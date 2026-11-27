@@ -1,0 +1,490 @@
+{
+  "version": "1.02",
+  "engineSha256": "cd1c87f18c753019aeccf37a638d12e1eee1f93e1a9ca901e32fdb8db61dbb0f",
+  "method": "Actual compiled Rust/Wasm.2016 nominal-hold fixtures=4recipes×4cups×7targets×3tap levels×3pressures×2modes. Gentle catalog tested at exact nominal hold; Classic/Rush results are nominal-hold diagnostics, not searched optimal ceilings. Career profiles use seeded Gaussian timing errors around Gentle nominal hold; they are sensitivity scenarios, not measured players. Menu/review time excluded.",
+  "catalog": [
+    {
+      "pressure": "Gentle",
+      "cases": 336,
+      "fiveStars": 336,
+      "fourOrBetter": 336,
+      "spillCases": 0,
+      "minAccuracy": 100,
+      "minFoamMl": 5.87,
+      "maxFoamMl": 57.91,
+      "maxBeverageWasteMl": 0
+    },
+    {
+      "pressure": "Classic",
+      "cases": 336,
+      "fiveStars": 331,
+      "fourOrBetter": 336,
+      "spillCases": 17,
+      "minAccuracy": 91.24,
+      "minFoamMl": 11.25,
+      "maxFoamMl": 125.07,
+      "maxBeverageWasteMl": 7.01
+    },
+    {
+      "pressure": "Rush",
+      "cases": 336,
+      "fiveStars": 308,
+      "fourOrBetter": 332,
+      "spillCases": 51,
+      "minAccuracy": 84.28,
+      "minFoamMl": 15.18,
+      "maxFoamMl": 178.89,
+      "maxBeverageWasteMl": 12.58
+    }
+  ],
+  "modeParityCases": 2016,
+  "emptyCareer": {
+    "days": 10,
+    "pours": 120,
+    "gross": 0,
+    "cash": 0
+  },
+  "progression": [
+    {
+      "timingSdMilliseconds": 0,
+      "pressure": "Gentle",
+      "purchasePolicy": "Cheapest affordable available upgrade after each cup",
+      "runs": [
+        {
+          "seed": 1,
+          "pours": 99,
+          "days": 9,
+          "firstPurchase": 3,
+          "meanFillScore": 100,
+          "cash": 1764
+        },
+        {
+          "seed": 2,
+          "pours": 98,
+          "days": 9,
+          "firstPurchase": 3,
+          "meanFillScore": 100,
+          "cash": 3359
+        },
+        {
+          "seed": 3,
+          "pours": 98,
+          "days": 9,
+          "firstPurchase": 3,
+          "meanFillScore": 100,
+          "cash": 3019
+        },
+        {
+          "seed": 4,
+          "pours": 100,
+          "days": 9,
+          "firstPurchase": 3,
+          "meanFillScore": 100,
+          "cash": 2897
+        },
+        {
+          "seed": 5,
+          "pours": 100,
+          "days": 9,
+          "firstPurchase": 3,
+          "meanFillScore": 100,
+          "cash": 1059
+        },
+        {
+          "seed": 6,
+          "pours": 100,
+          "days": 9,
+          "firstPurchase": 3,
+          "meanFillScore": 100,
+          "cash": 830
+        },
+        {
+          "seed": 7,
+          "pours": 99,
+          "days": 9,
+          "firstPurchase": 3,
+          "meanFillScore": 100,
+          "cash": 1899
+        },
+        {
+          "seed": 8,
+          "pours": 98,
+          "days": 9,
+          "firstPurchase": 3,
+          "meanFillScore": 100,
+          "cash": 551
+        },
+        {
+          "seed": 9,
+          "pours": 100,
+          "days": 9,
+          "firstPurchase": 3,
+          "meanFillScore": 100,
+          "cash": 1205
+        },
+        {
+          "seed": 10,
+          "pours": 101,
+          "days": 9,
+          "firstPurchase": 3,
+          "meanFillScore": 100,
+          "cash": 3421
+        },
+        {
+          "seed": 11,
+          "pours": 100,
+          "days": 9,
+          "firstPurchase": 3,
+          "meanFillScore": 100,
+          "cash": 2150
+        },
+        {
+          "seed": 12,
+          "pours": 101,
+          "days": 9,
+          "firstPurchase": 3,
+          "meanFillScore": 100,
+          "cash": 3411
+        },
+        {
+          "seed": 13,
+          "pours": 98,
+          "days": 9,
+          "firstPurchase": 3,
+          "meanFillScore": 100,
+          "cash": 2234
+        },
+        {
+          "seed": 14,
+          "pours": 97,
+          "days": 9,
+          "firstPurchase": 3,
+          "meanFillScore": 100,
+          "cash": 1752
+        },
+        {
+          "seed": 15,
+          "pours": 98,
+          "days": 9,
+          "firstPurchase": 3,
+          "meanFillScore": 100,
+          "cash": 780
+        },
+        {
+          "seed": 16,
+          "pours": 98,
+          "days": 9,
+          "firstPurchase": 3,
+          "meanFillScore": 100,
+          "cash": 1420
+        }
+      ],
+      "poursRange": [
+        97,
+        101
+      ],
+      "daysRange": [
+        9,
+        9
+      ],
+      "firstPurchaseRange": [
+        3,
+        3
+      ]
+    },
+    {
+      "timingSdMilliseconds": 70,
+      "pressure": "Gentle",
+      "purchasePolicy": "Cheapest affordable available upgrade after each cup",
+      "runs": [
+        {
+          "seed": 1,
+          "pours": 109,
+          "days": 10,
+          "firstPurchase": 3,
+          "meanFillScore": 96.49,
+          "cash": 2062
+        },
+        {
+          "seed": 2,
+          "pours": 105,
+          "days": 9,
+          "firstPurchase": 3,
+          "meanFillScore": 96.62,
+          "cash": 1835
+        },
+        {
+          "seed": 3,
+          "pours": 103,
+          "days": 9,
+          "firstPurchase": 3,
+          "meanFillScore": 96.84,
+          "cash": 2567
+        },
+        {
+          "seed": 4,
+          "pours": 107,
+          "days": 9,
+          "firstPurchase": 3,
+          "meanFillScore": 96.96,
+          "cash": 501
+        },
+        {
+          "seed": 5,
+          "pours": 106,
+          "days": 9,
+          "firstPurchase": 3,
+          "meanFillScore": 96.78,
+          "cash": 743
+        },
+        {
+          "seed": 6,
+          "pours": 104,
+          "days": 9,
+          "firstPurchase": 3,
+          "meanFillScore": 97.29,
+          "cash": 775
+        },
+        {
+          "seed": 7,
+          "pours": 104,
+          "days": 9,
+          "firstPurchase": 3,
+          "meanFillScore": 96.73,
+          "cash": 1323
+        },
+        {
+          "seed": 8,
+          "pours": 104,
+          "days": 9,
+          "firstPurchase": 3,
+          "meanFillScore": 96.99,
+          "cash": 3130
+        },
+        {
+          "seed": 9,
+          "pours": 109,
+          "days": 10,
+          "firstPurchase": 3,
+          "meanFillScore": 96.98,
+          "cash": 725
+        },
+        {
+          "seed": 10,
+          "pours": 105,
+          "days": 9,
+          "firstPurchase": 3,
+          "meanFillScore": 96.69,
+          "cash": 976
+        },
+        {
+          "seed": 11,
+          "pours": 107,
+          "days": 9,
+          "firstPurchase": 3,
+          "meanFillScore": 97.07,
+          "cash": 2326
+        },
+        {
+          "seed": 12,
+          "pours": 103,
+          "days": 9,
+          "firstPurchase": 3,
+          "meanFillScore": 96.87,
+          "cash": 1450
+        },
+        {
+          "seed": 13,
+          "pours": 105,
+          "days": 9,
+          "firstPurchase": 3,
+          "meanFillScore": 97.05,
+          "cash": 602
+        },
+        {
+          "seed": 14,
+          "pours": 103,
+          "days": 9,
+          "firstPurchase": 3,
+          "meanFillScore": 96.9,
+          "cash": 1716
+        },
+        {
+          "seed": 15,
+          "pours": 109,
+          "days": 10,
+          "firstPurchase": 3,
+          "meanFillScore": 96.84,
+          "cash": 1691
+        },
+        {
+          "seed": 16,
+          "pours": 103,
+          "days": 9,
+          "firstPurchase": 3,
+          "meanFillScore": 97.01,
+          "cash": 1812
+        }
+      ],
+      "poursRange": [
+        103,
+        109
+      ],
+      "daysRange": [
+        9,
+        10
+      ],
+      "firstPurchaseRange": [
+        3,
+        3
+      ]
+    },
+    {
+      "timingSdMilliseconds": 150,
+      "pressure": "Gentle",
+      "purchasePolicy": "Cheapest affordable available upgrade after each cup",
+      "runs": [
+        {
+          "seed": 1,
+          "pours": 152,
+          "days": 13,
+          "firstPurchase": 3,
+          "meanFillScore": 93.09,
+          "cash": 1171
+        },
+        {
+          "seed": 2,
+          "pours": 155,
+          "days": 13,
+          "firstPurchase": 3,
+          "meanFillScore": 92.68,
+          "cash": 2024
+        },
+        {
+          "seed": 3,
+          "pours": 144,
+          "days": 12,
+          "firstPurchase": 4,
+          "meanFillScore": 93.61,
+          "cash": 1164
+        },
+        {
+          "seed": 4,
+          "pours": 143,
+          "days": 12,
+          "firstPurchase": 4,
+          "meanFillScore": 93.25,
+          "cash": 561
+        },
+        {
+          "seed": 5,
+          "pours": 150,
+          "days": 13,
+          "firstPurchase": 4,
+          "meanFillScore": 93.45,
+          "cash": 1800
+        },
+        {
+          "seed": 6,
+          "pours": 147,
+          "days": 13,
+          "firstPurchase": 3,
+          "meanFillScore": 93.5,
+          "cash": 420
+        },
+        {
+          "seed": 7,
+          "pours": 154,
+          "days": 13,
+          "firstPurchase": 4,
+          "meanFillScore": 92.77,
+          "cash": 2030
+        },
+        {
+          "seed": 8,
+          "pours": 142,
+          "days": 12,
+          "firstPurchase": 3,
+          "meanFillScore": 93.5,
+          "cash": 743
+        },
+        {
+          "seed": 9,
+          "pours": 139,
+          "days": 12,
+          "firstPurchase": 3,
+          "meanFillScore": 93.67,
+          "cash": 1409
+        },
+        {
+          "seed": 10,
+          "pours": 144,
+          "days": 12,
+          "firstPurchase": 4,
+          "meanFillScore": 93.23,
+          "cash": 2154
+        },
+        {
+          "seed": 11,
+          "pours": 148,
+          "days": 13,
+          "firstPurchase": 3,
+          "meanFillScore": 93.38,
+          "cash": 2323
+        },
+        {
+          "seed": 12,
+          "pours": 148,
+          "days": 13,
+          "firstPurchase": 4,
+          "meanFillScore": 93.24,
+          "cash": 1803
+        },
+        {
+          "seed": 13,
+          "pours": 139,
+          "days": 12,
+          "firstPurchase": 4,
+          "meanFillScore": 93.16,
+          "cash": 503
+        },
+        {
+          "seed": 14,
+          "pours": 148,
+          "days": 13,
+          "firstPurchase": 4,
+          "meanFillScore": 93.4,
+          "cash": 1497
+        },
+        {
+          "seed": 15,
+          "pours": 149,
+          "days": 13,
+          "firstPurchase": 3,
+          "meanFillScore": 93.29,
+          "cash": 489
+        },
+        {
+          "seed": 16,
+          "pours": 143,
+          "days": 12,
+          "firstPurchase": 3,
+          "meanFillScore": 93.74,
+          "cash": 1889
+        }
+      ],
+      "poursRange": [
+        139,
+        155
+      ],
+      "daysRange": [
+        12,
+        13
+      ],
+      "firstPurchaseRange": [
+        3,
+        4
+      ]
+    }
+  ]
+}

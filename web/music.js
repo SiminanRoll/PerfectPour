@@ -9,7 +9,7 @@
   const MASTER_LEVEL = .14;
   const FADE_SECONDS = .14;
   let context = null, output = null, room = null, feedback = null, roomLevel = null;
-  let current = null, contextListener = null;
+  let current = null, contextListener = null, savedBeat = 0, volume = 1;
   const retiring = new Set();
 
   // A small original 16-bar tune: warm extended chords, a walking two-note
@@ -71,11 +71,14 @@
   function stop() {
     const run = current;
     if(!run) return;
+    // Pause the musical clock with the game. A visit to the shop or help
+    // should continue the tune, not replay its opening phrase.
+    savedBeat = Math.max(0,(run.context.currentTime-run.anchor)/BEAT) % LOOP_BEATS;
     current = null; clearInterval(run.timer); run.timer = null;
     const now = run.context.currentTime;
     // Each playback owns its gain so a rapid off/on cannot revive old notes.
     run.gain.gain.cancelScheduledValues(now);
-    const level = MASTER_LEVEL*Math.min(1,Math.max(0,(now-run.fadeStart)/.6));
+    const level = MASTER_LEVEL*volume*Math.min(1,Math.max(0,(now-run.fadeStart)/.6));
     run.gain.gain.setValueAtTime(level,now);
     run.gain.gain.linearRampToValueAtTime(0,now+FADE_SECONDS);
     for(const voice of run.voices) {
@@ -152,16 +155,33 @@
     if(!context || context.state !== 'running' || document.hidden) return false;
     if(current) return true;
     const gain = context.createGain(), now = context.currentTime;
-    gain.gain.setValueAtTime(0,now); gain.gain.linearRampToValueAtTime(MASTER_LEVEL,now+.6);
+    gain.gain.setValueAtTime(0,now); gain.gain.linearRampToValueAtTime(MASTER_LEVEL*volume,now+.6);
     gain.connect(output);
-    const run = {context,gain,fadeStart:now,anchor:now+.035,index:0,loop:0,voices:new Set(),timer:null,cleanup:null};
+    let index = notes.findIndex(note => note.beat >= savedBeat);
+    const loop = index === -1 ? 1 : 0;
+    if(index === -1) index = 0;
+    const run = {context,gain,fadeStart:now,anchor:now+.035-savedBeat*BEAT,index,loop,voices:new Set(),timer:null,cleanup:null};
     current = run; schedule(run); run.timer = setInterval(() => schedule(run),30);
     return true;
+  }
+
+  function setVolume(next) {
+    if(!Number.isFinite(Number(next))) return;
+    volume = Math.max(0,Math.min(1,Number(next)));
+    if(!current) return;
+    const now = current.context.currentTime;
+    current.gain.gain.cancelScheduledValues(now);
+    current.gain.gain.setValueAtTime(current.gain.gain.value,now);
+    current.gain.gain.linearRampToValueAtTime(MASTER_LEVEL*volume,now+.08);
+  }
+
+  function position() {
+    return current ? Math.max(0,(current.context.currentTime-current.anchor)/BEAT) % LOOP_BEATS : savedBeat;
   }
 
   // These are safety stops only. Resuming always belongs to the game's
   // user-gesture/audio policy, never to a visibility or focus event here.
   document.addEventListener('visibilitychange',() => { if(document.hidden) stop(); });
   window.addEventListener('blur',stop);
-  window.PourMusic = Object.freeze({attach,start,stop,isPlaying:() => current !== null});
+  window.PourMusic = Object.freeze({attach,start,stop,setVolume,position,isPlaying:() => current !== null});
 })();

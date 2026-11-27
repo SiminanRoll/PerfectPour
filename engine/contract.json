@@ -1,9 +1,9 @@
 {
-  "version": "1.01",
-  "saveVersion": 101,
+  "version": "1.02",
+  "saveVersion": 102,
   "snapshot": {
     "type": "f32",
-    "length": 65,
+    "length": 98,
     "fields": {
       "phase": 0,
       "order": 1,
@@ -69,17 +69,53 @@
       "bestShiftGross": 61,
       "businessLevel": 62,
       "previousRating": 63,
-      "beverageMl": 64
+      "beverageMl": 64,
+      "pressure": 65,
+      "beverageWasteMl": 66,
+      "cleanupSeconds": 67,
+      "patienceFraction": 68,
+      "patienceLimit": 69,
+      "menuPrice": 70,
+      "ingredientCost": 71,
+      "cleanupCost": 72,
+      "refund": 73,
+      "lastNet": 74,
+      "shiftIngredientCosts": 75,
+      "shiftCleanupCosts": 76,
+      "shiftRefunds": 77,
+      "shiftSignRevenue": 78,
+      "shiftServiceTips": 79,
+      "staffOrders": 80,
+      "staffCapacity": 81,
+      "queuedDemand": 82,
+      "missedCustomers": 83,
+      "interiorLevel": 84,
+      "cateringLevel": 85,
+      "interiorCost": 86,
+      "cateringCost": 87,
+      "nextStreakGoal": 88,
+      "nextStreakReward": 89,
+      "hardcoreBestStreak": 90,
+      "easyBestStreak": 91,
+      "cleanupSavedSeconds": 92,
+      "trainingLevel": 93,
+      "trainingCost": 94,
+      "businessTier": 95,
+      "mayChangePressure": 96,
+      "serviceTipPotential": 97
     },
     "notes": [
-      "Fields 0 through 63 retain their existing indexes.",
-      "liquid and foam describe the visible cup, including during a paid review.",
-      "beverageMl is min(capacity, liquid plus beverage trapped in foam); use it for the scored receipt amount."
+      "Fields0..64 retain indexes. flowRate is selected pressure flow; shiftNet is signed revenue minus operating costs and wages, excluding upgrades.",
+      "accuracy is final beverage fill only. Visible foam mess (spill) and actual beverageWasteMl have separate economic consequences.",
+      "Patience runs from first hold only while active service; mandatory paid settling, review and menus do not consume it.",
+      "staffSales is actual cumulative secondary-lane gross; staffOrders can increase after each scored player cup. queuedDemand includes demand not yet served or lost.",
+      "refund and shiftRefunds show foregone menu sale value, not a second cash deduction. ingredientCost/cleanupCost are actual cash charges capped by spendable cash to keep a recovery path.",
+      "modeMultiplier reflects the committed receipt in review/closed phases, even when the selected next difficulty changes."
     ]
   },
   "save": {
     "type": "f64",
-    "length": 80,
+    "length": 120,
     "fields": {
       "version": 0,
       "phase": 1,
@@ -88,8 +124,6 @@
       "cup": 4,
       "target": 5,
       "liquid": 6,
-      "foamReserved": 7,
-      "foamLiquidReserved": 8,
       "spill": 9,
       "rating": 10,
       "shiftGross": 11,
@@ -133,18 +167,50 @@
       "previousRating": 49,
       "lastWasGood": 50,
       "lockedOrderSign": 51,
-      "lockedOrderAwning": 52
+      "lockedOrderAwning": 52,
+      "foam": 7,
+      "foamBeverage": 8,
+      "pressure": 53,
+      "beverageWasteMl": 54,
+      "pouredMl": 55,
+      "cleanupSeconds": 56,
+      "lastIngredientCost": 57,
+      "lastCleanupCost": 58,
+      "lastRefund": 59,
+      "lastNet": 60,
+      "shiftIngredientCosts": 61,
+      "shiftCleanupCosts": 62,
+      "shiftRefunds": 63,
+      "shiftSignRevenue": 64,
+      "shiftServiceTips": 65,
+      "staffOrders": 66,
+      "staffCapacity": 67,
+      "queuedDemand": 68,
+      "missedCustomers": 69,
+      "interiorLevel": 70,
+      "cateringLevel": 71,
+      "trainingLevel": 72,
+      "hardcoreBestStreak": 73,
+      "easyBestStreak": 74,
+      "cleanupSavedSeconds": 75,
+      "staffWorkSeconds": 76,
+      "activePatio": 77,
+      "activeInterior": 78,
+      "activeCatering": 79,
+      "activeTraining": 80,
+      "lastScoredHardcore": 81,
+      "resumeHardcoreAfterEasyCup": 82
     },
     "reserved": [
-      53,
-      79
+      83,
+      119
     ],
     "notes": [
-      "save_ptr refreshes the buffer from live state.",
-      "For restore: call save_ptr once, write all80 doubles, then restore_save.",
-      "Unfinished cups restart untouched without a payout. Paid reviews remain paid.",
-      "Paid and closed cups save their settled beverage in field 6, with reserved fields 7 and 8 still zero; version 101 stays compatible.",
-      "Restoring always selects Hardcore; a saved Easy streak resets."
+      "Version102 stores120 doubles. For legacy101, fill120-double buffer with zeroes then copy original80 doubles.",
+      "save_ptr refreshes buffer from live state: call once, write all120 doubles, then restore_save.",
+      "Attempted102 Hardcore restores by committing its saved drink exactly once. An unfinished102 Easy cup restores stopped in Easy, then returns to Hardcore after that cup. Legacy101 retains its untouched checkpoint behavior.",
+      "Paid cups remain paid and save their settled beverage; ordinary restored saves default to Hardcore and preserve mode-specific records.",
+      "lastScoredHardcore locks receipt mode premium even when the next selected mode changes."
     ]
   },
   "phases": {
@@ -166,7 +232,8 @@
     "state_len": "()->u32",
     "save_ptr": "()->pointer",
     "save_len": "()->u32",
-    "restore_save": "()->u32"
+    "restore_save": "()->u32",
+    "set_pressure": "(pressure:u32)->u32"
   },
   "upgrades": [
     {
@@ -177,50 +244,80 @@
         2200,
         3600
       ],
-      "effect": "+5% base order price per level"
+      "effect": "+8% base price and +2 daily side-lane demand per level"
     },
     {
       "item": 1,
-      "name": "Patio seating",
+      "name": "Patio",
       "costsCents": [
         1800,
         3000
       ],
-      "effect": "+2 player customers per level starting next day"
+      "effect": "+2 specialist capacity and +3 daily side-lane demand per level; +1s patience per level"
     },
     {
       "item": 2,
       "name": "Awning",
       "costsCents": [
-        1600,
-        2800
+        1400,
+        2400
       ],
-      "effect": "+15c tip per level on4+ stars"
+      "effect": "+2s patience and +10c good-pour welcome tip per level"
     },
     {
       "item": 3,
-      "name": "Tap equipment",
+      "name": "Tap",
       "costsCents": [
-        2400,
-        4200
+        1800,
+        3000
       ],
-      "effect": "20% less gas volume per level, preserving beverage"
+      "effect": "20% less foam gas and 15% lower cleanup cost per level"
     },
     {
       "item": 4,
       "name": "Counter helper",
       "costsCents": [
-        3500
+        2800
       ],
-      "effect": "+35c on3+ stars,150c wage/day, starts next day"
+      "effect": "Halves cleanup work/cost, +30c good-service tip;150c wage/day; starts next day"
     },
     {
       "item": 5,
       "name": "Soda specialist",
       "costsCents": [
-        5500
+        4200
       ],
-      "effect": "2 passive staff sales/day,250c wage/day, starts next day"
+      "effect": "Serves separate queued orders during player service up to capacity;250c wage/day; starts next day"
+    },
+    {
+      "item": 6,
+      "name": "Shop interior",
+      "costsCents": [
+        10000,
+        18000,
+        30000
+      ],
+      "effect": "+4 specialist capacity/demand per level and larger illustrated premises; starts next day"
+    },
+    {
+      "item": 7,
+      "name": "Catering",
+      "costsCents": [
+        14000,
+        24000,
+        40000
+      ],
+      "effect": "+8 daily side-lane demand and +12% staff sale price per level; interior and specialist required"
+    },
+    {
+      "item": 8,
+      "name": "Staff training",
+      "costsCents": [
+        5000,
+        8500,
+        13000
+      ],
+      "effect": "+2 specialist capacity,20% faster service and +6% staff sale value per level; specialist required"
     }
   ],
   "moneyUnit": "integer cents",
@@ -232,7 +329,29 @@
     "purchaseDuringAttempt": false,
     "modeChangeDuringAttempt": false,
     "targetSelection": "All requests from 45, 55, 60, 65, 70, 75, and 80 percent remain available for every soda, cup, mode, and tap level. The first career order remains 65 percent Orange.",
-    "scoredVolume": "Free liquid plus the beverage trapped in foam, capped at capacity. Gas does not count as beverage; visible overflow keeps its existing penalty.",
-    "reviewSettling": "Phase 1 step advances only the existing cup physics with pouring disabled. Elapsed service time, score, payout, and career state remain final. Phase 2 step does nothing."
-  }
+    "scoredVolume": "Final free+trapped beverage, capped by capacity. Fill score=100-350*absolute fill fraction error. Gas does not count as beverage or ingredient waste.",
+    "reviewSettling": "Phase 1 step advances only the existing cup physics with pouring disabled. Elapsed service time, score, payout, and career state remain final. Phase 2 step does nothing.",
+    "service": "Patience starts on first hold; slow service reduces speed tip and eventually sale value/demand. No timed automatic serve. Specialist work uses at most10seconds of actual service per nonempty player cup,3.5s per staff order divided by(1+0.2*activeTraining).",
+    "pressure": "Chosen only on an untouched cup. All3 pressure settings and all targets exist in both modes; Gentle makes every ordinary request five-star reachable while retaining visible fizz."
+  },
+  "pressure": [
+    {
+      "value": 0,
+      "name": "Gentle",
+      "flowMultiplier": 0.55,
+      "gasMultiplier": 0.8
+    },
+    {
+      "value": 1,
+      "name": "Classic",
+      "flowMultiplier": 1,
+      "gasMultiplier": 1
+    },
+    {
+      "value": 2,
+      "name": "Rush",
+      "flowMultiplier": 1.35,
+      "gasMultiplier": 1.15
+    }
+  ]
 }
