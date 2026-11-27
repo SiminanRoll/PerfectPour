@@ -1,10 +1,10 @@
 {
   "game": "Perfect Pour",
-  "version": "1.03",
+  "version": "1.03.1",
   "release_date": "2026-11-27",
-  "revision": "custom-sodas-and-one-primary-control",
-  "html_bytes": 299542,
-  "html_sha256": "d5d3479343e8aa903878f394096aaa7a1f652c4a4b6c33602705c667e8f214e7",
+  "revision": "compact-viewport-interface-and-paged-upgrades",
+  "html_bytes": 354595,
+  "html_sha256": "4d3b6285c49bb145dfe906a3a409b2eb51b8e02a3a35b31d174c288aedee6b4f",
   "wasm_bytes": 39420,
   "wasm_sha256": "faace530dcdcf92e4504ef33ace1bd51c8e28a89d9b26d9f84d35637a7e24c4e",
   "native_tests": 40,
@@ -18,18 +18,15 @@
   "live_url": "https://perfect-pour.pretty-scarf-0591.chatgpt.site",
   "github_ci_url": "https://github.com/SiminanRoll/PerfectPour/actions/workflows/ci.yml",
   "browser_checks": [
-    "Existing V102 business restores its paid cup and upgrades without duplicate payment",
-    "New custom requests start with an unchosen base and require Ready before pouring",
-    "Hardcore first release commits once; customer remains fully visible while expressions change",
-    "Easy native pointer holds top up; a short tap of the same button serves",
-    "Space held across settling in both modes leaves the finished cup awaiting explicit review",
-    "Reviews separately show recipe and pour accuracy while reusing the primary button",
-    "Citrus and syrup station purchases deduct their prices, preserve payroll and current ticket, and enable future requests",
-    "Hardcore Lime retains visible foam; severe overfill reduces reputation and cash",
-    "390x844 and 320x844 layouts keep the customer, cup, foam gauge, and main control together",
-    "320px preparation and finished views have no horizontal overflow",
-    "Help and settings downloads an actual 512x512 PNG app icon",
-    "Final cup shows only the pictorial logo with visible cherries beside it and no lettering"
+    "320x568 advanced Tall/Light recipe: one timed Space hold commits Hardcore once; foam settles and the finished cup waits for explicit review",
+    "Canvas and primary-button baseline rectangles stay identical before and after Hardcore release",
+    "390x844 Easy mode: native pointer hold, release, second hold to top up, and quick tap to serve preserve the same control and stable layout",
+    "Advanced preparation fits 1280x720,1366x768,768x600,390x844,375x667,320x568,844x390,568x320 with zero document overflow and essential controls inside",
+    "All 12 upgrade pages are reachable; a real lounge purchase deducts $100, advances its level, and retains the page",
+    "Build fits the eight checked viewport sizes without document/card/management overflow; resizing320x568 to1280x720 to1440x900 and back changes1 to2 to4 to1 cards",
+    "Review and day-summary defaults fit320x568,568x320,844x390; expanded optional details scroll only within the content body while actions remain visible",
+    "Help default fits320x568; expanded instructions keep the close action visible; audio controls use readable14px labels",
+    "Final320x568 review content has equal315px client and scroll heights, with no scrollbar artifact"
   ],
   "balance_checks": {
     "catalog_cases": 6048,
@@ -51,10 +48,11 @@
     ],
     "empty_cup_revenue_120_attempts": 0,
     "recipe_preparation_model": "Correct recipes selected instantly; no simulated reading or ingredient-selection delay.",
-    "report": "engine/balance-report.json"
+    "report": "engine/balance-report.json",
+    "evidence_scope": "V1.03 balance evidence retained for the unchanged Rust/Wasm engine; V1.03.1 changes presentation only. Current full-suite execution is recorded in GitHub CI."
   },
-  "verification_limit": "Same bundled HTML tested through managed HTTP preview. Direct file launch was unavailable in the browser. Narrow iframe layouts are not physical-device certification; seeded economy simulations are not a human playtest.",
-  "audio_verification": "Web Audio lifecycle and cue regression tests plus browser controls; no human auditory mix assessment.",
+  "verification_limit": "Managed HTTP preview of the actual standalone bundle, including viewport-sized iframe checks with isolated earned-progress fixtures. Physical iOS/Android hardware, mobile browser chrome, deliberate pinch zoom, and direct file launch were not verified. Optional expanded details scroll inside their own panel; primary play and tested default review/summary layouts do not require scrolling.",
+  "audio_verification": "Audio behavior is unchanged. V1.03.1 verified relocated audio controls in the browser; existing automated lifecycle and cue checks remain in CI. No new auditory mix assessment.",
   "music": "Original quiet synthesized loop; independent persisted music and effects volume.",
   "finish_effect": "Golden rim, glass glint, and bounded sparkles for five-star cups; static reduced-motion treatment.",
   "save_migration": "V103 writes a separate key and reads genuine V101/V102 saves. Legacy keys remain untouched; current legacy cups remain plain without new costs.",
@@ -66,5 +64,6 @@
     "verified_bytes": 21676,
     "location": "Help & settings"
   },
-  "acceptance_report": "docs/qa/V103_ACCEPTANCE.md"
+  "acceptance_report": "docs/qa/V1031_ACCEPTANCE.md",
+  "prior_acceptance_report": "docs/qa/V103_ACCEPTANCE.md"
 }

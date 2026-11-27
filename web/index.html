@@ -5,16 +5,14 @@
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
   <meta name="theme-color" content="#124c4c">
   <meta name="description" content="A little soda shop. A perfect pour. An offline soda-pouring and shop-building game. One pour, happy customers, and a business of your own.">
-  <title>Perfect Pour V1.03 · Your soda story</title>
+  <title>Perfect Pour V1.03.1 · Your soda story</title>
   <link rel="icon" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA2NCA2NCI+PHJlY3Qgd2lkdGg9IjY0IiBoZWlnaHQ9IjY0IiByeD0iMTUiIGZpbGw9IiMxNzRiNDkiLz48cGF0aCBkPSJNMTggMTdoMzBsLTQgMzZIMjJ6IiBmaWxsPSIjZmZjYzZjIi8+PHBhdGggZD0iTTM0IDE4IDM5IDhoMTFNMTYgMTdoMzQiIGZpbGw9Im5vbmUiIHN0cm9rZT0iI2ZmZmFmMCIgc3Ryb2tlLXdpZHRoPSI0IiBzdHJva2UtbGluZWNhcD0icm91bmQiLz48Y2lyY2xlIGN4PSIyOCIgY3k9IjM1IiByPSIyIiBmaWxsPSIjMTc0YjQ5Ii8+PGNpcmNsZSBjeD0iMzkiIGN5PSIzNSIgcj0iMiIgZmlsbD0iIzE3NGI0OSIvPjxwYXRoIGQ9Ik0yOCA0NHE2IDYgMTEgMCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjMTc0YjQ5IiBzdHJva2Utd2lkdGg9IjMiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIvPjwvc3ZnPg==">
   <!-- STYLE -->
 </head>
 <body>
     <div class="utility global-utility">
-      <button class="icon-button" id="sound-button" aria-label="Turn sound effects off" aria-pressed="true" title="Sound effects on"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9h4l5-4v14l-5-4H4zM17 8q4 4 0 8M20 4q7 8 0 16"/></svg></button>
-      <button class="icon-button" id="music-button" aria-label="Turn music off" aria-pressed="true" title="Music on"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 17V6l11-2v11M9 9l11-2"/><ellipse cx="6" cy="18" rx="3" ry="2"/><ellipse cx="17" cy="16" rx="3" ry="2"/></svg></button>
       <button class="icon-button" id="pause-button" aria-label="Pause game" title="Pause (P)"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14M16 5v14"/></svg></button>
-      <button class="icon-button" id="help-button" aria-label="Help and settings" title="Help & settings"><span aria-hidden="true">?</span></button>
+      <button class="icon-button" id="help-button" aria-label="Help and settings" title="Help & settings"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M4 17h16"/><circle cx="9" cy="7" r="3"/><circle cx="15" cy="17" r="3"/></svg></button>
     </div>
 <div class="game-shell">
   <header class="topbar">
@@ -22,19 +20,20 @@
       <svg class="brand-icon" viewBox="0 0 52 60" aria-hidden="true"><path d="M10 18h32l-5 34H15z" fill="#ffcb68" stroke="currentColor" stroke-width="3.5"/><path d="M8 18h36M16 27h20" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round"/><path d="M29 18l6-13h10" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round"/><circle cx="23" cy="34" r="2" fill="currentColor"/><circle cx="31" cy="39" r="2" fill="currentColor"/><path d="M21 44q5 5 10 0" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round"/></svg>
       <span>PERFECT<span>POUR<span class="brand-period">.</span></span></span>
     </a>
-    <div class="shop-caption">POUR A LITTLE JOY.<br><strong>BUILD SOMETHING BIG.</strong></div>
+    <div class="shop-caption" aria-hidden="true">A LITTLE FIZZ. A LOT OF HEART.</div>
     <div class="hud" aria-label="Business statistics">
-      <div class="hud-item"><span class="hud-label">CASH</span><strong id="money">$0.00</strong></div>
-      <div class="hud-item"><span class="hud-label">REPUTATION</span><strong><span class="star-icon">★</span> <span id="rating">3.5</span><small> / 5</small></strong></div>
-      <div class="hud-item shift-stat"><span class="hud-label">SERVED</span><strong id="customer-count">01 <small>/ 12</small></strong></div>
+      <div class="hud-item" id="money-stat" role="group" aria-label="Cash $0.00"><span class="hud-label sr-only">Cash</span><strong id="money">$0.00</strong></div>
+      <div class="hud-item"><span class="hud-label sr-only">Reputation</span><strong><span class="star-icon">★</span> <span id="rating">3.5</span><small> / 5</small></strong></div>
+      <div class="hud-item shift-stat"><span class="hud-label sr-only">Current customer</span><svg class="hud-symbol" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 8h12l-2 12H8ZM4 8h16M14 8l3-5h4"/></svg><strong id="customer-count">01 <small>/ 12</small></strong></div>
     </div>
 
   </header>
 
   <nav class="shop-rail" aria-label="Shop and difficulty">
-    <div class="view-tabs"><button id="counter-tab" class="active" aria-pressed="true"><span aria-hidden="true">◒</span> Pour</button><button id="store-tab" aria-pressed="false"><span aria-hidden="true">⌂</span> Build</button></div>
-    <div class="mode-switch" role="group" aria-label="Pour difficulty"><span>MODE</span><button id="hardcore-mode" class="active" aria-pressed="true" title="One hold. Release automatically serves. Earn 15% more base pay.">Hardcore</button><button id="easy-mode" aria-pressed="false" title="Pause, let foam settle, and top up. Serve when ready.">Easy</button></div>
-    <span id="day-label" class="day-label">DAY 01</span>
+    <div class="view-tabs"><button id="counter-tab" class="active" aria-pressed="true" aria-label="Pour at the counter" title="Pour at the counter"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 8h12l-2 12H8ZM4 8h16M14 8l3-5h4"/></svg><span class="nav-label">Pour</span></button><button id="store-tab" aria-pressed="false" aria-label="Build your soda bar" title="Build your soda bar"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 10h18l-2-6H5ZM5 10v10h14V10M9 20v-7h6v7"/></svg><span class="nav-label">Build</span></button></div>
+    <div class="mode-switch" role="group" aria-label="Pour difficulty"><span class="sr-only">Mode</span><button id="hardcore-mode" class="active" aria-pressed="true" title="One hold. Release automatically serves. Earn 15% more base pay.">Hardcore</button><button id="easy-mode" aria-pressed="false" title="Pause, let foam settle, and top up. Serve when ready.">Easy</button></div>
+    <button id="edit-recipe" class="text-button edit-recipe" aria-label="Edit recipe" title="Edit recipe" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 4 5 5M4 20l5-1L21 7l-5-5L4 14Z"/></svg><span class="sr-only">Edit recipe</span></button>
+    <span id="day-label" class="day-label" role="group" aria-label="Day 1">DAY 01</span>
   </nav>
 
   <main id="playfield" class="playfield">
@@ -44,69 +43,74 @@
     <div class="shelf" aria-hidden="true"><i class="bottle bottle-orange"></i><i class="bottle bottle-cherry"></i><i class="bottle bottle-lime"></i><i class="bottle bottle-cola"></i><span class="shelf-board"></span></div>
 
     <section class="customer-area" aria-label="Current customer">
-      <div class="order-bubble"><div class="customer-name"><span id="customer-name">Jamie</span><span id="customer-number">CUSTOMER 01</span></div><p id="order-line">“A Sunset Orange, please.<br><strong>Fill it to 65%!</strong>”</p><div id="order-recipe" class="recipe-ticket" aria-label="Requested recipe"></div><span class="bubble-small" id="customer-aside">A little sunshine in a cup.</span><div class="customer-patience"><span aria-hidden="true">◷</span><div class="patience-meter" aria-hidden="true"><i id="patience-track"></i></div><strong id="patience-label">Ready</strong></div></div>
+      <div class="order-bubble"><div class="customer-name"><span id="customer-name">Jamie</span><span id="customer-number">CUSTOMER 01</span></div><p id="order-line">Sunset Orange <strong>65%</strong></p><div id="order-recipe" class="recipe-ticket" aria-label="Requested recipe"></div><span class="bubble-small sr-only" id="customer-aside">A little sunshine in a cup.</span><div class="customer-patience"><span aria-hidden="true">◷</span><div class="patience-meter" aria-hidden="true"><i id="patience-track"></i></div><strong id="patience-label">Ready</strong></div></div>
       <div id="customer-art" class="customer-art" aria-hidden="true"></div>
       <div class="customer-tag"><span class="online-dot"></span><span id="customer-status">READY TO ORDER</span></div>
     </section>
 
     <section class="pour-area" aria-label="Soda pouring station">
-      <details class="pressure-control" id="pressure-controls"><summary><span>Tap pressure</span><strong id="pressure-summary">Classic</strong></summary><div role="group" aria-label="Tap pressure"><div class="pressure-heading"><span>PRESSURE</span><span id="pressure-note">Choose before pouring</span></div><div class="pressure-buttons"><button id="pressure-gentle" aria-pressed="false"><span class="pressure-art gentle" aria-hidden="true">▂</span><strong>Gentle</strong><small>Less fizz</small></button><button id="pressure-classic" class="active" aria-pressed="true"><span class="pressure-art classic" aria-hidden="true">▂▅</span><strong>Classic</strong><small>Balanced</small></button><button id="pressure-rush" aria-pressed="false"><span class="pressure-art rush" aria-hidden="true">▂▅▇</span><strong>Rush</strong><small>Faster</small></button></div></div></details>
+      <details class="pressure-control" id="pressure-controls"><summary><span>Pressure</span><strong id="pressure-summary">Classic</strong></summary><div role="group" aria-label="Tap pressure"><div class="pressure-heading"><span>PRESSURE</span><span id="pressure-note">Classic flow</span></div><div class="pressure-buttons"><button id="pressure-gentle" aria-pressed="false"><span class="pressure-art gentle" aria-hidden="true">▂</span><strong>Gentle</strong><small>Less fizz</small></button><button id="pressure-classic" class="active" aria-pressed="true"><span class="pressure-art classic" aria-hidden="true">▂▅</span><strong>Classic</strong><small>Balanced</small></button><button id="pressure-rush" aria-pressed="false"><span class="pressure-art rush" aria-hidden="true">▂▅▇</span><strong>Rush</strong><small>Faster</small></button></div></div></details>
       <div class="tap-machine" aria-hidden="true"><div class="tap-badge"><span class="tap-dot"></span><span id="tap-name">SUNSET ORANGE</span></div><div class="tap-neck"></div><div class="tap-nozzle"></div></div>
       <div class="station-target"><span>TARGET</span><strong id="station-target">65%</strong></div>
       <canvas id="game-canvas" width="420" height="440" aria-label="Cup showing the soda level, foam, and requested fill line"></canvas>
-      <div class="live-message" id="live-message">Watch the soda. Leave room for fizz.</div><div id="milestone-badge" class="milestone-badge" hidden></div>
+      <div class="live-message" id="live-message">Leave room for fizz</div><div id="milestone-badge" class="milestone-badge" hidden></div>
       <div class="cup-nameplate"><span id="cup-name">THE CLASSIC</span><span id="cup-capacity">280 mL</span></div>
     </section>
 
     <aside class="order-ticket" aria-label="Order details">
-      <div class="ticket-top"><span>THE ORDER</span><strong id="order-price">$0.00</strong></div>
+      <div class="ticket-top"><span>MENU PRICE</span><strong id="order-price">$0.00</strong></div>
       <div class="ticket-drink"><span class="drink-swatch" id="drink-swatch"></span><div><strong id="drink-name">Sunset Orange</strong><span id="drink-flavor">Bright, citrusy & mellow</span></div></div>
       <section class="recipe-workbench" id="recipe-workbench" aria-label="Craft your soda">
-        <div class="recipe-heading"><strong>YOUR MIX</strong><span id="recipe-cost">Choose a base</span></div>
+        <div class="recipe-heading"><strong>YOUR MIX</strong><span id="recipe-cost" title="Ingredient cost">$0.00</span></div>
         <div id="base-options" class="base-options" role="group" aria-label="Choose soda base"></div>
         <div class="ingredient-options" id="ingredient-options" role="group" aria-label="Add ingredients"></div>
-        <div id="blend-controls" class="blend-controls" hidden><div class="recipe-heading"><strong>SODA WATER</strong><span>Choose your blend</span></div><div id="blend-options" class="blend-options" role="group" aria-label="Soda water blend"></div></div>
-        <p class="recipe-instruction" id="recipe-instruction">Tap a jar to add. Tap again to change the amount.</p>
+        <div id="blend-controls" class="blend-controls" hidden><div class="recipe-heading"><strong>SODA WATER</strong><span class="sr-only">Choose your blend</span></div><div id="blend-options" class="blend-options" role="group" aria-label="Soda water blend"></div></div>
+        <p class="recipe-instruction sr-only" id="recipe-instruction">Tap a jar to add. Tap again to change the amount.</p>
       </section>
       <div id="mixed-recipe" class="mixed-recipe" aria-label="Your prepared recipe" hidden></div>
       <div class="pour-gauge" id="pour-gauge">
-      <div class="fizz-row"><span>FIZZ FACTOR</span><div class="fizz-meter" id="fizz-meter" aria-label="Mild fizz"><i></i><i></i><i></i><i></i></div><strong id="fizz-label">MILD</strong></div>
-      <p class="fizz-note" id="fizz-note">A gentle fizz. A lovely place to start.</p>
+      <div class="fizz-row"><span>FIZZ</span><div class="fizz-meter" id="fizz-meter" aria-label="Mild fizz"><i></i><i></i><i></i><i></i></div><strong id="fizz-label">MILD</strong></div>
+      <p class="fizz-note sr-only" id="fizz-note">A gentle fizz. A lovely place to start.</p>
       <div class="ticket-rule"></div>
-      <div class="target-row"><span>TARGET<br>FILL</span><strong id="target-percent">65<small>%</small></strong></div>
+      <div class="target-row"><span>TARGET</span><strong id="target-percent">65<small>%</small></strong></div>
       <div class="level-track" aria-hidden="true"><span id="liquid-track"></span><span id="foam-track"></span><i id="target-track"></i></div>
       <div class="level-readings"><span class="liquid-key">Liquid <strong id="liquid-percent">0%</strong></span><span class="foam-key">Foam <strong id="foam-percent">0%</strong></span></div>
       </div>
       <div class="payout-note"><span>REPUTATION</span><strong id="payout-multiplier">1.30×</strong></div>
-      <p class="ticket-footnote">Better reviews. Better business.</p>
+      <p class="ticket-footnote sr-only">Better reviews improve future prices.</p>
       <span class="ticket-tear" aria-hidden="true"></span>
     </aside>
 
     <div id="staff-strip" class="staff-strip" aria-live="polite"></div>
     <div class="counter-back" aria-hidden="true"></div>
-    <div class="counter-front" aria-hidden="true"><span>A LITTLE FIZZ. A LOT OF HEART.</span></div>
+    <div class="counter-front" aria-hidden="true"></div>
     <div class="scene-caption" aria-hidden="true">EST. TODAY <span>✦</span> MADE WITH FIZZ</div>
   </main>
 
   <footer class="control-deck" id="counter-controls">
-    <div class="pour-tip"><span class="tip-spark" aria-hidden="true">✦</span><p id="tip-text"><strong>One pour. Make it count.</strong><span>Release to serve. No second chances.</span></p></div>
-    <div class="main-controls" id="counter-action-slot"><button id="pour-button" class="pour-button primary-action"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3s-6 7-6 12a6 6 0 0 0 12 0c0-5-6-12-6-12Z"/><path d="M9 16q0 3 3 3"/></svg><span><span id="primary-label">CHOOSE A BASE</span><small id="primary-hint">Match the order above</small></span></button><button id="edit-recipe" class="text-button edit-recipe" hidden>Edit recipe</button></div>
+    <div class="pour-tip"><span class="tip-spark" aria-hidden="true">✦</span><p id="tip-text"><strong>One pour.</strong><span>Release to serve.</span></p></div>
+    <div class="main-controls" id="counter-action-slot"><button id="pour-button" class="pour-button primary-action"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3s-6 7-6 12a6 6 0 0 0 12 0c0-5-6-12-6-12Z"/><path d="M9 16q0 3 3 3"/></svg><span><span id="primary-label">CHOOSE A BASE</span><small id="primary-hint">Match the order above</small></span></button></div>
     <div class="shift-progress"><div><span>TODAY’S QUEUE</span><strong id="progress-label">0 / 12 served</strong></div><div class="progress-dots" id="progress-dots" aria-hidden="true"></div><button class="text-button" id="restart-button">Build your bar</button></div>
-    <div class="combo-strip"><strong id="combo-label">A FRESH STREAK</strong><span id="combo-next">Two good pours unlock a 1.10× combo.</span></div>
+    <div class="combo-strip"><strong id="combo-label">Start a streak</strong><span id="combo-next">2 good pours · 1.10×</span></div>
   </footer>
 
   <section id="storefront-view" class="storefront-view" aria-label="Your soda bar and business upgrades" hidden>
     <div class="store-hero">
-      <div class="store-intro"><div class="modal-eyebrow">FROM FIRST POUR TO LOCAL FAVORITE</div><h1>A little shop.<br><em>Big possibilities.</em></h1><p id="store-description">Your next chapter starts here.</p></div>
+      <div class="store-intro"><div class="modal-eyebrow">YOUR NEIGHBORHOOD FAVORITE</div><h1>Your soda bar.</h1><p id="store-description">Your next chapter starts here.</p></div>
       <div class="business-goal-card"><div><span class="goal-symbol" aria-hidden="true">✦</span><strong id="business-goal">A sign with personality</strong></div><div class="business-progress-track" aria-hidden="true"><i id="business-progress"></i></div><p id="staff-activity">A one-person dream, for now.</p></div>
       <div id="store-art" class="store-art" aria-label="Your illustrated soda bar"></div>
       <div class="store-scoreboard"><div><span>READY TO SPEND</span><strong id="store-spendable">$0.00</strong></div><div><span>WAGES SET ASIDE</span><strong id="store-reserve">$0.00</strong></div><div><span>TOTAL SALES</span><strong id="store-lifetime">$0.00</strong></div></div>
     </div>
     <div class="store-management">
-      <div class="store-heading"><div><span class="modal-eyebrow">YOUR NEXT GOOD IDEA</span><h2>Build your bar.</h2></div><button id="store-back" class="primary-button">BACK TO POURING</button></div>
-      <p class="store-rule" id="store-rule">Buy between pours. Your business stays with you from day to day.</p>
-      <div id="upgrade-grid" class="upgrade-grid"></div>
-      <div class="business-tools"><p id="save-status">Progress saves on this device.</p><div><button id="export-save" class="text-button">Export save</button><button id="import-save" class="text-button">Import save</button><button id="reset-business" class="text-button">Start a new business</button></div></div>
+      <div class="store-heading"><div><span class="modal-eyebrow">MAKE IT YOURS</span><h2>Upgrades</h2></div><button id="store-back" class="primary-button">BACK TO POUR</button></div>
+      <p class="store-rule" id="store-rule">Staff & seats: next day</p>
+      <div id="upgrade-grid" class="upgrade-grid" data-page-size="1"></div>
+      <nav id="upgrade-pager" class="upgrade-pager" aria-label="Upgrade pages">
+        <button id="upgrade-prev" class="icon-button" aria-label="Previous upgrades" aria-controls="upgrade-grid" title="Previous upgrades" disabled><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 6-6 6 6 6"/></svg></button>
+        <span id="upgrade-page" role="status" aria-live="polite" aria-atomic="true">1 / 12</span>
+        <button id="upgrade-next" class="icon-button" aria-label="Next upgrades" aria-controls="upgrade-grid" title="Next upgrades"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg></button>
+      </nav>
+      <div class="business-tools"><p id="save-status" title="Export a portable backup of your business">Autosaved</p><div><button id="export-save" class="text-button" aria-label="Export business save" title="Export business save">Export</button><button id="import-save" class="text-button" aria-label="Import business save" title="Import business save">Import</button><button id="reset-business" class="text-button" aria-label="Start a new business" title="Start a new business">Reset</button></div></div>
     </div>
   </section>
 </div>
@@ -115,36 +119,42 @@
 <div class="overlay" id="welcome-overlay">
   <section class="modal welcome-modal" role="dialog" aria-modal="true" aria-labelledby="welcome-title">
     <div class="modal-eyebrow">ONE CUP. BIG AMBITIONS.</div><div class="welcome-fizz" aria-hidden="true"><span>✦</span><svg viewBox="0 0 100 110"><path d="M25 29h53l-7 69H32z" fill="#f7c76d" stroke="#174b49" stroke-width="5"/><path d="M28 57h46l-4 36H33z" fill="#f68d49"/><path d="m53 29 8-22h22" fill="none" stroke="#174b49" stroke-width="5" stroke-linecap="round"/><path d="M23 29h57" stroke="#174b49" stroke-width="5" stroke-linecap="round"/><circle cx="42" cy="66" r="3" fill="#174b49"/><circle cx="62" cy="66" r="3" fill="#174b49"/><path d="M44 79q8 8 16 0" fill="none" stroke="#174b49" stroke-width="4" stroke-linecap="round"/></svg><span>✦</span></div>
-    <h1 id="welcome-title">A little fizz.<br>A lot of <em>possibility.</em></h1><p class="modal-description" id="welcome-description">Pour it right. Win them over. Build your soda bar.</p>
+    <h1 id="welcome-title">A little soda<br><em>magic.</em></h1><p class="modal-description" id="welcome-description">Craft. Pour. Grow.</p>
     <div class="welcome-mode" role="group" aria-label="Choose pour difficulty"><button class="mode-choice active" id="welcome-hardcore" aria-pressed="true">HARDCORE <small>One pour · +15% base pay</small></button><button class="mode-choice" id="welcome-easy" aria-pressed="false">EASY <small>Top up · serve when ready</small></button></div>
-    <p id="welcome-mode-copy" class="save-notice">Hold Space or the pour button. Release once and the drink is served. Hardcore is the default.</p>
-    <div class="how-steps"><div><b aria-hidden="true">◒</b><p><strong>Craft & pour</strong><span>Match their recipe.</span></p></div><div><b aria-hidden="true">★</b><p><strong>Win a following</strong><span>Build your streak.</span></p></div><div><b aria-hidden="true">⌂</b><p><strong>Make it yours</strong><span>Grow your soda bar.</span></p></div></div>
-    <button class="primary-button" id="start-button">OPEN THE SHOP</button><div class="modal-small">Mouse, touch, or keyboard <span>•</span> Offline · V1.03</div>
+    <p id="welcome-mode-copy" class="save-notice">Hold Space or the button. Release to serve.</p>
+    <div class="how-steps" aria-hidden="true"><div><b>◒</b><p><strong>Craft</strong></p></div><div><b>★</b><p><strong>Pour</strong></p></div><div><b>⌂</b><p><strong>Grow</strong></p></div></div>
+    <button class="primary-button" id="start-button">OPEN THE SHOP</button><div class="modal-small">Mouse, touch, or keyboard <span>•</span> Offline · V1.03.1</div>
     <div id="boot-error" hidden></div>
   </section>
 </div>
 
 <div class="overlay" id="result-overlay" hidden>
-  <section class="modal result-modal" role="dialog" aria-modal="true" aria-labelledby="result-title"><div class="modal-eyebrow" id="result-eyebrow">THE VERDICT</div><div class="review-stars" id="review-stars" aria-label="5 out of 5 stars">★★★★★</div><h2 id="result-title">A perfect little pour.</h2><p class="review-quote" id="review-quote">“Just the way I like it!”</p><div class="result-metrics"><div><span>RECIPE</span><strong id="result-recipe">100<small>%</small></strong></div><div><span>POUR SCORE</span><strong id="result-accuracy">100<small>%</small></strong></div><div><span>TAKE-HOME</span><strong id="result-earned">$3.25</strong></div></div><div class="result-details" id="result-details"></div><div class="combo-callout" id="result-combo"></div><details class="receipt-details"><summary>View receipt</summary><div class="bonus-breakdown" id="bonus-breakdown" aria-label="Earnings breakdown"></div></details><div class="rating-change"><span>REPUTATION</span><strong><span id="old-rating">3.5</span><span class="rating-separator">/</span><span id="new-rating">4.0</span><span class="star-icon">★</span></strong></div><p class="next-price-note" id="next-price-note">Your next customer will pay a little more.</p><div class="modal-actions"><div id="result-action-slot" class="primary-action-slot"></div><button class="text-button" id="result-store">Visit your soda bar</button></div></section>
+  <section class="modal result-modal" role="dialog" aria-modal="true" aria-labelledby="result-title"><div class="modal-review-body"><div class="modal-eyebrow" id="result-eyebrow">THE VERDICT</div><div class="review-stars" id="review-stars" aria-label="5 out of 5 stars">★★★★★</div><h2 id="result-title">A perfect little pour.</h2><p class="review-quote" id="review-quote">“Just the way I like it!”</p><div class="result-metrics"><div><span>RECIPE</span><strong id="result-recipe">100<small>%</small></strong></div><div><span>POUR SCORE</span><strong id="result-accuracy">100<small>%</small></strong></div><div><span>TAKE-HOME</span><strong id="result-earned">$3.25</strong></div></div><div class="result-details" id="result-details"></div><div class="combo-callout" id="result-combo"></div><details class="receipt-details"><summary>View receipt</summary><div class="bonus-breakdown" id="bonus-breakdown" aria-label="Earnings breakdown"></div></details><div class="rating-change"><span>REPUTATION</span><strong><span id="old-rating">3.5</span><span class="rating-separator">/</span><span id="new-rating">4.0</span><span class="star-icon">★</span></strong></div><p class="next-price-note" id="next-price-note">Your next customer will pay a little more.</p></div><div class="modal-actions"><div id="result-action-slot" class="primary-action-slot"></div><button class="text-button" id="result-store">Build your bar</button></div></section>
 </div>
 
 <div class="overlay" id="summary-overlay" hidden>
-  <section class="modal summary-modal" role="dialog" aria-modal="true" aria-labelledby="summary-title"><div class="modal-eyebrow">DOORS CLOSED. NUMBERS IN.</div><div class="summary-emblem" aria-hidden="true">✦</div><h2 id="summary-title">That’s a good day.</h2><p class="modal-description" id="summary-message">You made twelve little moments a little brighter.</p><div class="summary-grid"><div><span>SHIFT PROFIT</span><strong id="summary-money">$0.00</strong></div><div><span>FINAL RATING</span><strong id="summary-rating">3.5 ★</strong></div><div><span>AVG. POUR SCORE</span><strong id="summary-accuracy">0%</strong></div><div><span>PERFECT POURS</span><strong id="summary-perfect">0 / 12</strong></div></div><div class="shift-ledger" id="shift-ledger"></div><div class="personal-best" id="personal-best">Your first shift in the books.</div><div class="modal-actions"><div id="summary-action-slot" class="primary-action-slot"></div><button class="text-button" id="summary-store">Build your business</button></div><div class="modal-small">Cash, reviews, upgrades, and employees carry over.</div></section>
+  <section class="modal summary-modal" role="dialog" aria-modal="true" aria-labelledby="summary-title"><div class="modal-review-body"><div class="modal-eyebrow">DOORS CLOSED. NUMBERS IN.</div><div class="summary-emblem" aria-hidden="true">✦</div><h2 id="summary-title">That’s a good day.</h2><p class="modal-description" id="summary-message">You made twelve little moments a little brighter.</p><div class="summary-grid"><div><span>SHIFT PROFIT</span><strong id="summary-money">$0.00</strong></div><div><span>FINAL RATING</span><strong id="summary-rating">3.5 ★</strong></div><div><span>AVG. POUR SCORE</span><strong id="summary-accuracy">0%</strong></div><div><span>PERFECT POURS</span><strong id="summary-perfect">0 / 12</strong></div></div><details class="receipt-details day-ledger" id="day-ledger"><summary>Day ledger</summary><div class="shift-ledger" id="shift-ledger"></div></details><div class="personal-best" id="personal-best">Your first shift in the books.</div></div><div class="modal-actions"><div id="summary-action-slot" class="primary-action-slot"></div><button class="text-button" id="summary-store">Build your bar</button></div><div class="modal-small">Ready for a new day</div></section>
 </div>
 
 <div class="overlay" id="pause-overlay" hidden>
-  <section class="modal compact-modal" role="dialog" aria-modal="true" aria-labelledby="pause-title"><div class="modal-eyebrow">TAKE A BREATHER</div><h2 id="pause-title">On a little break.</h2><p class="modal-description" id="pause-description">Take your time. The shop is paused.</p><button class="primary-button" id="resume-button">BACK TO POURING</button><button class="text-button" id="pause-restart">Build your bar</button></section>
+  <section class="modal compact-modal" role="dialog" aria-modal="true" aria-labelledby="pause-title"><div class="modal-eyebrow">TAKE A BREATHER</div><h2 id="pause-title">Paused</h2><p class="modal-description" id="pause-description">Your shop can wait.</p><button class="primary-button" id="resume-button">RESUME</button><button class="text-button" id="pause-restart">Build your bar</button></section>
 </div>
 
 <div class="overlay" id="help-overlay" hidden>
-  <section class="modal compact-modal help-modal" role="dialog" aria-modal="true" aria-labelledby="help-title"><div class="modal-eyebrow">A QUICK REFRESHER</div><h2 id="help-title">Help & settings.</h2><div class="help-copy">
-      <div class="help-rule"><span aria-hidden="true">◒</span><p><strong>Craft it, then pour.</strong>Match the base, fruit, syrup, and blend on the ticket. Select Ready to pour. Hardcore commits your one hold when you release.</p></div>
-      <div class="help-rule"><span aria-hidden="true">≋</span><p><strong>Foam becomes soda.</strong>Aim for the final liquid level. The side meter shows both. Pressure changes speed and fizz before you start.</p></div>
-      <div class="help-rule"><span aria-hidden="true">★</span><p><strong>Good pours add up.</strong>Four or five stars grow your streak. Bad pours cost reviews, tips, and wasted ingredients.</p></div>
-      <div class="help-rule"><span aria-hidden="true">⌂</span><p><strong>Build a working business.</strong>Buy equipment, seats, and staff. Check the day’s ledger to see what each investment earns.</p></div>
+  <section class="modal compact-modal help-modal" role="dialog" aria-modal="true" aria-labelledby="help-title"><div class="modal-eyebrow">THE LITTLE DETAILS</div><h2 id="help-title">Help & settings</h2><div class="help-copy">
+      <div class="utility-audio" role="group" aria-label="Audio settings">
+        <button class="icon-button" id="sound-button" aria-label="Turn sound effects off" aria-pressed="true" title="Sound effects on"><span class="audio-toggle-label">Effects</span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9h4l5-4v14l-5-4H4zM17 8q4 4 0 8M20 4q7 8 0 16"/></svg></button>
+        <button class="icon-button" id="music-button" aria-label="Turn music off" aria-pressed="true" title="Music on"><span class="audio-toggle-label">Music</span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 17V6l11-2v11M9 9l11-2"/><ellipse cx="6" cy="18" rx="3" ry="2"/><ellipse cx="17" cy="16" rx="3" ry="2"/></svg></button>
+      </div>
       <div class="audio-levels"><label for="music-volume"><span>Music</span><input id="music-volume" type="range" min="0" max="100" value="45" aria-label="Music volume"></label><label for="sound-volume"><span>Effects</span><input id="sound-volume" type="range" min="0" max="100" value="65" aria-label="Sound effects volume"></label></div>
+      <div class="app-icon-download"><img id="app-icon-preview" width="52" height="52" alt="Perfect Pour app icon"><div><button id="download-icon" class="text-button">Download app icon</button><span>512 × 512 PNG</span></div></div>
+      <details class="help-rules"><summary>How to play</summary>
+      <div class="help-rule"><span aria-hidden="true">◒</span><p><strong>Match their recipe.</strong>Choose the base and add-ins shown on the order. Tap a jar to cycle its quantity.</p></div>
+      <div class="help-rule"><span aria-hidden="true">≋</span><p><strong>Leave room for fizz.</strong>Foam settles into soda. The meter shows both; aim for the final liquid level.</p></div>
+      <div class="help-rule"><span aria-hidden="true">★</span><p><strong>Earn your stars.</strong>Match the recipe and fill. Good reviews grow streaks and future prices.</p></div>
+      <div class="help-rule"><span aria-hidden="true">⌂</span><p><strong>Grow your bar.</strong>Buy equipment, ingredients, seats, and staff. Receipts show what you earn and spend.</p></div>
+      </details>
       <details><summary>Controls & saving</summary><p>Enter or tap readies your recipe. Hold Space or the main button to pour. In Easy, tap the same button to serve, or hold it to top up. Enter opens a ready review or serves in Easy. P or Escape pauses. Leaving or pausing during a Hardcore pour ends that attempt.</p><p>Your finished cup waits for you. Patience starts with your first recipe change; complex orders allow more time. Menus and settling pause it. Ingredients lock at the first pour. Changing difficulty starts a new streak.</p><p>Music and effects have separate controls. Your business saves on this device; export a backup from Build. Imported earlier saves keep their career progress.</p></details>
-      <div class="app-icon-download"><img id="app-icon-preview" width="52" height="52" alt="Perfect Pour app icon"><div><button id="download-icon" class="text-button">Download app icon</button><span>512 × 512 PNG · for home-screen shortcuts</span></div></div>
     </div><button class="primary-button" id="close-help">GOT IT</button></section>
 </div>
 

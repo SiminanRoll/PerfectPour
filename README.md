@@ -1,8 +1,8 @@
-# Perfect Pour — V1.03
+# Perfect Pour — V1.03.1
 
 **[Play Perfect Pour online](https://perfect-pour.pretty-scarf-0591.chatgpt.site/)** · [Source repository](https://github.com/SiminanRoll/PerfectPour)
 
-Craft a custom soda, make the pour, earn a review, and grow a neighborhood soda bar. V1.03 adds illustrated recipe requests, visible cherries and lime, syrup, blend choices, and one primary button that follows each customer through service. The cup carries a pictorial brand stamp without lettering.
+Craft a custom soda, make the pour, earn a review, and grow a neighborhood soda bar. V1.03.1 consolidates the interface into a compact game screen, with illustrated controls and less repeated instruction. V1.03's custom recipes, cherries, lime, syrup, blend choices, and single primary action remain. The cup carries a pictorial brand stamp without lettering.
 
 **`dist/index.html` is the complete game:** a self-contained HTML file with the Rust/WebAssembly engine, interface, graphics, and synthesized music and effects. It is designed for offline play without an account, frontend server, or runtime downloads. Rust, Python, and Node are development tools; players do not need them.
 
@@ -89,7 +89,7 @@ Payroll is reserved before purchases and charged once at closing. Receipts and d
 
 ## Sound, appearance, and saves
 
-Customers keep the same SVG while expressions change, avoiding the disappearance caused by replacing their artwork at release. Pouring and fizz use smoother audio release transitions. Music and effects have independent toggles and volumes.
+Customers keep the same SVG while expressions change, avoiding the disappearance caused by replacing their artwork at release. Pouring and fizz use smoother audio release transitions. Music and effects have independent toggles and volumes in **Help & settings**.
 
 **Help & settings → Download app icon** exports a **512 × 512 PNG** suitable for a shortcut. It is included in the standalone game; downloading an icon does not install an app automatically.
 
@@ -118,4 +118,4 @@ node tests/browser/verify_offline.mjs dist/index.html
 
 Historical filenames now exercise V1.03. Local checks include 40 native tests, 6,048 catalog/mode fixtures, 48 synthetic careers, 94 UI aliases, and production pointer/keyboard handlers. UI harnesses are not browser playtests, and simulated careers are not measured player performance. Direct-file portability is packaging-verified; narrow browser layouts do not certify physical phones, and audio lifecycle tests are not a subjective listening pass.
 
-See [V1.03 notes](docs/V103_RELEASE.md), [engine integration](engine/README.md), and [release identity](docs/release-manifest.json). [V1.02 notes](docs/V102_RELEASE.md) and [its acceptance history](docs/qa/V102_ACCEPTANCE.md) are retained. These documents describe source and prepublication checks; GitHub CI and deployment records establish subsequent release status.
+See [V1.03.1 notes](docs/V1031_RELEASE.md), [engine integration](engine/README.md), and [release identity](docs/release-manifest.json). [V1.03 notes](docs/V103_RELEASE.md), [V1.02 notes](docs/V102_RELEASE.md), and their acceptance records are retained. These documents describe source and prepublication checks; GitHub CI and deployment records establish subsequent release status.
