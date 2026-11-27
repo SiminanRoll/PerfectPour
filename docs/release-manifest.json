@@ -1,33 +1,61 @@
 {
   "game": "Perfect Pour",
-  "version": "1.01",
-  "release_date": "2026-11-26",
-  "html_bytes": 191527,
-  "html_sha256": "34f01dbebffa02274861af8716aea46e9e31d12c34bdb0e15e10500e6d6d75bb",
-  "wasm_bytes": 28182,
-  "wasm_sha256": "b38eb1c20172225374e4aba672da9f94986c98415a68c2950fd255ffa1ae8c24",
-  "native_tests": 32,
+  "version": "1.02",
+  "release_date": "2026-11-27",
+  "revision": "visual-soda-bar-and-business-balance",
+  "html_bytes": 248818,
+  "html_sha256": "f9ea56e40d0aef6a4bb39377a68d3bd298071573bce0b0a52a3cc0fa626e60d6",
+  "wasm_bytes": 35410,
+  "wasm_sha256": "cd1c87f18c753019aeccf37a638d12e1eee1f93e1a9ca901e32fdb8db61dbb0f",
+  "native_tests": 31,
   "wasm_imports": 0,
+  "snapshot_fields": 98,
+  "save_version": 102,
+  "save_doubles": 120,
+  "inline_scripts": 6,
   "repository": "https://github.com/SiminanRoll/PerfectPour",
   "site_project_id": "appgprj_6b0908af5d34819183b47b403fbcb98b",
-  "browser_checks": [
-    "Hardcore release retains physical foam in cup and meter",
-    "Foam settles visibly before manual See customer review unlocks",
-    "A second Space held through settling cannot pour, repay, or skip the final cup",
-    "Golden five-star cup observed; keyboard Enter and mouse open review",
-    "Easy two holds and explicit Serve",
-    "Existing Day 2 business save and paid review load without duplicate rewards",
-    "Independent music and effects toggles persist across reload",
-    "390x844 layout, finished cup, review action, music controls, pause/resume"
-  ],
-  "verification_limit": "Direct file:// launch blocked by available preview browser; same bundled HTML tested through HTTP.",
-  "live_url": "https://perfect-pour.pretty-scarf-0591.chatgpt.site/",
+  "live_url": "https://perfect-pour.pretty-scarf-0591.chatgpt.site",
   "github_ci_url": "https://github.com/SiminanRoll/PerfectPour/actions/workflows/ci.yml",
-  "revision": "fizz-music-and-finished-cup",
-  "snapshot_fields": 65,
-  "save_version": 101,
-  "music": "Original 16-bar synthesized loop, separate persisted toggle",
-  "audio_verification": "Web Audio lifecycle regression and browser controls; no auditory mix certification",
-  "finish_effect": "Golden rim, glass glint, and small sparkles for five-star cups; static reduced-motion alternative",
-  "inline_scripts": 5
+  "browser_checks": [
+    "Default Hardcore commits the first release and retains physical foam in cup and meter",
+    "A second Space held through settling cannot pour again or skip the finished cup",
+    "Finished five-star cup remains with golden treatment until See review",
+    "Easy accepts two holds followed by explicit Serve",
+    "Severe underfill loses 17 cents, lowers reputation, and breaks the streak",
+    "Legacy business save, paid cup, and day close continue without duplicate rewards",
+    "Two actual tabs protect the newer save and require explicit Load latest save in the stale tab",
+    "Day closing ledger reconciles sales, ingredient costs, and wages",
+    "Specialist serves a real side order with matching sale and ingredient cost; payroll stays reserved",
+    "Training, tap, and awning purchases change storefront artwork and respect next-day activation",
+    "Independent music and effects controls remain available during settling; separate volume controls",
+    "390x844 and 320x844 frame layouts show cup, foam meter, and main controls together",
+    "Final 320px layout uses 14px difficulty labels; desktop header and navigation remain visible during shop scrolling"
+  ],
+  "balance_checks": {
+    "catalog_cases": 2016,
+    "gentle_five_star": 336,
+    "gentle_cases": 336,
+    "seeded_careers": 48,
+    "full_catalog_cost_dollars": 1899,
+    "perfect_timing_completion_pours": [
+      97,
+      101
+    ],
+    "timing_sd_70ms_completion_pours": [
+      103,
+      109
+    ],
+    "timing_sd_150ms_completion_pours": [
+      139,
+      155
+    ],
+    "empty_cup_revenue_120_attempts": 0,
+    "report": "engine/balance-report.json"
+  },
+  "verification_limit": "Same bundled HTML tested through managed HTTP preview. Direct file launch was unavailable in the browser. Narrow iframe layouts are not physical-device certification; seeded economy simulations are not a human playtest.",
+  "audio_verification": "Web Audio lifecycle and cue regression tests plus browser controls; no human auditory mix assessment.",
+  "music": "Original quiet synthesized loop; independent persisted music and effects volume.",
+  "finish_effect": "Golden rim, glass glint, and bounded sparkles for five-star cups; static reduced-motion treatment.",
+  "save_migration": "V102 writes a separate key and reads genuine V101 saves; the legacy backing key remains untouched."
 }

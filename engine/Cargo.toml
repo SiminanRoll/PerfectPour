@@ -1,6 +1,6 @@
 [package]
 name = "perfect-pour-engine"
-version = "1.0.1"
+version = "1.0.2"
 edition = "2021"
 description = "Dependency-free Rust simulation for the offline Perfect Pour browser game"
 license = "MIT"

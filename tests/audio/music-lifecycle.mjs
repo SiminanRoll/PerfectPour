@@ -105,18 +105,27 @@ const queued=sources(context).filter(node=>node.started>context.currentTime&&!no
 assert.ok(queued.length>0,'Test reached a queued future note');
 const stoppedAt=context.currentTime;
 music.stop(); music.stop();
+const pausedBeat=music.position();
+assert.ok(pausedBeat>0,'Pausing remembers progress through the composition');
 assert.equal(music.isPlaying(),false);
 assert.equal(intervals(),0);
 assert.ok(queued.every(node=>node.stopped<=stoppedAt),'Future notes cannot sound after stop');
 assert.ok(firstRunGain.gain.calls.some(call=>call.type==='linear'&&call.value===0),'Active audio fades to zero');
 const priorCount=sources(context).length;
 advanceClock(50);
+assert.equal(music.position(),pausedBeat,'The musical clock is frozen while paused');
 assert.equal(music.start(context),true,'Rapidly enabling music again starts a new owned loop');
+assert.ok(Math.abs(music.position()-pausedBeat)<.05,'Resume returns to the held phrase, not beat zero');
 assert.equal(intervals(),1);
 advanceClock(200);
 assert.equal(firstRunGain.disconnected,true,'Retiring graph is disconnected even after a restart');
 assert.ok(sources(context).length>priorCount);
 check.push('stop fades active notes, cancels future notes, and cleans old graph across rapid toggles');
+music.setVolume(.4);
+const resumedGain=context.nodes.filter(node=>node.kind==='gain'&&[...node.connections].some(target=>target.kind==='filter')).at(-1);
+assert.ok(resumedGain.gain.calls.some(call=>call.type==='linear'&&Math.abs(call.value-.056)<1e-8));
+music.setVolume(1);
+check.push('pause freezes the musical position; resume continues the phrase and volume changes fade smoothly');
 
 context.state='suspended'; context.dispatch('statechange');
 assert.equal(music.isPlaying(),false);

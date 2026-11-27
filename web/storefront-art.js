@@ -1,4 +1,4 @@
-/* Perfect Pour V1.01 · Original state-driven storefront illustration.
+/* Perfect Pour V1.02 · Original state-driven storefront illustration.
    No images, fonts, network resources, SVG IDs, or external dependencies. */
 (function () {
   'use strict';
@@ -82,10 +82,11 @@
     const o=options && typeof options==='object'?options:{};
     const sign=level(o.sign,3),seating=level(o.seating,2),a=level(o.awning,2),tap=level(o.tap,2);
     const helper=level(o.helper,1),specialist=level(o.specialist,1);
+    const interior=level(o.interior,3),catering=level(o.catering,3),training=level(o.training,3);
     const rating=safeNumber(o.rating,3.5,1,5).toFixed(1),day=Math.floor(safeNumber(o.day,1,1,9999));
     const sky=['#d9ede4','#e0eee2','#e4ece0'][(day-1)%3];
     const facade=sign>=2?'#a9cfb7':'#b5d8c1';
-    const welcome=seating===2?person(813,442,.56,3,true):'';
+    const welcome=seating===2&&!catering?person(813,442,.56,3,true):'';
     return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 620" aria-hidden="true" focusable="false"><title>Your Perfect Pour soda bar</title>
       <rect width="900" height="620" rx="18" fill="${sky}"/>
       <circle cx="766" cy="76" r="40" fill="#f4d795"/><circle cx="766" cy="76" r="54" fill="none" stroke="#f4d795" stroke-width="2" opacity=".35"/>
@@ -100,7 +101,7 @@
       <path d="M239 346h166v10H239Z" fill="#bc986b" stroke-width="2"/>
       <g stroke-width="1.5"><path d="M247 328h10v17h-10Zm18-5h10v22h-10Zm18 3h10v19h-10Zm18 1h10v18h-10Zm18-5h10v23h-10Zm18 4h10v19h-10Z" fill="#e6b469"/><path d="M265 329h10v12h-10m35-10h10v10h-10" fill="#d78b91" stroke="none"/><path d="M283 330h10v11h-10m35-9h10v9h-10" fill="#a7bb7e" stroke="none"/><path d="M252 328v-5m18 0v-5m18 8v-5m17 6v-5m19 0v-4m18 8v-5" fill="none" stroke-width="3"/></g>
       <path d="M242 380h63v38h-63Z" fill="#f2e7cb" stroke-width="1.7"/><text x="273" y="395" text-anchor="middle" font-family="Trebuchet MS,Arial,sans-serif" font-size="8" font-weight="700" fill="${ink}" stroke="none" letter-spacing="1">FRESH FIZZ</text><path d="M253 403h41m-33 6h26" stroke="#b6b89b" stroke-width="1.3"/>
-      ${helper?staff(361,389,'helper'):''}${specialist?staff(662,390,'specialist'):''}${taps(tap)}
+      <g class="staff-scene">${helper?'<g class="staff-motion">'+staff(361,389,'helper')+'</g>':''}${specialist?'<g class="staff-motion">'+staff(662,390,'specialist')+'</g>':''}</g>${taps(tap)}
       <path d="M230 436h187v18H230Zm308 0h152v18H538Z" fill="#b7875e" stroke-width="2"/><path d="M227 435h193v7H227Zm308 0h158v7H535Z" fill="#e6bd85" stroke-width="2"/>
       <path d="M231 331l83-1-77 104h-6Zm63-1h29l-77 104h-18Z" fill="#fff9df" opacity=".16" stroke="none"/><path d="M541 331h30l-30 41Zm73 0h21l-82 105h-15Z" fill="#fff9df" opacity=".16" stroke="none"/>
       <path d="M433 313h89v176h-89Z" fill="#49877a" stroke-width="4"/><path d="M442 324h71v108h-71Z" fill="#c5ddd0" stroke-width="2.5"/><path d="m445 327 28 0-28 48m27-48h16l-44 68" fill="#fff9df" opacity=".22" stroke="none"/><path d="M443 444h69v29h-69Z" fill="#81b09b" stroke-width="2"/><path d="M505 401v18" stroke="#f4d58a" stroke-width="5" stroke-linecap="round"/><path d="M432 486h92l10 9H423Z" fill="#6e9180" stroke-width="2"/>
@@ -108,15 +109,59 @@
       <rect x="459" y="393" width="37" height="18" rx="3" fill="#f0cf83" stroke-width="1.3"/><text x="477.5" y="406" text-anchor="middle" font-family="Trebuchet MS,Arial,sans-serif" font-size="9" font-weight="700" fill="${ink}" stroke="none">★ ${rating}</text>
       <path d="M218 304v128m485-128v128" stroke="#d8ead0" stroke-width="3"/>
       </g>
-      ${signboard(sign)}${awning(a)}
+      ${interior?expansion(interior):''}${signboard(sign)}${awning(a)}${training?trainingBadge(training):''}
       <g stroke="${ink}" stroke-width="2.5" stroke-linecap="round"><path d="M219 170h-14v54m-6 1h13" fill="none"/><path d="M196 216h20l6 14h-32Z" fill="#d8b877"/><path d="M216 230q-10 15-20 0" fill="#fae7a9" opacity=".7"/><path d="M705 170h15v54m-6 1h13" fill="none"/><path d="M711 216h20l6 14h-32Z" fill="#d8b877"/><path d="M731 230q-10 15-20 0" fill="#fae7a9" opacity=".7"/></g>
       ${plant(220,501,.75,true)}${plant(706,501,.73,false)}
       <g stroke="${ink}" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="m345 471-10 66m64-66 10 66" fill="none"/><path d="M341 469h61l-4 58h-54Z" fill="#4a7569"/><path d="M347 475h49l-3 45h-43Z" fill="#284f4b" stroke="none"/><text x="371" y="490" font-family="Trebuchet MS,Arial,sans-serif" font-size="8" letter-spacing="1.2" fill="#f6edce" stroke="none" text-anchor="middle">SODA +</text><text x="371" y="503" font-family="Trebuchet MS,Arial,sans-serif" font-size="8" letter-spacing="1.2" fill="#f6edce" stroke="none" text-anchor="middle">SMILES</text><path d="M357 511h28" stroke="#c0d1af" stroke-width="1"/></g>
-      ${seating>0?person(86,436,.54,1,true):''}${seating>0?patio(130,501,false):''}${welcome}${seating>1?patio(767,510,true):''}
+      <g class="patio-social">${seating>0?person(86,436,.54,1,true):''}</g>${seating>0?patio(130,501,false):''}<g class="patio-social">${welcome}</g>${seating>1&&!catering?patio(767,510,true):''}${catering?cateringCart(catering):''}
       ${person(569,440,.68,0,false)}
       <g stroke="${ink}" stroke-width="3" stroke-linecap="round"><path d="M60 462v44m-16-4h32" fill="none"/><path d="M59 455c-34-4-50-30-35-54-12-32 15-57 40-42 26-12 49 11 40 37 20 29-6 62-45 59Z" fill="#7da98a"/><path d="M60 442v-52m0 26-18-14m18 29 21-17" fill="none" stroke="#51806a" stroke-width="2"/></g>
-      <g fill="#697e70" font-family="Trebuchet MS,Arial,sans-serif" font-size="10" letter-spacing="2" font-weight="700"><text x="450" y="609" text-anchor="middle">YOUR LITTLE CORNER OF THE NEIGHBORHOOD</text></g>
+      <g fill="#697e70" font-family="Trebuchet MS,Arial,sans-serif" font-size="10" letter-spacing="2" font-weight="700"><text x="450" y="609" text-anchor="middle">${interior?'THE NEIGHBORHOOD HAS FOUND ITS HAPPY PLACE':'YOUR LITTLE CORNER OF THE NEIGHBORHOOD'}</text></g>
     </svg>`;
   }
-  window.PourStoreArt=Object.freeze({render});
+  function expansion(tier) {
+    const windows = [322, 411, 500, 589].map((x,i)=>`<g><rect x="${x}" y="65" width="60" height="47" rx="4" fill="#bed8c0" stroke="${ink}" stroke-width="2.2"/><path d="M${x+3} 68h54v11h-54Z" fill="${i%2?'#edca83':'#95b9a3'}" stroke="none"/><path d="M${x+30} 80v30M${x+2} 94h56" stroke="#5d8b75" stroke-width="2"/><path d="m${x+5} 82 12 0-12 15" fill="#fff8df" opacity=".5" stroke="none"/></g>`).join('');
+    return `<g stroke="${ink}" stroke-width="3" stroke-linejoin="round"><rect x="295" y="46" width="372" height="81" rx="5" fill="${tier>1?'#cbd7a4':'#c4d9b2'}"/><path d="M285 42h392v13H285Z" fill="#4b8270"/><path d="M293 38h376v6H293Z" fill="#c3a572" stroke-width="2"/>${windows}<path d="M304 118h353" stroke="#98b389" stroke-width="2"/>${tier>1?'<g fill="#edc66c" stroke-width="1.2"><path d="m308 66 3 6 7 1-5 5 1 7-6-3-6 3 1-7-5-5 7-1Z"/><path d="m650 66 3 6 7 1-5 5 1 7-6-3-6 3 1-7-5-5 7-1Z"/></g>':''}</g>`;
+  }
+  function trainingBadge(tier) {
+    return `<g transform="translate(383 367)" stroke="${ink}" stroke-width="1.5"><rect x="-14" y="-14" width="28" height="34" rx="2" fill="#efd08b"/><rect x="-10" y="-10" width="20" height="25" fill="#fff6da"/><path d="m0-6 2 4 5 1-4 3 1 5-4-2-4 2 1-5-4-3 5-1Z" fill="#dbb25c" stroke-width=".8"/><path d="M-5 12H5" stroke="#7fa68c"/>${tier>1?'<path d="m-4 20-2 10 6-3 6 3-2-10" fill="#d88f74"/>':''}</g>`;
+  }
+  function cateringCart(tier) {
+    return `<g transform="translate(756 479)" stroke="${ink}" stroke-linejoin="round" stroke-linecap="round"><ellipse cx="49" cy="71" rx="82" ry="9" fill="#174b4918" stroke="none"/><path d="M-10-5h124v60H-10Z" fill="${tier>1?'#e6ba63':'#81b2a0'}" stroke-width="3"/><path d="M-10 14h124v39H-10Z" fill="#f5e6bc" stroke-width="2"/><path d="M-18-12h140v13H-18Z" fill="#edbf71" stroke-width="3"/><path d="M-8-12v-31h121v31" fill="none" stroke-width="3"/><path d="m-20-43 17-23h108l22 23Z" fill="#f6e8c7" stroke-width="3"/><path d="m5-66 11 23h17l-5-23m24 0v23h18l-5-23m27 0 12 23h18l-17-23" fill="#d98669" stroke="none"/><path d="M-20-43h147v8q-8 12-15 0-8 12-15 0-8 12-15 0-8 12-15 0-8 12-15 0-8 12-15 0-8 12-15 0-8 12-15 0-8 12-15 0-8 12-15 0Z" fill="#e29976" stroke-width="2"/><circle class="catering-wheel" cx="9" cy="58" r="13" fill="#4c7161" stroke-width="3"/><circle cx="9" cy="58" r="5" fill="#cfdbba" stroke-width="1.5"/><circle class="catering-wheel" cx="94" cy="58" r="13" fill="#4c7161" stroke-width="3"/><circle cx="94" cy="58" r="5" fill="#cfdbba" stroke-width="1.5"/><text x="52" y="36" font-family="Trebuchet MS,Arial,sans-serif" font-size="13" font-weight="900" fill="${ink}" stroke="none" text-anchor="middle" letter-spacing="1.3">POP PARTY</text><path d="M15-24h16l-2 15H17Z" fill="#db9a67" stroke-width="1.5"/><path d="M40-24h16l-2 15H42Z" fill="#a8be7d" stroke-width="1.5"/><path d="M65-24h16l-2 15H67Z" fill="#d88c94" stroke-width="1.5"/><path d="M24-25v-10h5m20 10v-10h5m20 10v-10h5" fill="none" stroke-width="1.7"/></g>`;
+  }
+  function upgradeIcon(item, currentLevel) {
+    const n=level(item,8),lv=level(currentLevel,3);
+    const motifs=[
+      `<path d="M22 17v65m56-65v65" stroke-width="4"/><rect x="12" y="25" width="76" height="44" rx="7" fill="${lv?'#367b67':'#e6bd73'}"/><path d="M20 36h60M28 47h44M36 57h28" stroke="${lv?'#f9df9b':ink}" stroke-width="4"/><path d="m49 7 3 6 7 1-5 5 1 7-6-3-6 3 1-7-5-5 7-1Z" fill="#f3ce6e" stroke-width="1.5"/>`,
+      '<path d="M50 42v42m-18 0h36M12 50v29m18-29v29m40-29v29m18-29v29" stroke-width="4"/><path d="M9 47h25v14H9Zm57 0h25v14H66Z" fill="#85b49b"/><ellipse cx="50" cy="45" rx="32" ry="9" fill="#e7b77b"/><path d="M50 44V16m-31 9 31-15 31 15Z" fill="#e19a77"/><path d="M19 25h62" stroke-width="2"/><path d="M43 30h12l-2 13h-8Z" fill="#f8f1d4" stroke-width="1.5"/>',
+      '<path d="M17 30h66v51H17Z" fill="#b4d1b2"/><path d="M25 46h23v35H25Zm31 0h19v20H56Z" fill="#ecedce"/><path d="m11 33 9-16h60l9 16v7q-6 8-13 0-6 8-13 0-6 8-13 0-6 8-13 0-6 8-13 0-6 8-13 0Z" fill="#f0c980"/><path d="M33 17 30 33v8m20-24v23m17-23 3 16v8" stroke="#da9678" stroke-width="12"/><path d="M11 33h78" stroke-width="2"/><path d="M13 84h74" stroke-width="4"/>',
+      `<rect x="22" y="22" width="54" height="60" rx="8" fill="${lv>1?'#e5be6d':'#8ab7a5'}"/><rect x="28" y="28" width="42" height="31" rx="4" fill="#d6e5c9"/><path d="M50 23V11m-8-1h16M50 46v16h11v8" fill="none" stroke-width="5"/><circle cx="50" cy="39" r="8" fill="#e8a067"/><path d="M30 76h36" stroke="#f7e8b9" stroke-width="3"/><path d="m42 65 15 0-2 13H44Z" fill="#fff6db" stroke-width="1.5"/>`,
+      `<g transform="translate(50 48) scale(.61)">${staff(0,0,'helper')}</g>`,
+      `<g transform="translate(47 47) scale(.61)">${staff(0,0,'specialist')}</g>`,
+      '<path d="M12 84h76V35l-38-22-38 22Z" fill="#bad2ac"/><path d="m7 36 43-27 43 27" fill="none" stroke-width="5"/><path d="M22 47h22v37H22Zm34 0h22v23H56Z" fill="#fff0c9"/><path d="M55 59h24M67 47v23M27 31h45" fill="none" stroke="#79a383" stroke-width="2"/><path d="M33 58v8" stroke="#b9914b" stroke-width="3"/>',
+      '<path d="M17 45h67v33H17Z" fill="#84b2a0"/><path d="M17 60h67v18H17Z" fill="#f5e5bd"/><path d="M14 43h74v7H14ZM20 42V25m63 17V25" fill="#e5bc73"/><path d="m12 26 10-14h59l10 14v7q-6 7-13 0-6 7-13 0-6 7-13 0-6 7-13 0-6 7-13 0-6 7-14 0Z" fill="#e59b77"/><path d="m37 12-4 14m26-14 4 14" stroke="#fff0cb" stroke-width="10"/><circle cx="28" cy="81" r="9" fill="#537b68"/><circle cx="73" cy="81" r="9" fill="#537b68"/><path d="M34 63h32" stroke-width="3"/>',
+      '<path d="M21 19h58v66H21Z" fill="#e5bb6a"/><path d="M28 26h44v50H28Z" fill="#fff3d4"/><path d="m50 32 5 10 11 2-8 8 2 12-10-6-10 6 2-12-8-8 11-2Z" fill="#e9bd57" stroke-width="2"/><path d="M36 70h28" stroke="#7aa080" stroke-width="3"/><path d="m39 84-3 11 14-5 14 5-3-11" fill="#d89072"/>'
+    ];
+    return `<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false"><ellipse cx="50" cy="88" rx="37" ry="5" fill="#174b490d"/><g fill="none" stroke="${ink}" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round">${motifs[n]}</g></svg>`;
+  }
+  function counter(options) {
+    const o=options&&typeof options==='object'?options:{};
+    const sign=level(o.sign,3),seating=level(o.seating,2),a=level(o.awning,2),tap=level(o.tap,2),interior=level(o.interior,3),catering=level(o.catering,3),training=level(o.training,3);
+    const helper=!!o.helperActive,specialist=!!o.specialistActive;
+    const bottles = [0,1,2,3,4,5].map((_,i)=>`<g transform="translate(${815+i*28} 133)"><path d="M-6-31h12v13l4 7v39h-20v-39l4-7Z" fill="${['#e8a165','#dc8e99','#adbf7e','#b79365'][i%4]}" stroke="${ink}" stroke-width="2"/><path d="M-9 1H9v16H-9Z" fill="#fff5d3b3" stroke="none"/><path d="M-5-35H5v5H-5Z" fill="#5f8e7c" stroke-width="1.5"/></g>`).join('');
+    const stripedAwning=a?`<path d="M60 114h230v24H60Z" fill="#f1dfb7"/><path d="M75 114v24m40-24v24m40-24v24m40-24v24m40-24v24m40-24v24" stroke="${a>1?'#629a84':'#df9c7e'}" stroke-width="21"/>`:'';
+    const helperArt=helper?`<g transform="translate(428 345) scale(.7)"><g class="staff-motion">${staff(0,0,'helper')}<path d="M-30 66h53" stroke="#e7d8a7" stroke-width="5" stroke-linecap="round"/></g></g>`:'';
+    const specialistArt=specialist?`<g transform="translate(780 344) scale(.7)"><g class="staff-motion">${staff(0,0,'specialist')}</g></g>`:'';
+    return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 600" preserveAspectRatio="xMidYMax slice" aria-hidden="true" focusable="false"><g stroke="${ink}" stroke-linecap="round" stroke-linejoin="round"><path d="M45 109h260v290H45Z" fill="#a0c2ad" stroke-width="4"/><path d="M57 119h236v267H57Z" fill="#cfdfc4" stroke-width="2"/><path d="M60 300h230v83H60Z" fill="#b6cca9" stroke="none"/><path d="M76 263c-13-28 4-50 24-48 3-29 33-38 53-16 24-5 40 13 35 34 21 18 10 42-9 46" fill="#94b796" stroke="none"/><path d="M83 333h187" stroke="#eadbc0" stroke-width="20"/>${seating?'<path d="M197 319v43m-21-43v32m42-32v32" stroke="#708c6d" stroke-width="4"/><ellipse cx="197" cy="315" rx="32" ry="7" fill="#dfc087" stroke-width="2"/>':''}${stripedAwning}<path d="M175 122v264M57 255h236" stroke="#789e83" stroke-width="6"/><path d="M50 389h250v15H50Z" fill="#b39364" stroke-width="3"/><path d="m68 144 67 0-67 77m105-77h27l-132 157" fill="#fff9df" stroke="none" opacity=".18"/>
+      <path d="M795 167h208v11H795Z" fill="#b39667" stroke-width="3"/>${bottles}<path d="M816 181v12m166-12v12" stroke-width="4"/>
+      <path d="M351 0v46m498-46v45" fill="none" stroke="#698c73" stroke-width="3"/><g class="shop-lamp"><path d="m330 47 22-19 21 19v9h-43Z" fill="#e0bd76" stroke-width="3"/><ellipse cx="351" cy="55" rx="16" ry="4" fill="#fff0ba" stroke-width="1.5"/><path d="m828 46 22-19 21 19v9h-43Z" fill="#e0bd76" stroke-width="3"/><ellipse cx="849" cy="54" rx="16" ry="4" fill="#fff0ba" stroke-width="1.5"/></g>
+      ${interior?'<path d="M720 235h75v162h-75Z" fill="#c0d7b6" stroke-width="3"/><path d="M729 245h57v141h-57Z" fill="#dce4c8" stroke-width="2"/><path d="M744 277h30m-30 20h30m-30 20h30" stroke="#a9be98" stroke-width="3"/>':''}
+      ${training?'<rect x="349" y="223" width="54" height="65" rx="3" fill="#e7c985" stroke-width="2"/><rect x="355" y="230" width="42" height="49" fill="#f8edcb" stroke-width="1.5"/><path d="m376 237 5 10 11 2-8 7 2 11-10-5-10 5 2-11-8-7 11-2Z" fill="#d7ae59" stroke-width="1.2"/>':''}
+      <g class="staff-scene">${helperArt}${specialistArt}</g>
+      ${tap?`<g transform="translate(737 390)"><rect x="-19" y="-34" width="44" height="43" rx="4" fill="${tap>1?'#d7b16b':'#8eac9a'}" stroke-width="2"/><path d="M3-39v17h10v9" fill="none" stroke-width="3"/><path d="M3-46v9" stroke="#db9b71" stroke-width="6"/></g>`:''}
+      ${catering?'<g transform="translate(1020 319)"><path d="M0 0h72v66H0Z" fill="#dfc089" stroke-width="2"/><path d="M6 8h60v15H6Z" fill="#f5e8c5" stroke-width="1.5"/><path d="M13 35h12v20H13Zm22 0h12v20H35Zm22 0h9v20H57Z" fill="#8db199" stroke-width="1.5"/></g>':''}
+      ${sign>1?'<g class="neon-shine" fill="#f0ca78" stroke="none"><circle cx="337" cy="115" r="3"/><circle cx="337" cy="139" r="3"/><circle cx="337" cy="163" r="3"/><circle cx="337" cy="187" r="3"/></g>':''}
+    </g></svg>`;
+  }
+  window.PourStoreArt=Object.freeze({render,upgradeIcon,counter});
 }());

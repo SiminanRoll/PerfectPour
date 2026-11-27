@@ -29,8 +29,17 @@ jobs:
       - name: Test business and one-pour acceptance
         run: node tests/browser/v101-business-acceptance.mjs
 
+      - name: Test catalog reachability and economy
+        run: node tests/engine/v102-balance.mjs
+
+      - name: Test UI and save adapter contracts
+        run: node tests/browser/v102-ui-contract.mjs
+
       - name: Test music scheduling and mute lifecycle
         run: node tests/audio/music-lifecycle.mjs
+
+      - name: Test pour, fizz, and feedback effects
+        run: node tests/audio/game-sounds.mjs
 
       - name: Test offline verifier regressions
         run: node tests/browser/verify-offline-selftest.mjs

@@ -51,7 +51,7 @@
       ctx.strokeStyle = 'rgba(255, 211, 112, .7)';
       ctx.lineWidth = 1.35;
       ctx.shadowColor = 'rgba(255, 206, 102, .65)';
-      ctx.shadowBlur = 12;
+      ctx.shadowBlur = reducedMotion ? 12 : 12 + 8 * Math.max(0, 1 - elapsed / 1.2);
       cupPath(ctx, centerX, top, bottom, widthAt);
       ctx.stroke();
       ctx.beginPath();
@@ -99,6 +99,23 @@
         const pulse = reducedMotion ? 1 : .78 + .22 * Math.sin(elapsed * 2.1 + phase);
         ctx.globalAlpha *= pulse;
         sparkle(ctx, x, y, radius * (.84 + .16 * pulse));
+        ctx.restore();
+      }
+
+      // A small, one-time gold lift marks the moment the final cup is ready.
+      // It never repeats while the player is taking time to admire the pour.
+      if (!reducedMotion && elapsed < 1.55) {
+        const progress = elapsed / 1.55;
+        const opacity = Math.sin(Math.PI * progress) * .8;
+        ctx.save();
+        ctx.globalAlpha *= opacity;
+        ctx.shadowBlur = 3;
+        for (let i = 0; i < 5; i++) {
+          const side = i % 2 === 0 ? -1 : 1;
+          const x = centerX + side * (rimWidth * .28 + 13 * i + progress * 18);
+          const y = top - 4 - progress * (29 + i * 3) + progress * progress * 12;
+          sparkle(ctx, x, y, 2.5 + (i % 2));
+        }
         ctx.restore();
       }
     } finally {
