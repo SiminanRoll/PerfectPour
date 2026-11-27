@@ -41,6 +41,9 @@ jobs:
       - name: Test UI and save adapter contracts
         run: node tests/browser/v102-ui-contract.mjs
 
+      - name: Test startup menu and saved career safety
+        run: node tests/browser/v1032-menu.mjs
+
       - name: Test music scheduling and mute lifecycle
         run: node tests/audio/music-lifecycle.mjs
 

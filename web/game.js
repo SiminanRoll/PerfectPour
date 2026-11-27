@@ -1,4 +1,4 @@
-/* Perfect Pour V1.03.1 · Presentation and input. Simulation, business, saves, and rules are Rust/Wasm. */
+/* Perfect Pour V1.03.2 · Presentation and input. Simulation, business, saves, and rules are Rust/Wasm. */
 (() => {
   'use strict';
   const WASM_BASE64 = '__WASM_BASE64__';
@@ -60,16 +60,17 @@
   const scoreText=(value,stars)=>{const next=[0,50,72,88,96][stars];return(Math.floor(Math.min(value,next===undefined?100:next-.01)*10)/10).toFixed(1);};
   const levelValues=()=>[...Array.from(state.slice(F.owned,F.owned+6)),state[F.interior],state[F.catering],state[F.training],state[F.hasCitrus],state[F.hasSyrup],state[F.hasMixer]].map(Math.round);
   const costValues=()=>[...Array.from(state.slice(F.cost,F.cost+6)),state[F.interiorCost],state[F.cateringCost],state[F.trainingCost],state[F.citrusCost],state[F.syrupCost],state[F.mixerCost]];
-  let engine,state,mode='welcome',returnMode='playing',storeReturn='playing',pauseReturn='preparing',lastFrame=0,simulationClock=0,visualTime=0,lastUi=0;
+  let engine,state,mode='intro',returnMode='playing',storeReturn='playing',pauseReturn='preparing',lastFrame=0,simulationClock=0,visualTime=0,lastUi=0;
   let inputOwner=null,activePointer=null,keyHeld=false,settlingSpaceHeld=false,pouring=false,ready=false,lastSpill=0,spillFlash=0,storageAvailable=true,loadedCareer=false,toastTimer;
   let settlingElapsed=0,finishElapsed=0,lastAutosave=0,sceneDirty=true,lastFeedback='',lastSceneKey='',lastSavedRaw=null,externalSave=false;
   let pendingPointer=null,suppressPrimaryClick=false,recipeUiKey='',iconDownloading=false;
   let upgradePage=0,upgradePageSize=1;
+  let careerActive=false,menuActivationKey='';
   const blendNames=['Light','Regular','Bold'];
   const activePlayMode=()=>state[F.attempted]===1?'playing':'preparing';
   let settings={sound:true,music:true,musicVolume:1,soundVolume:1};
   try{const raw=JSON.parse(localStorage.getItem('perfect-pour-v1-settings')||'null');if(raw){for(const key of ['sound','music'])if(typeof raw[key]==='boolean')settings[key]=raw[key];for(const key of ['musicVolume','soundVolume'])if(Number.isFinite(raw[key]))settings[key]=clamp(raw[key],0,1);}}catch(_){}
-  const overlays=['welcome','result','summary','pause','help','restart'];
+  const overlays=['intro','welcome','result','summary','pause','help','restart'];
   const audio={context:null};
   const reducedMotion=window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   function announce(text){$('announcer').textContent=text;}
@@ -84,7 +85,7 @@
     overlays.forEach(name=>$(name+'-overlay').hidden=name!==next);
     document.querySelector('.game-shell').classList.toggle('is-paused',next==='pause');
     document.body.dataset.gameMode=next;
-    if(next==='store'||['preparing','playing','settling','finished','result','summary','welcome','pause'].includes(next)){
+    if(next==='store'||['preparing','playing','settling','finished','result','summary','intro','welcome','pause'].includes(next)){
       const store=next==='store';document.body.dataset.view=store?'store':'counter';
       $('storefront-view').hidden=!store;$('playfield').hidden=store;$('counter-controls').hidden=store;
       $('counter-tab').classList.toggle('active',!store);$('store-tab').classList.toggle('active',store);
@@ -108,7 +109,7 @@
     refreshState();
   }
   function saveCareer(){
-    if(!ready||externalSave)return;
+    if(!ready||!careerActive||externalSave)return;
     try{
       const current=localStorage.getItem(SAVE_KEY);
       if(current!==lastSavedRaw){handleExternalSave();return;}
@@ -136,17 +137,16 @@
       if(file.size>100000)throw new Error('This file is too large to be a game save.');
       const data=JSON.parse(await file.text());
       if(!confirm('Import this business? It will replace the business currently open on this device.'))return;
-      let currentRaw=null;try{currentRaw=localStorage.getItem(SAVE_KEY);}catch(_){}applySave(data);lastSavedRaw=currentRaw;externalSave=false;text('pause-title','Paused');text('pause-description','Your shop can wait.');text('resume-button','RESUME');$('pause-restart').disabled=false;clearInput();saveCareer();if(externalSave)return;renderOrder();storeReturn=state[0]===2?'summary':state[0]===1?'finished':activePlayMode();renderStore();setMode('store','store-back');toast('Business restored. Your cash, upgrades, and records are ready.');
+      let currentRaw=null;try{currentRaw=localStorage.getItem(SAVE_KEY);}catch(_){}applySave(data);lastSavedRaw=currentRaw;externalSave=false;careerActive=true;loadedCareer=true;text('pause-title','Paused');text('pause-description','Your shop can wait.');text('resume-button','RESUME');$('pause-restart').disabled=false;clearInput();saveCareer();if(externalSave)return;renderOrder();storeReturn=state[0]===2?'summary':state[0]===1?'finished':activePlayMode();renderStore();setMode('store','store-back');toast('Business restored. Your cash, upgrades, and records are ready.');
     }catch(error){toast(error instanceof SyntaxError?'That file is not a valid JSON save.':error.message||'The save could not be imported.');}
   }
   function updateModeUi(){
     const hard=state[F.hardcore]===1,locked=state[F.attempted]===1&&state[0]===0||['settling','finished'].includes(mode);
-    for(const id of ['hardcore-mode','welcome-hardcore','easy-mode','welcome-easy']){
+    for(const id of ['hardcore-mode','easy-mode']){
       const button=$(id),selected=id.includes('hardcore')===hard;
       button.classList.toggle('active',selected);button.setAttribute('aria-pressed',String(selected));button.disabled=locked;
       button.title=locked?'Finish this customer first.':id.includes('hardcore')?'One hold. Release serves. +15% base pay.':'Pause, top up, then serve.';
     }
-    text('welcome-mode-copy',hard?'Hold Space or the button. Release to serve.':'Hold to pour. Pause, top up, or tap to serve.');
     const flow=window.PourFlow.resolve({mode,hardcore:hard,attempted:state[F.attempted]===1,holding:pouring,selectedSoda:state[F.selectedSoda],recipeLocked:state[F.recipeLocked]===1,lastCustomer:state[1]===state[F.goal]});
     const action=$('pour-button');action.dataset.action=flow.action;action.disabled=flow.disabled;
     text('primary-label',flow.label);text('primary-hint',flow.hint);
@@ -189,8 +189,29 @@
     if(state[0]===1)showCommittedPour();else{setCustomerMood('neutral');saveCareer();if(externalSave)return;updateHud();}
   }
   function interruptPour(){cancelPendingPointer();if(inputOwner!==null)releaseInput(inputOwner);}
+  function startupSaveCurrent(){
+    if(externalSave)return false;
+    try{if(localStorage.getItem(SAVE_KEY)!==lastSavedRaw){handleExternalSave();return false;}}catch(_){storageAvailable=false;}
+    return true;
+  }
+  function updateMainMenu(){
+    $('welcome-overlay').dataset.hasSave=String(loadedCareer);
+    $('start-button').disabled=!loadedCareer;
+    text('menu-save-info',loadedCareer?`Day ${state[F.day]} · ${dollars(state[F.cash])}`:'');
+    $('menu-store-art').innerHTML=window.PourStoreArt.render(shopState());
+  }
+  function showMainMenu(){
+    if(!ready||mode!=='intro'||externalSave)return;
+    openAudio();updateMainMenu();setMode('welcome',loadedCareer?'start-button':'new-game-button');
+  }
+  function newGame(){
+    if(!ready||mode!=='welcome'||!startupSaveCurrent())return;
+    if(loadedCareer){requestRestart();return;}
+    resetBusiness();
+  }
   function openShop(){
-    if(!ready)return;openAudio();
+    if(!ready||mode!=='welcome'||!loadedCareer||!startupSaveCurrent())return;
+    careerActive=true;openAudio();saveCareer();if(externalSave)return;
     if(state[0]===1){if(state[7]/state[5]>VISIBLE_FOAM)showCommittedPour();else showFinishedCup(false);return;}if(state[0]===2){showSummary(false);return;}
     renderOrder();setMode(activePlayMode(),state[F.selectedSoda]<4?'pour-button':'base-0');saveCareer();if(externalSave)return;playCue('day');announce('Shop open. Match the recipe, then choose Ready to pour. '+(state[F.hardcore]?'Hardcore gives you one hold.':'Easy allows top-ups.'));
   }
@@ -199,7 +220,9 @@
     clearInput();engine.next_day(randomSeed());refreshState();saveCareer();if(externalSave)return;renderOrder();setMode(activePlayMode(),state[F.selectedSoda]<4?'pour-button':'base-0');playCue('day');announce(`Day ${state[F.day]}. ${state[F.goal]} customers are coming to your soda bar.`);
   }
   function resetBusiness(){
-    clearInput();engine.reset(randomSeed());refreshState();saveCareer();if(externalSave)return;renderOrder();setMode(activePlayMode(),state[F.selectedSoda]<4?'pour-button':'base-0');toast('A fresh start. Welcome to Day 1.');
+    if(!ready||!['welcome','restart'].includes(mode)||!startupSaveCurrent())return;
+    if(mode==='welcome'&&loadedCareer){requestRestart();return;}
+    clearInput();engine.reset(randomSeed());refreshState();careerActive=true;loadedCareer=true;openAudio();saveCareer();if(externalSave)return;renderOrder();setMode(activePlayMode(),state[F.selectedSoda]<4?'pour-button':'base-0');playCue('day');announce('Shop open. Match the recipe, then choose Ready to pour.');
   }
   function personIndex(){return(Math.round(state[1])-1+(state[F.day]-1)*3)%names.length;}
   function setCustomerMood(mood){
@@ -456,7 +479,7 @@
     updateHud();
   }
   function enterStore(){
-    if(!ready||externalSave||mode==='welcome'||mode==='settling'||mode==='restart'||mode==='help')return;
+    if(!ready||externalSave||['intro','welcome','settling','restart','help'].includes(mode))return;
     interruptPour();
     // Releasing Hardcore may commit a cup. Never hide that physical handoff.
     if(mode==='settling')return;
@@ -482,12 +505,12 @@
   }
   function resume(){if(mode==='pause'){if(externalSave){window.location.reload();return;}openAudio();setMode(state[F.attempted]?'playing':pauseReturn,'pour-button');}}
   function showHelp(){
-    if(!ready||!['preparing','playing','pause','store','welcome','settling','finished','result','summary'].includes(mode))return;
+    if(!ready||!['preparing','playing','pause','store','intro','welcome','settling','finished','result','summary'].includes(mode))return;
     interruptPour();returnMode=mode;setMode('help','close-help');
   }
-  function closeHelp(){if(mode==='help')setMode(returnMode,returnMode==='welcome'?'start-button':returnMode==='pause'?'resume-button':returnMode==='store'?'store-back':returnMode==='finished'?'pour-button':returnMode==='result'?'pour-button':returnMode==='summary'?'pour-button':returnMode==='settling'?'help-button':'pour-button');}
-  function requestRestart(){if(mode!=='store')return;returnMode='store';setMode('restart','cancel-restart');}
-  function cancelRestart(){if(mode==='restart')setMode(returnMode,'store-back');}
+  function closeHelp(){if(mode==='help')setMode(returnMode,returnMode==='intro'?'intro-start':returnMode==='welcome'?'menu-settings':returnMode==='pause'?'resume-button':returnMode==='store'?'store-back':returnMode==='finished'?'pour-button':returnMode==='result'?'pour-button':returnMode==='summary'?'pour-button':returnMode==='settling'?'help-button':'pour-button');}
+  function requestRestart(){if(!['store','welcome'].includes(mode))return;returnMode=mode;setMode('restart','cancel-restart');}
+  function cancelRestart(){if(mode==='restart')setMode(returnMode,returnMode==='welcome'?'new-game-button':'store-back');}
   function saveSettings(){try{localStorage.setItem('perfect-pour-v1-settings',JSON.stringify(settings));}catch(_){}}
   function openAudio(){
     if(!settings.sound&&!settings.music)return;
@@ -508,7 +531,7 @@
   function updateSoundButton(){const b=$('sound-button');b.classList.toggle('muted',!settings.sound);b.setAttribute('aria-label',settings.sound?'Turn sound effects off':'Turn sound effects on');b.setAttribute('aria-pressed',String(settings.sound));b.title=settings.sound?'Sound effects on':'Sound effects off';}
   function syncMusic(){
     if(!window.PourMusic)return;
-    const allowed=settings.music&&audio.context&&!document.hidden&&document.hasFocus()&&['preparing','playing','settling','finished','result','summary','store'].includes(mode);
+    const allowed=settings.music&&audio.context&&!document.hidden&&document.hasFocus()&&['welcome','preparing','playing','settling','finished','result','summary','store'].includes(mode);
     window.PourMusic.setVolume(settings.musicVolume);
     if(allowed)window.PourMusic.start(audio.context);else window.PourMusic.stop();
   }
@@ -683,6 +706,7 @@
   $('pour-button').addEventListener('lostpointercapture',cancelPrimaryPointer);
   $('pour-button').addEventListener('contextmenu',event=>event.preventDefault());
   $('pour-button').addEventListener('click',primaryClick);
+  $('intro-start').addEventListener('click',showMainMenu);$('new-game-button').addEventListener('click',newGame);$('menu-settings').addEventListener('click',showHelp);
   $('start-button').addEventListener('click',openShop);$('edit-recipe').addEventListener('click',editRecipe);
   $('base-options').addEventListener('click',event=>{const button=event.target.closest('button[data-base]');if(button&&!button.disabled)changeRecipe('base',Number(button.dataset.base));});
   $('ingredient-options').addEventListener('click',event=>{
@@ -695,8 +719,8 @@
   for(const id of ['store-tab','restart-button','pause-restart','result-store','summary-store'])$(id).addEventListener('click',enterStore);
   $('store-back').addEventListener('click',leaveStore);$('counter-tab').addEventListener('click',()=>{if(mode==='store')leaveStore();});
   $('brand-home').addEventListener('click',event=>{event.preventDefault();enterStore();});
-  for(const id of ['hardcore-mode','welcome-hardcore'])$(id).addEventListener('click',()=>changeDifficulty(true));
-  for(const id of ['easy-mode','welcome-easy'])$(id).addEventListener('click',()=>changeDifficulty(false));
+  $('hardcore-mode').addEventListener('click',()=>changeDifficulty(true));
+  $('easy-mode').addEventListener('click',()=>changeDifficulty(false));
   ['pressure-gentle','pressure-classic','pressure-rush'].forEach((id,index)=>$(id)?.addEventListener('click',()=>changePressure(index)));
   for(const [id,key,module] of [['music-volume','musicVolume','PourMusic'],['sound-volume','soundVolume','PerfectPourSounds']]){const slider=$(id);if(slider){slider.value=settings[key]*100;slider.addEventListener('input',()=>{settings[key]=clamp(Number(slider.value)/100,0,1);window[module]?.setVolume(settings[key]);saveSettings();});}}
   $('upgrade-grid').addEventListener('click',event=>{const button=event.target.closest('button[data-item]');if(button&&!button.disabled)buyUpgrade(Number(button.dataset.item));});
@@ -706,6 +730,14 @@
   const leaveWindow=()=>{interruptPour();keyHeld=false;settlingSpaceHeld=false;if(['playing','preparing'].includes(mode))pause();saveCareer();if(externalSave)return;window.PourMusic?.stop();window.PerfectPourSounds?.suspend();};window.addEventListener('blur',leaveWindow);window.addEventListener('focus',syncMusic);document.addEventListener('visibilitychange',()=>{if(document.hidden)leaveWindow();else syncMusic();});
   function nativeActivation(target){const control=target instanceof Element?target.closest('button,a,input,textarea,select,summary,[contenteditable="true"]'):null;return control&&control.id!=='pour-button';}
   function keyDown(event){
+    // A held launch key belongs to its original menu control, even after focus moves.
+    if(menuActivationKey===event.code){if(event.repeat){event.preventDefault();return;}menuActivationKey='';}
+    if(['intro','welcome'].includes(mode)&&['Enter','Space'].includes(event.code)){
+      if(event.repeat){event.preventDefault();return;}
+      menuActivationKey=event.code;
+      if(!nativeActivation(event.target)){event.preventDefault();if(mode==='intro')showMainMenu();}
+      return;
+    }
     // A Space pressed before pouring is ready cannot turn into a different
     // action when the primary button changes its role while that key is held.
     if(event.code==='Space'&&((['settling','preparing'].includes(mode)&&!nativeActivation(event.target))||settlingSpaceHeld)){
@@ -733,6 +765,7 @@
     }
   }
   function keyUp(event){
+    if(menuActivationKey===event.code){menuActivationKey='';return;}
     if(event.code==='Space'){
       if(keyHeld||settlingSpaceHeld)event.preventDefault();
       const consumed=settlingSpaceHeld;keyHeld=false;settlingSpaceHeld=false;
@@ -740,6 +773,12 @@
     }
   }
   document.addEventListener('keydown',keyDown);document.addEventListener('keyup',keyUp);
+  function cancelZoomGesture(event){if(event.cancelable)event.preventDefault();}
+  function cancelMultiTouchZoom(event){if(event.touches.length>1)cancelZoomGesture(event);}
+  for(const name of ['gesturestart','gesturechange'])document.addEventListener(name,cancelZoomGesture,{passive:false});
+  document.addEventListener('touchstart',cancelMultiTouchZoom,{passive:false});
+  document.addEventListener('touchmove',cancelMultiTouchZoom,{passive:false});
+  document.addEventListener('wheel',event=>{if(event.ctrlKey)cancelZoomGesture(event);},{passive:false});
   function downloadAppIcon(){
     if(iconDownloading)return;iconDownloading=true;$('download-icon').disabled=true;
     const image=new Image();
@@ -763,15 +802,13 @@
   $('download-icon').addEventListener('click',downloadAppIcon);
   window.addEventListener('pagehide',leaveWindow);
   window.addEventListener('storage',event=>{if(event.key!==SAVE_KEY&&event.key!==null)return;try{if(localStorage.getItem(SAVE_KEY)!==lastSavedRaw)handleExternalSave();}catch(_){storageAvailable=false;}});
-  updateSoundButton();updateMusicButton();document.querySelector('.game-shell').inert=true;$('start-button').disabled=true;$('start-button').textContent='WARMING UP THE FIZZ…';requestAnimationFrame(frame);
+  updateSoundButton();updateMusicButton();setMode('intro');$('intro-start').disabled=true;$('start-button').disabled=true;requestAnimationFrame(frame);
   (async()=>{
     try{
       const bytes=Uint8Array.from(atob(WASM_BASE64),ch=>ch.charCodeAt(0));const result=await WebAssembly.instantiate(bytes,{});engine=result.instance.exports;engine.reset(randomSeed());refreshState();ready=true;
       try{lastSavedRaw=localStorage.getItem(SAVE_KEY);const saved=lastSavedRaw||LEGACY_SAVE_KEYS.map(key=>localStorage.getItem(key)).find(Boolean);if(saved){applySave(JSON.parse(saved));loadedCareer=true;}}catch(_){toast('Your previous save could not be loaded. A fresh shop is ready; you can import a backup.');}
-      if(loadedCareer){saveCareer();if(externalSave)return;}
-      renderOrder();updateHud();$('start-button').disabled=false;$('start-button').textContent=loadedCareer?(state[F.attempted]&&state[0]===0?'RESUME MY POUR':'RESUME SHOP'):'OPEN THE SHOP';
-      if(loadedCareer)$('welcome-description').textContent=`Day ${state[F.day]} · ${dollars(state[F.cash])} · ${state[9].toFixed(1)} ★`;
-      $('start-button').focus({preventScroll:true});
-    }catch(error){console.error('Perfect Pour could not start:',error);$('boot-error').hidden=false;$('boot-error').textContent='The game couldn’t start. Open this HTML file in a recent version of Chrome, Edge, Firefox, or Safari with JavaScript enabled.';$('start-button').textContent='UNABLE TO OPEN';}
+      renderOrder();updateHud();updateMainMenu();$('intro-start').disabled=false;
+      $('intro-start').focus({preventScroll:true});
+    }catch(error){console.error('Perfect Pour could not start:',error);$('boot-error').hidden=false;$('boot-error').textContent='The game couldn’t start. Open this HTML file in a recent version of Chrome, Edge, Firefox, or Safari with JavaScript enabled.';$('intro-start').disabled=true;}
   })();
 })();

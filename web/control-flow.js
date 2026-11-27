@@ -16,7 +16,7 @@
     const result = {
       action: 'none', label: '', hint: '', disabled: true,
       showRecipe: editable, showPressure: editable,
-      showMode: editable || mode === 'store' || mode === 'welcome',
+      showMode: editable || mode === 'store',
       stage: 'other'
     };
     const primary = (action, label, hint, stage, disabled = false) =>

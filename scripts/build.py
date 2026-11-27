@@ -9,7 +9,7 @@ ROOT = Path(__file__).resolve().parents[1]
 source = ROOT / 'web'
 wasm = (ROOT / 'engine' / 'perfect_pour_engine.wasm').read_bytes()
 assert wasm[:8] == b'\x00asm\x01\x00\x00\x00', 'Invalid WebAssembly engine'
-css = (source / 'style.css').read_text() + '\n' + (source / 'business.css').read_text() + '\n' + (source / 'recipe.css').read_text()
+css = '\n'.join((source / name).read_text() for name in ['style.css', 'business.css', 'recipe.css', 'title.css'])
 art = (source / 'customer-art.js').read_text()
 store_art = (source / 'storefront-art.js').read_text()
 music = (source / 'music.js').read_text()

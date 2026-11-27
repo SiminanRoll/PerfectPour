@@ -1,10 +1,10 @@
 {
   "game": "Perfect Pour",
-  "version": "1.03.1",
+  "version": "1.03.2",
   "release_date": "2026-11-27",
-  "revision": "compact-viewport-interface-and-paged-upgrades",
-  "html_bytes": 354595,
-  "html_sha256": "4d3b6285c49bb145dfe906a3a409b2eb51b8e02a3a35b31d174c288aedee6b4f",
+  "revision": "animated-title-main-menu-and-mobile-zoom-guards",
+  "html_bytes": 379757,
+  "html_sha256": "6d05daf15b4f6f711248ae09048191a622c4f43a39d330295f1293773d6c775a",
   "wasm_bytes": 39420,
   "wasm_sha256": "faace530dcdcf92e4504ef33ace1bd51c8e28a89d9b26d9f84d35637a7e24c4e",
   "native_tests": 40,
@@ -18,15 +18,12 @@
   "live_url": "https://perfect-pour.pretty-scarf-0591.chatgpt.site",
   "github_ci_url": "https://github.com/SiminanRoll/PerfectPour/actions/workflows/ci.yml",
   "browser_checks": [
-    "320x568 advanced Tall/Light recipe: one timed Space hold commits Hardcore once; foam settles and the finished cup waits for explicit review",
-    "Canvas and primary-button baseline rectangles stay identical before and after Hardcore release",
-    "390x844 Easy mode: native pointer hold, release, second hold to top up, and quick tap to serve preserve the same control and stable layout",
-    "Advanced preparation fits 1280x720,1366x768,768x600,390x844,375x667,320x568,844x390,568x320 with zero document overflow and essential controls inside",
-    "All 12 upgrade pages are reachable; a real lounge purchase deducts $100, advances its level, and retains the page",
-    "Build fits the eight checked viewport sizes without document/card/management overflow; resizing320x568 to1280x720 to1440x900 and back changes1 to2 to4 to1 cards",
-    "Review and day-summary defaults fit320x568,568x320,844x390; expanded optional details scroll only within the content body while actions remain visible",
-    "Help default fits320x568; expanded instructions keep the close action visible; audio controls use readable14px labels",
-    "Final320x568 review content has equal315px client and scroll heights, with no scrollbar artifact"
+    "Animated intro and illustrated main menu visually verified at1280x720,320x568,390x844,568x320 with zero document overflow; narrow landscape menu targets remain44px tall",
+    "Native held Enter1100ms and Space1100ms activate the intro once and stop at the main menu, without beginning a game",
+    "Fresh New Game opens Hardcore, Day1, zero cash, and recipe preparation; one native Space hold commits once into visible settling",
+    "Saved Day5/$497.51 fixture shows its upgraded storefront; New Game cancellation returns to the menu and Continue preserves the business and advanced order",
+    "Settings opens and returns to the main menu; expanded controls at320x568 scroll within the392px content area from0 to405px while the close button stays visible",
+    "Computed html/body touch-action is pan-y; title and pour surfaces block touch gestures, while the settings content retains pan-y scrolling"
   ],
   "balance_checks": {
     "catalog_cases": 6048,
@@ -49,10 +46,10 @@
     "empty_cup_revenue_120_attempts": 0,
     "recipe_preparation_model": "Correct recipes selected instantly; no simulated reading or ingredient-selection delay.",
     "report": "engine/balance-report.json",
-    "evidence_scope": "V1.03 balance evidence retained for the unchanged Rust/Wasm engine; V1.03.1 changes presentation only. Current full-suite execution is recorded in GitHub CI."
+    "evidence_scope": "V1.03 balance model retained for the unchanged Rust/Wasm engine and rerun for V1.03.2; correct recipes are selected instantly, not a human preparation playtest."
   },
-  "verification_limit": "Managed HTTP preview of the actual standalone bundle, including viewport-sized iframe checks with isolated earned-progress fixtures. Physical iOS/Android hardware, mobile browser chrome, deliberate pinch zoom, and direct file launch were not verified. Optional expanded details scroll inside their own panel; primary play and tested default review/summary layouts do not require scrolling.",
-  "audio_verification": "Audio behavior is unchanged. V1.03.1 verified relocated audio controls in the browser; existing automated lifecycle and cue checks remain in CI. No new auditory mix assessment.",
+  "verification_limit": "Managed HTTP preview of the actual standalone bundle with viewport-sized iframe checks and isolated earned-progress fixtures. Physical iOS/Android multi-touch, mobile browser chrome, OS/browser accessibility zoom overrides, and direct file launch were not verified. Gesture callbacks and event cancellation are tested separately against the production functions. Optional expanded settings and receipts retain internal scrolling.",
+  "audio_verification": "Existing music/effects lifecycle and cue suites pass. Music now starts at the main menu after the explicit Start gesture and honors the saved settings. No new auditory mix assessment.",
   "music": "Original quiet synthesized loop; independent persisted music and effects volume.",
   "finish_effect": "Golden rim, glass glint, and bounded sparkles for five-star cups; static reduced-motion treatment.",
   "save_migration": "V103 writes a separate key and reads genuine V101/V102 saves. Legacy keys remain untouched; current legacy cups remain plain without new costs.",
@@ -64,6 +61,8 @@
     "verified_bytes": 21676,
     "location": "Help & settings"
   },
-  "acceptance_report": "docs/qa/V1031_ACCEPTANCE.md",
-  "prior_acceptance_report": "docs/qa/V103_ACCEPTANCE.md"
+  "acceptance_report": "docs/qa/V1032_ACCEPTANCE.md",
+  "prior_acceptance_report": "docs/qa/V1031_ACCEPTANCE.md",
+  "startup_flow": "Animated intro, then New Game / Continue / Settings. New Game defaults to Hardcore; in-game difficulty controls remain available. A saved business must be confirmed before replacement.",
+  "zoom_control": "Fixed-scale viewport, pan-y/no-zoom touch actions, multi-touch/native gesture cancellation, and Ctrl-wheel cancellation. Ordinary wheel and single-touch events remain available."
 }
