@@ -1,0 +1,1132 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#124c4c">
+  <meta name="description" content="A little soda shop. A perfect pour. An offline soda-pouring and shop-building game. One pour, happy customers, and a business of your own.">
+  <title>Perfect Pour V1.01 · Build your soda bar</title>
+  <link rel="icon" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA2NCA2NCI+PHJlY3Qgd2lkdGg9IjY0IiBoZWlnaHQ9IjY0IiByeD0iMTUiIGZpbGw9IiMxNzRiNDkiLz48cGF0aCBkPSJNMTggMTdoMzBsLTQgMzZIMjJ6IiBmaWxsPSIjZmZjYzZjIi8+PHBhdGggZD0iTTM0IDE4IDM5IDhoMTFNMTYgMTdoMzQiIGZpbGw9Im5vbmUiIHN0cm9rZT0iI2ZmZmFmMCIgc3Ryb2tlLXdpZHRoPSI0IiBzdHJva2UtbGluZWNhcD0icm91bmQiLz48Y2lyY2xlIGN4PSIyOCIgY3k9IjM1IiByPSIyIiBmaWxsPSIjMTc0YjQ5Ii8+PGNpcmNsZSBjeD0iMzkiIGN5PSIzNSIgcj0iMiIgZmlsbD0iIzE3NGI0OSIvPjxwYXRoIGQ9Ik0yOCA0NHE2IDYgMTEgMCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjMTc0YjQ5IiBzdHJva2Utd2lkdGg9IjMiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIvPjwvc3ZnPg==">
+  <style>
+@charset "UTF-8";
+:root{--ink:#174b49;--deep:#123e3e;--mint:#a9d8c9;--wall:#c1e4d5;--paper:#fffaf0;--cream:#fff2d8;--yellow:#ffcc6c;--coral:#ed805b;--soda:#f49132;--line:#26625c;--shadow:0 14px 30px #153c3820;color-scheme:light;font-family:"Trebuchet MS","Arial Rounded MT Bold",Arial,sans-serif;font-size:16px;color:var(--ink)}
+*{box-sizing:border-box}body{margin:0;background:var(--deep);min-width:320px}button,a{-webkit-tap-highlight-color:transparent}button{font:inherit;cursor:pointer;color:inherit}button:disabled{cursor:not-allowed}button:focus-visible,a:focus-visible{outline:3px solid #ca4e32;outline-offset:5px}button{touch-action:manipulation}a{color:inherit}.game-shell{max-width:1600px;margin:auto;min-height:100svh;background:var(--paper);overflow:hidden}.topbar{height:108px;display:flex;align-items:center;gap:28px;padding:16px 4%;border-bottom:2px solid var(--ink);position:relative;z-index:5;background:var(--paper)}.brand{display:flex;align-items:center;gap:8px;text-decoration:none;line-height:.9;font-size:25px;font-weight:950;letter-spacing:-1.2px}.brand>span>span{display:block;font-size:33px;letter-spacing:-1.3px}.brand-period{color:var(--coral)}.brand-icon{width:42px;height:52px;transform:rotate(-8deg)}.shop-caption{font-size:11px;line-height:1.7;letter-spacing:1.1px;padding-left:23px;border-left:1px solid #174b4938}.shop-caption strong{font-weight:700}.hud{margin-left:auto;display:flex;gap:30px}.hud-item{min-width:95px}.hud-label{font-size:10px;letter-spacing:1.4px;display:block;margin-bottom:7px;font-weight:800}.hud-item>strong{font-size:27px;letter-spacing:-.8px;font-weight:800;white-space:nowrap}.hud-item small{font-size:14px;font-weight:500;letter-spacing:0;color:#547770}.star-icon{color:#dc9b29}.utility{display:flex;gap:8px;margin-left:10px}.icon-button{width:36px;height:36px;border:1px solid #174b4935;border-radius:50%;background:transparent;display:grid;place-items:center;padding:8px}.icon-button:hover{background:#174b490b}.icon-button svg{width:19px;height:19px;fill:none;stroke:currentColor;stroke-width:2;stroke-linejoin:round;stroke-linecap:round}.icon-button>span{font-weight:800;font-size:20px;line-height:1}.icon-button.muted{opacity:.55}.playfield{position:relative;height:min(560px,calc(100svh - 238px));min-height:465px;background:var(--wall);isolation:isolate;overflow:hidden}.wall-pattern{position:absolute;inset:0 0 30%;background-image:linear-gradient(#ffffff15 1px,transparent 1px),linear-gradient(90deg,#ffffff15 1px,transparent 1px);background-size:60px 60px}.wall-pattern:after{content:"";position:absolute;left:-60px;top:-85px;width:480px;height:250px;transform:rotate(-25deg);background:#f7fff21d;box-shadow:250px 25px 0 #f7fff215;pointer-events:none}.shop-sign{position:absolute;left:5%;top:20px;transform:rotate(-3deg);text-align:center;font-weight:900;letter-spacing:2px;font-size:20px;line-height:1.2}.sign-line{display:block;font-size:9px;letter-spacing:2.4px;margin-top:4px}.sign-spark{position:absolute;right:-32px;top:7px;font-size:24px;color:#eaa65b}.shelf{position:absolute;right:4.7%;top:25px;display:flex;align-items:end;gap:14px;height:90px;width:192px;padding:0 14px 8px}.bottle{height:60px;width:25px;background:#efaf63;border:2px solid #417066;border-radius:7px 7px 5px 5px;position:relative;box-shadow:inset 5px 0 #ffffff55}.bottle:before{content:"";position:absolute;top:-15px;left:4px;width:12px;height:16px;background:inherit;border:2px solid #417066;border-bottom:0;border-radius:4px 4px 0 0}.bottle:after{content:"✦";position:absolute;top:20px;left:-2px;right:-2px;height:21px;color:#417066;background:#fff3db;text-align:center;font-size:14px;border-top:1px solid #417066;border-bottom:1px solid #417066}.bottle-cherry{height:50px;background:#dc8b91}.bottle-lime{height:67px;background:#98b98c}.bottle-cola{height:55px;background:#bc9072}.shelf-board{position:absolute;bottom:0;left:0;right:0;height:8px;background:#a17453;border:2px solid #417066;border-radius:3px;box-shadow:0 7px 0 #174b4910}.customer-area{position:absolute;z-index:2;left:5.6%;width:27%;top:98px;bottom:65px;display:flex;flex-direction:column;align-items:center}.order-bubble{background:var(--paper);padding:20px 24px 17px;border:2px solid var(--ink);border-radius:18px 18px 18px 3px;width:100%;box-shadow:4px 5px 0 #174b4914;position:relative;z-index:3}.order-bubble:after{content:"";position:absolute;left:48px;bottom:-11px;width:18px;height:18px;background:var(--paper);border-right:2px solid var(--ink);border-bottom:2px solid var(--ink);transform:rotate(45deg)}.customer-name{display:flex;align-items:center;justify-content:space-between;gap:8px}.customer-name>span:first-child{font-size:17px;font-weight:800}.customer-name>span:last-child{font-size:9px;letter-spacing:1px;font-weight:700;opacity:.6}.order-bubble p{font-size:19px;line-height:1.5;margin:13px 0 8px;letter-spacing:-.35px}.order-bubble p strong{font-size:24px;font-weight:850}.bubble-small{font-size:11px;opacity:.7}.customer-art{position:absolute;bottom:-6px;width:235px;max-width:95%;height:285px;z-index:1}.customer-art svg{width:100%;height:100%;overflow:visible}.customer-tag{position:absolute;bottom:-5px;z-index:5;background:var(--paper);padding:9px 14px;border:1.5px solid var(--ink);border-radius:20px;display:flex;align-items:center;gap:7px;font-size:9px;font-weight:800;letter-spacing:.7px;white-space:nowrap}.online-dot{height:6px;width:6px;border-radius:50%;background:#82a775}.pour-area{position:absolute;z-index:3;left:33.4%;width:40%;top:10px;bottom:31px}.tap-machine{position:absolute;left:50%;transform:translateX(-50%);top:8px;width:196px;height:78px;z-index:3}.tap-badge{height:44px;background:var(--ink);border:3px solid var(--deep);border-radius:10px 10px 7px 7px;color:var(--paper);display:flex;justify-content:center;gap:8px;align-items:center;font-size:10px;font-weight:800;letter-spacing:1.4px;box-shadow:0 5px 0 #174b4918}.tap-dot{width:10px;height:10px;background:var(--soda);border-radius:50%;border:2px solid #fff4}.tap-neck{height:15px;width:44px;background:#88aaa1;border:2px solid var(--ink);border-top:0;margin:auto;box-shadow:inset 7px 0 #b1c7b9}.tap-nozzle{height:15px;width:25px;background:#417771;border:2px solid var(--ink);border-top:0;border-radius:0 0 5px 5px;margin:auto}.tap-machine.pouring .tap-badge{box-shadow:0 0 18px #f4ba6460}.pour-area canvas{position:absolute;inset:30px 0 22px;width:100%;height:calc(100% - 52px)}.live-message{position:absolute;top:91px;left:10%;right:10%;text-align:center;font-size:11px;color:#426f66;line-height:1.4;z-index:2}.live-message.warning{color:#a43d27;font-weight:800}.live-message.ready{color:#286548;font-weight:800}.cup-nameplate{position:absolute;bottom:1px;left:50%;transform:translateX(-50%);display:flex;gap:14px;white-space:nowrap;border-top:1px solid #174b4933;padding-top:8px;font-size:10px;letter-spacing:1.1px;font-weight:800}.cup-nameplate span+span{opacity:.65;font-weight:500}.order-ticket{position:absolute;z-index:4;right:4.5%;top:141px;width:21.5%;max-width:282px;padding:19px 21px 18px;background:var(--paper);box-shadow:4px 5px 0 #174b4917;transform:rotate(2deg)}.ticket-top{display:flex;justify-content:space-between;align-items:center;font-size:8px;letter-spacing:1.2px;font-weight:800}.ticket-dot{color:#dba34e;font-size:15px}.ticket-title{font-family:Georgia,"Times New Roman",serif;font-size:27px;line-height:1.03;letter-spacing:-.5px;font-weight:700;margin-top:12px}.ticket-rule{border-top:1px dashed #174b4948;margin:15px 0}.ticket-drink{display:flex;align-items:center;gap:9px}.drink-swatch{height:28px;width:28px;border-radius:8px;background:var(--soda);border:1px solid #174b4940;flex-shrink:0}.ticket-drink strong{display:block;font-size:13px}.ticket-drink div>span{display:block;font-size:9px;color:#567971;margin-top:3px}.fizz-row{display:flex;align-items:center;gap:7px;margin-top:14px;font-size:8px;font-weight:800;letter-spacing:.8px}.fizz-row>strong{font-size:8px;letter-spacing:0;margin-left:auto}.fizz-meter{display:flex;gap:3px}.fizz-meter i{width:6px;height:11px;border-radius:2px;background:#e4e9dc}.fizz-meter i.on{background:#e7aa55}.fizz-note{font-size:10px;line-height:1.4;margin:6px 0 0;color:#66817a;min-height:28px}.target-row{display:flex;justify-content:space-between;align-items:center}.target-row>span{font-size:9px;font-weight:800;letter-spacing:1px;line-height:1.5}.target-row>strong{font-size:38px;letter-spacing:-1px;line-height:1}.target-row small{font-size:19px;font-weight:500}.level-track{height:5px;background:#d9e5d8;border-radius:3px;position:relative;margin:12px 0 8px}.level-track>span{position:absolute;left:0;top:0;bottom:0;background:var(--soda);border-radius:3px}.level-track>i{position:absolute;top:-3px;bottom:-3px;width:2px;background:var(--ink)}.level-readings{display:flex;justify-content:space-between;font-size:9px}.level-readings strong{font-weight:800}.payout-note{display:flex;align-items:center;justify-content:space-between;margin-top:17px;padding-top:12px;border-top:1px dashed #174b4948}.payout-note>span{font-size:8px;letter-spacing:.8px;max-width:110px;line-height:1.6;font-weight:700}.payout-note>strong{font-size:22px;letter-spacing:-1px}.ticket-footnote{font-size:9px;line-height:1.4;margin:7px 0 0;color:#66817a}.ticket-tear{position:absolute;left:0;right:0;bottom:-7px;height:8px;background:linear-gradient(135deg,var(--paper) 33%,transparent 33%) 0 0/12px 12px,linear-gradient(225deg,var(--paper) 33%,transparent 33%) 0 0/12px 12px}.counter-back{position:absolute;bottom:54px;height:23px;left:0;right:0;z-index:1;background:#e5b481;border-top:3px solid var(--ink);box-shadow:inset 0 -5px #bc8c61}.counter-front{position:absolute;bottom:0;left:0;right:0;height:55px;z-index:2;background:#f0c99d;border-top:2px solid var(--ink);background-image:repeating-linear-gradient(90deg,transparent,transparent 85px,#c48c5c22 85px,#c48c5c22 86px);display:flex;align-items:center;justify-content:center}.counter-front>span{font-size:9px;letter-spacing:2.3px;font-weight:800;opacity:.5}.scene-caption{position:absolute;left:4.8%;bottom:19px;z-index:4;font-size:8px;letter-spacing:1px;opacity:.7}.scene-caption span{margin:0 5px}.control-deck{display:flex;gap:25px;align-items:center;justify-content:space-between;padding:27px 4%;min-height:130px;background:var(--paper);border-top:2px solid var(--ink)}.pour-tip{display:flex;gap:12px;align-items:center;flex:1}.tip-spark{font-size:25px;color:#d79f4f}.pour-tip p{margin:0;line-height:1.5}.pour-tip strong{display:block;font-family:Georgia,serif;font-size:19px}.pour-tip p>span{display:block;font-size:11px;color:#648079}.main-controls{display:flex;gap:12px;flex:0 0 auto}.pour-button,.serve-button{height:64px;display:flex;gap:12px;align-items:center;justify-content:center;padding:11px 23px;border:2px solid var(--ink);border-radius:11px;font-size:12px;letter-spacing:1px;font-weight:850;box-shadow:0 4px 0 var(--ink);transition:background .15s,transform .1s,box-shadow .1s;user-select:none;-webkit-user-select:none}.pour-button{background:var(--yellow);min-width:207px;touch-action:none}.pour-button:hover{background:#ffd98c}.pour-button.pressed,.pour-button:active{transform:translateY(3px);box-shadow:0 1px 0 var(--ink);background:#f4b84e}.pour-button svg{fill:none;stroke:currentColor;stroke-width:1.8;width:24px;height:27px}.main-controls small{display:block;font-size:9px;font-weight:400;letter-spacing:.1px;margin-top:6px}.serve-button{background:var(--ink);color:var(--paper);min-width:173px}.serve-button svg{fill:none;stroke:currentColor;stroke-width:2;width:21px;height:21px}.serve-button:hover:not(:disabled){background:#28635c}.serve-button:active:not(:disabled){transform:translateY(3px);box-shadow:0 1px 0 var(--ink)}.serve-button:disabled{opacity:.4}.shift-progress{flex:1;max-width:220px;margin-left:auto;padding-left:20px}.shift-progress>div:first-child{display:flex;justify-content:space-between;gap:12px;font-size:9px;font-weight:700;letter-spacing:1px}.shift-progress>div>strong{font-weight:400;font-size:9px;letter-spacing:0;white-space:nowrap}.progress-dots{display:flex;gap:5px;margin:10px 0 8px}.progress-dots i{height:6px;width:12px;flex:1;background:#dce6d8;border-radius:2px}.progress-dots i.done{background:#649987}.progress-dots i.current{background:var(--yellow);outline:1px solid #d4a349}.text-button{border:0;background:none;text-decoration:underline;text-underline-offset:4px;padding:3px 0;font-size:11px;color:#648079}.text-button:hover{color:var(--ink)}[hidden]{display:none!important}.overlay{position:fixed;inset:0;z-index:50;display:flex;align-items:center;justify-content:center;padding:24px;background:#103d3ad1;backdrop-filter:blur(6px);overflow:auto}.modal{position:relative;background:var(--paper);color:var(--ink);width:480px;max-width:100%;border:2px solid var(--ink);border-radius:23px;box-shadow:8px 9px 0 #062b2948;padding:32px 40px;text-align:center;animation:arrive .23s ease-out;margin:auto}.modal:before{content:"";position:absolute;inset:8px;border:1px solid #174b4920;border-radius:15px;pointer-events:none}.modal-eyebrow{font-size:9px;letter-spacing:1.9px;font-weight:800}.welcome-fizz{display:flex;align-items:center;justify-content:center;gap:28px;margin:17px 0 8px}.welcome-fizz svg{height:92px;width:80px;transform:rotate(-7deg)}.welcome-fizz>span{font-size:21px;color:#dc9b45}.welcome-fizz>span:last-child{font-size:15px;transform:translateY(15px)}h1,h2{font-family:Georgia,"Times New Roman",serif;letter-spacing:-1.5px;font-weight:700;margin:10px 0 16px;line-height:1.06}h1{font-size:43px}h1 em{color:#c56846;font-style:italic}h2{font-size:38px}.modal-description{font-size:14px;line-height:1.6;color:#648079;margin:0 0 20px}.how-steps{margin:23px 0 26px;text-align:left;border-top:1px dashed #174b4938;border-bottom:1px dashed #174b4938;padding:16px 0;display:grid;gap:13px}.how-steps>div{display:flex;gap:13px;align-items:center}.how-steps b{display:grid;place-items:center;flex-shrink:0;width:27px;height:27px;border-radius:50%;background:#e1ecdf;font-size:10px}.how-steps p{margin:0}.how-steps strong{display:block;font-size:13px}.how-steps p span{display:block;font-size:11px;line-height:1.4;color:#648079;margin-top:3px}.primary-button{border:2px solid var(--ink);border-radius:9px;background:var(--yellow);padding:17px 18px;width:100%;font-size:12px;font-weight:850;letter-spacing:1.2px;box-shadow:0 4px 0 var(--ink);transition:transform .1s,background .15s}.primary-button:hover{background:#ffdb91}.primary-button:active{transform:translateY(3px);box-shadow:0 1px 0 var(--ink)}.primary-button:disabled{opacity:.5}.modal-small{font-size:10px;color:#66817a;margin-top:17px;line-height:1.5}.modal-small>span{margin:0 7px}.review-stars{color:#daa23c;font-size:38px;letter-spacing:7px;margin:25px 0 15px;white-space:nowrap}.review-stars .empty{color:#d8dfd2}.review-quote{font-family:Georgia,serif;font-size:18px;line-height:1.5;color:#577970;margin:0 0 23px}.result-metrics{display:grid;grid-template-columns:1fr 1fr;border-top:1px dashed #174b4938;border-bottom:1px dashed #174b4938;padding:19px 0;gap:15px}.result-metrics>div+div{border-left:1px solid #174b4922}.result-metrics span,.summary-grid span{display:block;font-size:9px;letter-spacing:1px;font-weight:700;margin-bottom:9px}.result-metrics strong{font-size:32px;letter-spacing:-1px}.result-metrics small{font-size:18px;font-weight:500}.result-details{font-size:11px;color:#648079;margin:13px 0 21px;line-height:1.6}.rating-change{display:flex;justify-content:space-between;align-items:center}.rating-change>span{font-size:10px;letter-spacing:1px;font-weight:800}.rating-change>strong{display:flex;gap:13px;align-items:center;font-size:23px}.rating-separator{font-size:14px;color:#88a198;font-weight:400}#old-rating{font-size:17px;color:#89a096}.next-price-note{font-size:11px;color:#648079;text-align:left;line-height:1.6;margin:9px 0 24px}.summary-emblem{color:#dda348;font-size:64px;line-height:1;margin:20px 0}.summary-grid{display:grid;grid-template-columns:1fr 1fr;gap:24px 16px;padding:25px 0;border-top:1px dashed #174b4938;border-bottom:1px dashed #174b4938}.summary-grid strong{font-size:28px;letter-spacing:-.8px}.personal-best{font-size:12px;line-height:1.5;background:#e7eee0;padding:12px;border-radius:7px;margin:20px 0 25px}.compact-modal{padding:40px;max-width:430px}.compact-modal h2{margin-top:20px}.compact-modal>.text-button{margin-top:23px}.help-copy{text-align:left;margin:22px 0}.help-copy p{font-size:12px;line-height:1.65;color:#5f7d73}.help-copy strong{color:var(--ink)}.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}#boot-error{background:#ffe2d5;color:#9c3823;padding:12px;border-radius:8px;font-size:13px;margin-top:16px}.pour-area.spilling{animation:spillShake .12s linear 2}.confetti{pointer-events:none;position:fixed;top:-20px;width:8px;height:14px;z-index:65;animation:fall 1.9s ease-in forwards}.game-shell.is-paused .tap-machine{opacity:.65}@keyframes arrive{from{transform:translateY(12px);opacity:0}to{transform:translateY(0);opacity:1}}@keyframes fall{to{transform:translate(var(--drift),105vh) rotate(600deg);opacity:0}}@keyframes spillShake{50%{transform:translateX(2px)}}
+@media(min-width:1450px){.playfield{height:calc(100svh - 246px);max-height:700px}.customer-art{height:330px;width:270px}.customer-area{top:117px}.order-ticket{top:156px}.pour-area{left:32%;width:41%}.live-message{font-size:13px}.topbar{padding-left:5%;padding-right:5%}.control-deck{padding-left:5%;padding-right:5%}}
+@media(max-width:1100px){.topbar{gap:18px;padding-left:3%;padding-right:3%}.shop-caption{display:none}.hud{gap:23px}.hud-item{min-width:80px}.utility{gap:6px;margin-left:0}.customer-area{left:3%;width:28%}.order-bubble{padding:17px}.order-bubble p{font-size:16px}.order-bubble p strong{font-size:23px}.order-ticket{right:3%;width:23%;padding:17px}.pour-area{left:30%;width:43%}.control-deck{gap:16px;padding:23px 3%}.pour-tip{max-width:175px}.pour-tip strong{font-size:17px}.pour-tip p>span{font-size:10px}.main-controls{gap:10px}.pour-button,.serve-button{padding:10px 16px;min-width:0;font-size:11px}.pour-button{min-width:180px}.serve-button{min-width:155px}.shift-progress{padding-left:8px;max-width:180px}.shift-progress>div:first-child{font-size:8px;letter-spacing:.5px}.progress-dots{gap:4px}}
+@media(max-width:800px){.topbar{height:91px;padding:12px 20px;gap:15px}.brand{font-size:20px;gap:4px}.brand>span>span{font-size:26px}.brand-icon{width:33px;height:43px}.hud{gap:18px}.hud-label{font-size:8px;letter-spacing:.8px}.hud-item{min-width:70px}.hud-item>strong{font-size:23px}.hud-item small{font-size:11px}.shift-stat{display:none}.utility{gap:5px}.icon-button{height:31px;width:31px;padding:6px}.playfield{height:545px;min-height:0}.shop-sign{left:4%;top:19px;font-size:17px}.shelf{right:4%;transform:scale(.8);transform-origin:right top}.customer-area{top:89px;left:3%;width:34%;bottom:65px}.order-bubble{padding:15px}.customer-name>span:last-child{font-size:8px;letter-spacing:.2px}.order-bubble p{font-size:15px;line-height:1.5;margin-top:12px}.order-bubble p strong{font-size:21px}.bubble-small{font-size:10px}.customer-art{width:218px;height:275px}.customer-tag{font-size:8px;letter-spacing:.3px;padding:8px 10px}.pour-area{left:34%;width:62%;top:11px;bottom:33px}.tap-machine{left:45%;width:170px}.pour-area canvas{left:-5%;width:100%;top:36px}.live-message{left:4%;right:14%;font-size:10px;top:95px}.cup-nameplate{left:45%}.order-ticket{top:auto;bottom:87px;right:3%;width:135px;transform:rotate(3deg);padding:11px;pointer-events:none}.ticket-top,.ticket-title,.ticket-rule,.ticket-drink,.fizz-note,.payout-note,.ticket-footnote,.level-track,.level-readings{display:none}.fizz-row{margin:0 0 10px;font-size:7px;gap:5px}.fizz-row>strong{font-size:7px}.fizz-meter{gap:2px}.fizz-meter i{width:4px;height:9px}.target-row{align-items:center}.target-row>span{font-size:8px;letter-spacing:.5px}.target-row>strong{font-size:30px}.target-row small{font-size:15px}.control-deck{padding:23px 20px 20px;flex-wrap:wrap;gap:22px 20px;min-height:175px}.main-controls{order:0;flex:1;justify-content:center}.main-controls>button{flex:1;max-width:230px;height:62px}.pour-tip{order:2;max-width:none;flex:1}.pour-tip strong{font-size:16px;display:inline;margin-right:5px}.pour-tip p>span{font-size:10px;display:inline}.tip-spark{font-size:18px}.shift-progress{order:3;max-width:180px}.shift-progress>div:first-child{font-size:8px}.text-button{font-size:10px}.counter-front>span{margin-left:25%;font-size:8px}.scene-caption{font-size:7px}}
+@media(max-width:520px){.topbar{height:79px;padding:10px 13px;gap:9px}.brand{font-size:16px;letter-spacing:-.6px}.brand>span>span{font-size:22px;letter-spacing:-1px}.brand-icon{width:28px;height:37px}.hud{gap:14px;margin-left:auto}.hud-item{min-width:55px}.hud-label{font-size:7px;letter-spacing:.5px;margin-bottom:6px}.hud-item>strong{font-size:19px}.hud-item small{display:none}.hud-item .star-icon{font-size:17px}.utility{gap:4px;flex-wrap:wrap;max-width:61px;justify-content:end}.icon-button{height:27px;width:27px;padding:6px}.icon-button svg{height:15px;width:15px}#help-button{display:none}.playfield{height:450px;min-height:450px}.shop-sign{top:15px;left:5%;font-size:13px;letter-spacing:1.5px}.sign-line{font-size:7px;letter-spacing:1.1px}.sign-spark{font-size:17px;right:-24px;top:3px}.shelf{right:2%;top:13px;transform:scale(.61)}.customer-area{left:4%;top:71px;bottom:62px;width:45%}.order-bubble{padding:12px 12px 11px;border-radius:13px 13px 13px 3px;box-shadow:3px 3px 0 #174b4914}.customer-name{display:block}.customer-name>span:first-child{font-size:14px}.customer-name>span:last-child{display:block;font-size:7px;margin-top:4px;letter-spacing:.6px}.order-bubble p{font-size:13px;line-height:1.5;margin:8px 0 4px}.order-bubble p strong{font-size:18px}.bubble-small{font-size:9px;line-height:1.4;display:block}.order-bubble:after{left:33px;width:14px;height:14px;bottom:-9px}.customer-art{height:220px;width:172px;bottom:-12px;left:-7px;max-width:105%}.customer-tag{font-size:6.5px;letter-spacing:.2px;padding:7px 8px;bottom:0;left:-3px}.online-dot{width:5px;height:5px}.pour-area{left:44%;width:56%;top:14px;bottom:36px}.tap-machine{left:48%;width:144px;top:15px}.tap-badge{font-size:8px;letter-spacing:.7px;height:35px}.tap-neck{height:12px;width:34px}.tap-nozzle{height:12px;width:21px}.tap-dot{width:8px;height:8px;border-width:1px}.pour-area canvas{top:56px;left:-16%;width:126%;height:calc(100% - 76px)}.live-message{font-size:9px;top:91px;left:1%;right:6%;line-height:1.4}.cup-nameplate{font-size:8px;gap:8px;left:47%;bottom:0;padding-top:6px}.order-ticket{right:6%;top:auto;bottom:63px;width:119px;padding:8px;transform:rotate(2deg)}.fizz-row{margin-bottom:4px;font-size:6px;gap:4px}.fizz-row>span{font-size:6px;letter-spacing:.5px}.fizz-row>strong{font-size:6px}.fizz-meter i{height:7px;width:4px}.target-row>span{font-size:6px;line-height:1.4}.target-row>strong{font-size:22px}.target-row small{font-size:12px}.counter-back{bottom:50px;height:17px}.counter-front{height:51px}.counter-front>span{display:none}.scene-caption{bottom:20px;left:5%;font-size:7px;letter-spacing:.7px}.control-deck{padding:17px 14px 17px;gap:17px 10px;min-height:165px;align-items:start}.main-controls{width:100%;flex-basis:100%;gap:10px}.main-controls>button{height:61px;max-width:none;padding:9px 11px;min-width:0;font-size:10px;letter-spacing:.6px}.pour-button svg{width:21px;height:24px}.serve-button svg{width:17px}.main-controls small{font-size:8px;margin-top:6px}.pour-tip{gap:7px;max-width:50%;padding-top:3px}.tip-spark{font-size:17px}.pour-tip strong{font-size:13px;display:block;margin:0}.pour-tip p>span{font-size:9px;display:block;line-height:1.4}.shift-progress{max-width:145px;padding:0;flex-basis:45%;min-width:0}.shift-progress>div:first-child{font-size:7px;letter-spacing:.3px;gap:5px}.shift-progress>div>strong{font-size:8px}.progress-dots{gap:3px;margin:8px 0 5px}.progress-dots i{height:5px;min-width:0}.shift-progress .text-button{font-size:9px}.overlay{padding:18px}.modal{padding:27px 26px;border-radius:20px}.modal-eyebrow{font-size:8px;letter-spacing:1.3px}h1{font-size:36px}h2{font-size:31px}.welcome-fizz{margin:14px 0 7px}.welcome-fizz svg{height:72px;width:65px}.modal-description{font-size:12px;margin-bottom:16px}.how-steps{padding:13px 0;margin:18px 0 21px;gap:12px}.how-steps strong{font-size:12px}.how-steps p span{font-size:10px}.how-steps b{width:24px;height:24px;font-size:9px}.primary-button{padding:16px 13px;font-size:11px}.modal-small{font-size:9px;margin-top:15px}.review-stars{font-size:32px;letter-spacing:5px;margin:19px 0 14px}.review-quote{font-size:16px}.result-metrics strong{font-size:29px}.result-metrics span{font-size:8px}.result-details{font-size:10px}.result-metrics{padding:16px 0}.summary-grid strong{font-size:25px}.summary-grid span{font-size:8px}.help-copy p{font-size:11px}.compact-modal{padding:31px 27px}}
+@media(max-height:730px) and (min-width:801px){.topbar{height:86px}.playfield{min-height:440px;height:440px}.control-deck{min-height:112px;padding-top:20px;padding-bottom:20px}.customer-area{top:87px}.customer-art{height:235px;width:202px}.order-bubble{padding:14px 20px}.order-bubble p{margin:8px 0 5px;font-size:16px}.order-bubble p strong{font-size:21px}.order-ticket{top:110px;padding:14px 18px}.ticket-title{font-size:24px;margin-top:8px}.ticket-rule{margin:11px 0}.fizz-note{min-height:0}.payout-note{margin-top:10px;padding-top:9px}.ticket-footnote{font-size:8px}.target-row>strong{font-size:33px}.modal{padding-top:22px;padding-bottom:25px}.welcome-fizz{margin:11px 0 4px}.welcome-fizz svg{height:70px}.how-steps{margin:18px 0 21px;padding:13px 0;gap:10px}h1{font-size:37px}}
+/* Keep the shop screen full-height; the ticket should never be clipped by the counter. */
+@media(min-width:801px){.game-shell{display:flex;flex-direction:column}.playfield{height:calc(100svh - 238px);min-height:565px;max-height:none;flex:1}.customer-art{height:clamp(285px,37vh,355px);width:clamp(235px,29vh,285px)}.order-ticket{top:135px}.ticket-top{font-size:10px}.ticket-drink strong{font-size:15px}.ticket-drink div>span{font-size:11px}.fizz-row{font-size:10px}.fizz-row>strong{font-size:10px}.fizz-note{font-size:12px;min-height:33px}.target-row>span{font-size:11px}.level-readings{font-size:11px}.payout-note>span{font-size:10px}.ticket-footnote{font-size:11px}.ticket-title{font-size:29px}.shop-caption{font-size:12px}.hud-label{font-size:11px}.pour-tip p>span{font-size:12px}.live-message{font-size:12px}.bubble-small{font-size:12px}.main-controls>button{font-size:13px}.main-controls small{font-size:11px}.customer-name>span:last-child{font-size:10px}.ticket-rule{margin:12px 0}.order-ticket{padding-top:17px;padding-bottom:15px}.shift-progress>div:first-child{font-size:10px;letter-spacing:.5px}.shift-progress>div>strong{font-size:10px}.text-button{font-size:12px}}
+@media(min-width:801px) and (max-height:810px){.topbar{height:92px}.playfield{min-height:565px;height:565px}.control-deck{min-height:120px}.order-ticket{top:100px}.customer-art{height:280px;width:230px}.customer-area{top:88px}.order-bubble p{font-size:17px}.order-bubble p strong{font-size:23px}.counter-front>span{font-size:9px}}
+@media(max-width:800px){.main-controls>button{font-size:12px}.main-controls small{font-size:10px}.live-message{font-size:11px}.bubble-small{font-size:11px}.customer-name>span:last-child{font-size:9px}.fizz-row>span,.fizz-row>strong{font-size:9px}.target-row>span{font-size:9px}.order-ticket{width:150px;bottom:85px}.pour-tip p>span{font-size:11px}.text-button{font-size:11px}}
+@media(max-width:520px){.order-ticket{width:128px;bottom:63px}.fizz-row>span,.fizz-row>strong{font-size:7px}.target-row>span{font-size:8px}.fizz-meter i{height:8px;width:4px}.live-message{font-size:10px}.bubble-small{font-size:10px}.main-controls>button{font-size:11px}.main-controls small{font-size:10px}.pour-tip p>span{font-size:10px}.customer-name>span:last-child{font-size:8px}.shift-progress .text-button{font-size:11px}}
+@media(max-width:520px){.order-ticket{top:110px;bottom:auto;right:8%;width:128px;padding:10px 9px 7px}.order-ticket .target-row{display:none}.fizz-row{margin:0;gap:5px}.fizz-row>span,.fizz-row>strong{font-size:8px}.live-message{display:none}.fizz-meter i{height:9px;width:5px}}
+@media(prefers-reduced-motion:reduce){*,*:before,*:after{animation-duration:.01ms!important;transition-duration:.01ms!important}.confetti{display:none}}
+
+/* Perfect Pour V1.01 · Storefront, business, and one-pour mode additions.
+   Concatenate after style.css. All artwork and typography stay offline. */
+
+.shop-rail {
+  display:flex; align-items:center; gap:18px; min-height:60px;
+  padding:7px 4%; border-bottom:1px solid #174b4933;
+  background:#edf3e7; position:relative; z-index:6;
+}
+.view-tabs { display:flex; align-items:center; gap:5px; }
+.view-tabs button {
+  min-height:44px; border:1px solid transparent; border-radius:8px;
+  background:transparent; padding:10px 17px; font-size:12px; font-weight:800;
+  white-space:nowrap; transition:background .15s, color .15s;
+}
+.view-tabs button:hover { background:#dbe8d8; }
+.view-tabs button.active { background:var(--ink); color:var(--paper); border-color:var(--ink); }
+.mode-switch { display:flex; align-items:center; gap:3px; margin-left:auto; }
+.mode-switch>span { font-size:9px; letter-spacing:1.2px; font-weight:800; margin-right:9px; }
+.mode-switch button {
+  min-height:44px; min-width:80px; padding:9px 13px;
+  border:1px solid #174b492e; background:#fffaf080; border-radius:7px;
+  font-size:11px; font-weight:800; transition:background .15s;
+}
+.mode-switch button:hover:not(:disabled) { background:var(--cream); }
+.mode-switch button.active { background:var(--yellow); border-color:#b78e45; }
+.mode-switch button:disabled,.mode-switch button.disabled { cursor:not-allowed; opacity:.5; }
+.day-label {
+  font-size:10px; font-weight:850; letter-spacing:1.5px; white-space:nowrap;
+  border-left:1px solid #174b4933; padding:10px 0 10px 18px;
+}
+
+/* A shop that grows in the scene, with its upgrade catalog alongside. */
+.storefront-view {
+  display:grid; grid-template-columns:minmax(0,1.03fr) minmax(0,1fr);
+  align-items:start; gap:32px; padding:34px 4% 44px; background:var(--paper);
+}
+.store-hero {
+  min-width:0; border:1px solid #174b4933; border-radius:20px;
+  background:#edf4e8; overflow:hidden; box-shadow:0 8px 20px #174b490a;
+}
+.store-intro { padding:29px 30px 5px; position:relative; z-index:1; }
+.store-intro .modal-eyebrow { color:#608579; font-size:9px; }
+.store-intro h1 {
+  font-size:clamp(35px,3.4vw,49px); letter-spacing:-1.8px; line-height:1.02;
+  margin:13px 0 13px;
+}
+.store-intro p { font-size:13px; line-height:1.65; max-width:405px; color:#55776d; margin:0; }
+.store-art { width:100%; line-height:0; padding:4px 0 0; }
+.store-art svg { display:block; width:100%; height:auto; }
+.store-scoreboard {
+  display:grid; grid-template-columns:1fr 1fr 1fr; gap:0;
+  background:#fffaf0c9; border-top:1px solid #174b492b; padding:21px 17px;
+}
+.store-scoreboard>div { text-align:center; min-width:0; padding:0 8px; }
+.store-scoreboard>div+div { border-left:1px solid #174b4926; }
+.store-scoreboard span { display:block; font-size:8px; font-weight:800; letter-spacing:.85px; line-height:1.5; }
+.store-scoreboard strong { display:block; font-size:25px; letter-spacing:-.9px; margin-top:8px; overflow-wrap:anywhere; }
+.store-management { min-width:0; padding:5px 0 0; }
+.store-heading { display:flex; align-items:center; justify-content:space-between; gap:18px; }
+.store-heading .modal-eyebrow { font-size:8px; letter-spacing:1.4px; }
+.store-heading h2 { font-size:34px; line-height:1.08; margin:10px 0 0; }
+.store-heading .primary-button {
+  width:auto; min-width:140px; min-height:44px; padding:13px 12px;
+  font-size:9px; letter-spacing:.7px; white-space:nowrap; flex:0 0 auto;
+}
+.store-rule {
+  font-size:11px; line-height:1.65; margin:20px 0 18px;
+  padding:12px 14px; background:#e8eee1; border-radius:8px; color:#53776a;
+}
+.upgrade-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:14px; }
+.upgrade-card {
+  display:grid; grid-template-columns:37px minmax(0,1fr); grid-template-rows:1fr auto auto;
+  gap:11px 9px; min-width:0; padding:17px 15px 13px;
+  border:1px solid #174b4938; border-radius:12px; background:#fffdf6;
+  box-shadow:0 3px 0 #174b490a; transition:border-color .18s, box-shadow .18s;
+}
+.upgrade-card:hover { border-color:#6c9985; box-shadow:0 4px 0 #174b4910; }
+.upgrade-icon {
+  display:grid; place-items:center; align-self:start; width:36px; height:38px;
+  border:1px solid #174b491a; border-radius:10px; background:#e5efdd;
+  color:#2b6b5d; font-family:Arial,sans-serif; font-size:22px; line-height:1;
+}
+.upgrade-copy { min-width:0; }
+.upgrade-copy h3 { margin:0 0 5px; font-size:15px; font-weight:850; line-height:1.2; letter-spacing:-.2px; }
+.upgrade-level {
+  display:inline-block; font-size:9px; font-weight:800; color:#6e8170;
+  letter-spacing:.3px; line-height:1.4;
+}
+.upgrade-copy p { margin:9px 0 8px; font-size:11px; line-height:1.55; color:#668074; }
+.upgrade-effect { display:block; font-size:10px; line-height:1.6; color:#2c6a55; font-weight:800; }
+.buy-button {
+  grid-column:1/-1; width:100%; min-height:44px; border:1.5px solid var(--ink);
+  border-radius:7px; padding:10px 12px; background:var(--yellow);
+  color:var(--ink); font-size:11px; line-height:1.4; font-weight:850;
+  transition:background .15s, transform .1s; box-shadow:0 2px 0 var(--ink);
+}
+.buy-button:hover:not(:disabled) { background:#ffda8b; }
+.buy-button:active:not(:disabled) { transform:translateY(2px); box-shadow:none; }
+.buy-button:disabled { background:#edf0e4; color:#6c8275; border-color:#b5c5b6; box-shadow:none; }
+.upgrade-status { grid-column:1/-1; display:block; font-size:9px; line-height:1.45; text-align:center; color:#75877b; min-height:13px; }
+.upgrade-card.maxed,.upgrade-card.is-maxed { border-color:#9fbaa4; background:#f4f7ed; }
+.upgrade-card.maxed .upgrade-status,.upgrade-card.is-maxed .upgrade-status { color:#397c59; font-weight:800; }
+.business-tools { margin-top:22px; border-top:1px dashed #174b4936; padding:13px 0 0; }
+.business-tools p { font-size:10px; color:#6e8477; line-height:1.55; margin:0 0 4px; }
+.business-tools>div { display:flex; align-items:center; gap:6px 19px; flex-wrap:wrap; }
+.business-tools .text-button { min-height:44px; text-align:left; font-size:10px; padding:8px 0; }
+#reset-business { margin-left:auto; color:#a95d45; }
+
+/* The ticket shows the full occupied volume: soda followed by hatched foam. */
+.level-track {
+  display:block; height:12px; margin:12px 0 9px;
+  background:#dbe6d6; border:1px solid #174b4926; border-radius:4px;
+}
+.level-track>span { top:0; bottom:0; height:100%; max-width:100%; }
+#liquid-track { z-index:1; background:var(--soda); border-radius:3px 0 0 3px; }
+#foam-track {
+  z-index:2; border-left:1px solid #b49e72; border-radius:0 3px 3px 0;
+  background:repeating-linear-gradient(-45deg,#fffbed 0,#fffbed 4px,#e4cf9d 4px,#e4cf9d 6px);
+}
+.level-track>i { z-index:3; top:-5px; bottom:-5px; width:2px; border-radius:1px; }
+.level-readings { display:flex; justify-content:space-between; align-items:center; gap:6px; font-size:10px; color:#537465; }
+.level-readings>span { display:flex; align-items:center; gap:4px; white-space:nowrap; }
+.level-readings>span:before { content:""; width:7px; height:7px; flex-shrink:0; background:var(--soda); border-radius:2px; }
+.level-readings>span+span:before { background:#fff8e2; border:1px solid #c5ae7a; }
+.level-readings strong { color:var(--ink); }
+
+/* Shift streaks have a steady place beneath the controls. */
+.control-deck { flex-wrap:wrap; row-gap:18px; }
+.combo-strip {
+  flex:0 0 100%; order:8; min-height:40px; display:flex; justify-content:space-between;
+  align-items:center; gap:12px; padding:9px 14px; border:1px solid #174b4924;
+  border-radius:8px; background:#edf2e5; font-size:11px; line-height:1.5;
+}
+#combo-label { font-weight:850; color:#2c7059; }
+#combo-next { color:#6b8175; font-size:10px; text-align:right; }
+.combo-strip.hot { background:#fff0cb; border-color:#ddb361; }
+.combo-strip.hot #combo-label { color:#9a6123; }
+
+/* Results and the end-of-day ledger remain readable on small viewports. */
+.overlay { padding:12px; }
+.modal {
+  max-height:calc(100svh - 24px); overflow:auto; overscroll-behavior:contain;
+  padding:26px 32px; scrollbar-width:thin; scrollbar-color:#9ebcad transparent;
+}
+.modal h1,.modal h2 { margin-top:10px; margin-bottom:12px; }
+.modal .welcome-fizz { margin:12px 0 7px; }
+.modal .welcome-fizz svg { height:70px; }
+.modal .modal-description { margin-bottom:15px; }
+.modal .how-steps { margin:17px 0 19px; padding:13px 0; gap:11px; }
+.modal .review-stars { font-size:32px; margin:17px 0 10px; }
+.modal .review-quote { margin-bottom:16px; }
+.modal .result-metrics { padding:14px 0; }
+.modal .result-details { margin:10px 0 14px; }
+.modal .next-price-note { margin-bottom:17px; }
+.modal .summary-emblem { font-size:47px; margin:13px 0; }
+.modal .summary-grid { gap:19px 14px; padding:18px 0; }
+.modal .personal-best { margin:15px 0 18px; }
+.welcome-mode { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-top:16px; }
+.mode-choice {
+  min-height:44px; border:1.5px solid #174b4947; border-radius:8px;
+  padding:11px 12px; background:#edf1e5; font-size:11px; font-weight:850;
+}
+.mode-choice:hover { background:#e0ebd9; }
+.mode-choice.active { background:var(--ink); border-color:var(--ink); color:var(--paper); }
+#welcome-mode-copy { font-size:11px; color:#668074; line-height:1.55; margin:10px 0 17px; }
+.bonus-breakdown { background:#edf2e5; border-radius:8px; padding:10px 12px; margin:14px 0; text-align:left; }
+.bonus-row { display:flex; justify-content:space-between; align-items:baseline; gap:14px; font-size:11px; line-height:1.5; padding:3px 0; color:#5e7b6d; }
+.bonus-row>span:last-child,.bonus-row>strong { font-weight:800; color:var(--ink); white-space:nowrap; }
+.combo-callout {
+  font-size:11px; line-height:1.55; font-weight:800; padding:10px 13px; margin:12px 0;
+  border:1px solid #e2c37e; border-radius:8px; background:#fff0cc; color:#98642c;
+}
+.modal-actions { display:flex; align-items:stretch; gap:10px; margin-top:17px; }
+.modal-actions>.primary-button,.modal-actions>.secondary-button { flex:1; min-height:48px; width:auto; padding:14px 12px; font-size:10px; line-height:1.4; letter-spacing:.7px; }
+.secondary-button {
+  min-height:44px; border:1.5px solid var(--ink); border-radius:9px;
+  padding:13px 16px; background:#e6eee0; font-size:11px; font-weight:850;
+  color:var(--ink); box-shadow:0 3px 0 var(--ink); transition:background .15s,transform .1s;
+}
+.secondary-button:hover { background:#d7e8d2; }
+.secondary-button:active { transform:translateY(2px); box-shadow:0 1px 0 var(--ink); }
+.shift-ledger { border-top:1px dashed #174b4936; border-bottom:1px dashed #174b4936; padding:12px 0; margin:15px 0; text-align:left; }
+.shift-ledger>div,.shift-ledger .ledger-row { display:flex; justify-content:space-between; gap:16px; padding:5px 0; font-size:11px; line-height:1.5; color:#5c7b6c; }
+.shift-ledger strong,.shift-ledger b { color:var(--ink); font-weight:800; white-space:nowrap; }
+.shift-ledger>div:last-child { margin-top:5px; padding-top:10px; border-top:1px solid #174b4920; font-weight:850; color:var(--ink); }
+.save-notice { font-size:10px; line-height:1.5; color:#708376; margin:13px 0 0; }
+.save-notice.warning { color:#9d5a39; }
+#toast {
+  position:fixed; left:50%; bottom:25px; transform:translateX(-50%); z-index:90;
+  max-width:min(480px,calc(100% - 28px)); width:max-content; padding:14px 20px;
+  border:1px solid #a9d8c9; border-radius:10px; color:var(--paper); background:#174b49f5;
+  box-shadow:0 8px 28px #103d3a38; font-size:12px; line-height:1.55;
+  text-align:center; overflow-wrap:anywhere; pointer-events:none;
+}
+
+@media(min-width:1100px) {
+  .store-hero { position:sticky; top:24px; }
+}
+@media(min-width:801px) {
+  .playfield { min-height:565px; height:565px; }
+  .control-deck { padding-top:21px; padding-bottom:20px; }
+  .level-readings { font-size:11px; }
+}
+@media(max-width:1200px) {
+  .storefront-view { gap:23px; padding-left:3%; padding-right:3%; }
+  .store-intro { padding:25px 25px 5px; }
+  .store-heading { gap:12px; }
+  .store-heading h2 { font-size:30px; }
+  .store-heading .primary-button { min-width:128px; font-size:8px; padding-left:9px; padding-right:9px; }
+  .upgrade-card { padding:15px 12px 12px; gap:10px 7px; grid-template-columns:30px minmax(0,1fr); }
+  .upgrade-icon { width:30px; height:33px; font-size:19px; }
+  .upgrade-copy h3 { font-size:14px; }
+}
+@media(max-width:1099px) {
+  .storefront-view { grid-template-columns:1fr; max-width:850px; margin:0 auto; padding:26px 4% 38px; gap:29px; }
+  .store-hero { display:grid; grid-template-columns:1fr 1.15fr; align-items:center; }
+  .store-intro { padding:25px 0 25px 25px; }
+  .store-intro h1 { font-size:38px; }
+  .store-intro p { font-size:12px; }
+  .store-art { align-self:end; padding:0; }
+  .store-scoreboard { grid-column:1/-1; padding:18px; }
+  .store-scoreboard span { font-size:9px; }
+  .store-management { padding:0; }
+  .store-heading h2 { font-size:34px; }
+  .store-heading .primary-button { min-width:160px; font-size:10px; }
+  .upgrade-card { padding:18px 17px 14px; gap:12px 11px; grid-template-columns:38px minmax(0,1fr); }
+  .upgrade-icon { width:38px; height:40px; font-size:23px; }
+  .upgrade-copy h3 { font-size:16px; }
+  .upgrade-copy p { font-size:12px; }
+  .upgrade-effect { font-size:11px; }
+}
+@media(max-width:800px) {
+  .shop-rail { padding:6px 20px; gap:10px; flex-wrap:wrap; }
+  .view-tabs button { font-size:11px; padding:10px 13px; }
+  .mode-switch { gap:3px; }
+  .mode-switch>span { display:none; }
+  .mode-switch button { min-width:67px; padding:9px 10px; font-size:10px; }
+  .day-label { font-size:9px; padding-left:10px; letter-spacing:1px; }
+  .level-track { display:block; height:10px; margin:10px 0 8px; }
+  .level-readings { display:grid; grid-template-columns:1fr; gap:4px; font-size:9px; }
+  .level-readings>span { font-size:9px; line-height:1.2; gap:5px; }
+  .level-readings strong { margin-left:auto; font-size:9px; }
+  .order-ticket { top:110px; right:8%; bottom:auto; width:128px; padding:10px 9px 8px; }
+  .order-ticket .target-row { display:none; }
+  .fizz-row { margin:0; gap:5px; }
+  .fizz-row>span,.fizz-row>strong { font-size:8px; }
+  .combo-strip { order:4; font-size:10px; min-height:41px; padding:8px 11px; }
+  #combo-next { font-size:9px; max-width:55%; }
+  .control-deck { row-gap:16px; }
+}
+@media(max-width:620px) {
+  .shop-rail { gap:0 10px; padding:6px 14px; }
+  .view-tabs { gap:3px; }
+  .view-tabs button { padding:10px 11px; font-size:10px; }
+  .mode-switch { margin-left:auto; }
+  .mode-switch button { min-width:63px; padding:9px 8px; }
+  .day-label { display:none; }
+  .storefront-view { padding:20px 14px 30px; gap:25px; }
+  .store-hero { display:block; }
+  .store-intro { padding:24px 24px 0; }
+  .store-intro h1 { font-size:38px; }
+  .store-intro p { max-width:360px; }
+  .store-art { margin-top:-5px; }
+  .store-scoreboard { padding:17px 9px; }
+  .store-scoreboard span { font-size:8px; letter-spacing:.6px; }
+  .store-scoreboard strong { font-size:23px; }
+  .store-heading { align-items:flex-start; gap:13px; }
+  .store-heading .modal-eyebrow { font-size:7px; letter-spacing:1px; }
+  .store-heading h2 { font-size:29px; margin-top:8px; }
+  .store-heading .primary-button { min-width:0; max-width:130px; font-size:9px; padding:12px 10px; white-space:normal; }
+  .store-rule { margin:17px 0 15px; font-size:11px; }
+  .upgrade-grid { gap:12px; }
+  .upgrade-card { display:flex; flex-direction:column; padding:15px 13px 12px; gap:9px; }
+  .upgrade-icon { width:34px; height:35px; font-size:20px; }
+  .upgrade-copy { flex:1; }
+  .upgrade-copy h3 { font-size:15px; }
+  .upgrade-copy p { font-size:11px; }
+  .upgrade-effect { font-size:10px; }
+  .buy-button { font-size:10px; padding:10px 8px; }
+  .upgrade-status { font-size:9px; min-height:0; }
+  .business-tools>div { gap:0 17px; }
+  #reset-business { margin-left:0; }
+}
+@media(max-width:520px) {
+  .playfield { min-height:480px; height:480px; }
+  .pour-area canvas { top:84px; height:calc(100% - 104px); }
+  .tap-neck { height:36px; }
+  .level-readings { gap:3px; }
+  .level-track { margin:9px 0 7px; }
+  .order-ticket { padding-top:9px; padding-bottom:7px; }
+  .combo-strip { align-items:flex-start; padding:9px 10px; gap:8px; }
+  #combo-label { max-width:48%; }
+  #combo-next { max-width:52%; font-size:9px; }
+  .modal { padding:23px 23px; border-radius:17px; }
+  .modal h1 { font-size:34px; }
+  .modal h2 { font-size:30px; }
+  .modal .welcome-fizz svg { height:58px; }
+  .modal .welcome-fizz { margin:10px 0 5px; }
+  .modal .how-steps { gap:9px; padding:11px 0; margin:14px 0 17px; }
+  .modal .review-stars { font-size:29px; letter-spacing:5px; margin:13px 0 9px; }
+  .modal .review-quote { font-size:15px; margin-bottom:13px; }
+  .bonus-breakdown { padding:8px 10px; margin:10px 0; }
+  .bonus-row { font-size:10px; padding:3px 0; }
+  .combo-callout { font-size:10px; padding:9px 11px; }
+  .modal-actions { gap:8px; margin-top:14px; }
+  .modal-actions>.primary-button,.modal-actions>.secondary-button { padding:12px 9px; font-size:9px; letter-spacing:.4px; }
+  #toast { bottom:16px; font-size:11px; padding:12px 16px; }
+}
+@media(max-width:430px) {
+  .shop-rail { padding:6px 10px; gap:4px; justify-content:space-between; }
+  .view-tabs { gap:2px; }
+  .view-tabs button { padding:9px 8px; font-size:9px; }
+  .mode-switch { gap:2px; margin-left:0; }
+  .mode-switch button { min-width:56px; padding:9px 7px; font-size:9px; }
+  .store-heading h2 { font-size:27px; }
+  .store-heading .primary-button { max-width:118px; font-size:8px; }
+  .upgrade-grid { grid-template-columns:1fr; }
+  .upgrade-card { display:grid; grid-template-columns:42px minmax(0,1fr); grid-template-rows:auto auto auto; gap:10px 12px; padding:17px 17px 13px; }
+  .upgrade-icon { width:42px; height:42px; font-size:25px; }
+  .upgrade-copy h3 { font-size:16px; }
+  .upgrade-copy p { font-size:12px; }
+  .upgrade-effect { font-size:11px; }
+  .buy-button { font-size:11px; }
+  .store-scoreboard>div { padding:0 6px; }
+  .store-scoreboard span { font-size:7px; letter-spacing:.45px; }
+  .store-scoreboard strong { font-size:21px; }
+}
+@media(prefers-reduced-motion:reduce) {
+  .buy-button,.view-tabs button,.mode-switch button,.upgrade-card,.secondary-button { transition:none; }
+}
+/* Release-to-serve control: clear and compact next to the hold button. */
+.auto-serve-note{min-width:158px;max-width:190px;padding:12px 14px;border-left:1px solid #174b4930;line-height:1.45;text-align:left}
+.auto-serve-note strong{display:block;font-size:11px;letter-spacing:.9px}
+.auto-serve-note span{display:block;font-size:11px;margin-top:5px;color:#617f75}
+.auto-serve-note[hidden]{display:none}
+.main-controls{align-items:center}
+@media(max-width:800px){.auto-serve-note{flex:1;max-width:230px;padding:10px 12px}.auto-serve-note strong{font-size:11px}.auto-serve-note span{font-size:10px}}
+@media(max-width:520px){.auto-serve-note{min-width:0;max-width:none;flex:1;padding:8px 10px}.auto-serve-note strong{font-size:10px;letter-spacing:.5px}.auto-serve-note span{font-size:10px}.main-controls>button.pour-button{flex:1.2}}
+
+/* Two compact legend columns keep the foam ticket clear of the tallest rim. */
+@media(max-width:520px){.level-readings{grid-template-columns:1fr 1fr;gap:5px}.level-readings>span{gap:2px;font-size:9px}.level-readings>span:before{width:5px;height:5px}.level-readings strong{font-size:9px}.order-ticket{padding-top:8px;padding-bottom:6px}.level-track{margin:8px 0 6px}}
+
+</style>
+</head>
+<body>
+<div class="game-shell">
+  <header class="topbar">
+    <a class="brand" href="#" aria-label="Visit your soda bar" id="brand-home">
+      <svg class="brand-icon" viewBox="0 0 52 60" aria-hidden="true"><path d="M10 18h32l-5 34H15z" fill="#ffcb68" stroke="currentColor" stroke-width="3.5"/><path d="M8 18h36M16 27h20" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round"/><path d="M29 18l6-13h10" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round"/><circle cx="23" cy="34" r="2" fill="currentColor"/><circle cx="31" cy="39" r="2" fill="currentColor"/><path d="M21 44q5 5 10 0" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round"/></svg>
+      <span>PERFECT<span>POUR<span class="brand-period">.</span></span></span>
+    </a>
+    <div class="shop-caption">A LITTLE FIZZ.<br><strong>A BUSINESS OF YOUR OWN.</strong></div>
+    <div class="hud" aria-label="Business statistics">
+      <div class="hud-item"><span class="hud-label">BUSINESS CASH</span><strong id="money">$0.00</strong></div>
+      <div class="hud-item"><span class="hud-label">SHOP RATING</span><strong><span class="star-icon">★</span> <span id="rating">3.5</span><small> / 5</small></strong></div>
+      <div class="hud-item shift-stat"><span class="hud-label">CUSTOMERS</span><strong id="customer-count">01 <small>/ 12</small></strong></div>
+    </div>
+    <div class="utility">
+      <button class="icon-button" id="sound-button" aria-label="Turn sound off" aria-pressed="true" title="Sound"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9h4l5-4v14l-5-4H4zM17 8q4 4 0 8M20 4q7 8 0 16"/></svg></button>
+      <button class="icon-button" id="pause-button" aria-label="Pause game" title="Pause (P)"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14M16 5v14"/></svg></button>
+      <button class="icon-button" id="help-button" aria-label="How to play" title="How to play"><span aria-hidden="true">?</span></button>
+    </div>
+  </header>
+
+  <nav class="shop-rail" aria-label="Shop and difficulty">
+    <div class="view-tabs"><button id="counter-tab" class="active" aria-pressed="true">At the counter</button><button id="store-tab" aria-pressed="false">Your soda bar</button></div>
+    <div class="mode-switch" role="group" aria-label="Pour difficulty"><span>POUR MODE</span><button id="hardcore-mode" class="active" aria-pressed="true" title="One hold. Release automatically serves. Earn 15% more base pay.">Hardcore</button><button id="easy-mode" aria-pressed="false" title="Pause, let foam settle, and top up. Serve when ready.">Easy</button></div>
+    <span id="day-label" class="day-label">DAY 01</span>
+  </nav>
+
+  <main id="playfield" class="playfield">
+    <div class="wall-pattern" aria-hidden="true"></div>
+    <div class="shop-sign" aria-hidden="true"><span>FRESH FIZZ</span><span class="sign-line">GOOD COMPANY</span><span class="sign-spark">✦</span></div>
+    <div class="shelf" aria-hidden="true"><i class="bottle bottle-orange"></i><i class="bottle bottle-cherry"></i><i class="bottle bottle-lime"></i><i class="bottle bottle-cola"></i><span class="shelf-board"></span></div>
+
+    <section class="customer-area" aria-label="Current customer">
+      <div class="order-bubble"><div class="customer-name"><span id="customer-name">Jamie</span><span id="customer-number">CUSTOMER 01</span></div><p id="order-line">“A Sunset Orange, please.<br><strong>Fill it to 65%!</strong>”</p><span class="bubble-small" id="customer-aside">A little sunshine in a cup.</span></div>
+      <div id="customer-art" class="customer-art" aria-hidden="true"></div>
+      <div class="customer-tag"><span class="online-dot"></span><span id="customer-status">READY FOR A LITTLE FIZZ</span></div>
+    </section>
+
+    <section class="pour-area" aria-label="Soda pouring station">
+      <div class="tap-machine" aria-hidden="true"><div class="tap-badge"><span class="tap-dot"></span><span id="tap-name">SUNSET ORANGE</span></div><div class="tap-neck"></div><div class="tap-nozzle"></div></div>
+      <canvas id="game-canvas" width="520" height="440" aria-label="Cup showing the soda level, foam, and requested fill line"></canvas>
+      <div class="live-message" id="live-message">Follow the dotted line. Mind the foam.</div>
+      <div class="cup-nameplate"><span id="cup-name">THE CLASSIC</span><span id="cup-capacity">280 mL</span></div>
+    </section>
+
+    <aside class="order-ticket" aria-label="Order details">
+      <div class="ticket-top"><span>THE LITTLE SODA SHOP</span><span class="ticket-dot">✦</span></div>
+      <div class="ticket-title">One happy<br>customer.</div>
+      <div class="ticket-rule"></div>
+      <div class="ticket-drink"><span class="drink-swatch" id="drink-swatch"></span><div><strong id="drink-name">Sunset Orange</strong><span id="drink-flavor">Bright, citrusy & mellow</span></div></div>
+      <div class="fizz-row"><span>FIZZ FACTOR</span><div class="fizz-meter" id="fizz-meter" aria-label="Mild fizz"><i></i><i></i><i></i><i></i></div><strong id="fizz-label">MILD</strong></div>
+      <p class="fizz-note" id="fizz-note">A gentle fizz. A lovely place to start.</p>
+      <div class="ticket-rule"></div>
+      <div class="target-row"><span>REQUESTED<br>FILL LEVEL</span><strong id="target-percent">65<small>%</small></strong></div>
+      <div class="level-track" aria-hidden="true"><span id="liquid-track"></span><span id="foam-track"></span><i id="target-track"></i></div>
+      <div class="level-readings"><span class="liquid-key">Liquid <strong id="liquid-percent">0%</strong></span><span class="foam-key">Foam <strong id="foam-percent">0%</strong></span></div>
+      <div class="payout-note"><span>YOUR REPUTATION BONUS</span><strong id="payout-multiplier">1.30×</strong></div>
+      <p class="ticket-footnote">Happy customers make your next pour worth more.</p>
+      <span class="ticket-tear" aria-hidden="true"></span>
+    </aside>
+
+    <div class="counter-back" aria-hidden="true"></div>
+    <div class="counter-front" aria-hidden="true"><span>POUR WITH LOVE. SERVE WITH A SMILE.</span></div>
+    <div class="scene-caption" aria-hidden="true">EST. TODAY <span>✦</span> MADE WITH FIZZ</div>
+  </main>
+
+  <footer class="control-deck" id="counter-controls">
+    <div class="pour-tip"><span class="tip-spark">✦</span><p id="tip-text"><strong>One pour. Make it count.</strong><span>Release to serve. No second chances.</span></p></div>
+    <div class="main-controls"><button id="pour-button" class="pour-button"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3s-6 7-6 12a6 6 0 0 0 12 0c0-5-6-12-6-12Z"/><path d="M9 16q0 3 3 3"/></svg><span>HOLD TO POUR<small>or hold Space</small></span></button><div class="auto-serve-note" id="auto-serve-note"><strong>RELEASE TO SERVE</strong><span>One hold. That’s your pour.</span></div><button id="serve-button" class="serve-button" disabled><span>SERVE DRINK<small>or press Enter</small></span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12 4 4L19 6"/></svg></button></div>
+    <div class="shift-progress"><div><span>YOUR LITTLE SHIFT</span><strong id="progress-label">0 / 12 served</strong></div><div class="progress-dots" id="progress-dots" aria-hidden="true"></div><button class="text-button" id="restart-button">Visit your soda bar</button></div>
+    <div class="combo-strip"><strong id="combo-label">A FRESH STREAK</strong><span id="combo-next">Two good pours unlock a 1.10× combo.</span></div>
+  </footer>
+
+  <section id="storefront-view" class="storefront-view" aria-label="Your soda bar and business upgrades" hidden>
+    <div class="store-hero">
+      <div class="store-intro"><div class="modal-eyebrow">BUILD SOMETHING SWEET</div><h1>Your neighborhood<br>soda bar.</h1><p id="store-description">A little shop with a big future. Every good pour gets you closer.</p></div>
+      <div id="store-art" class="store-art" aria-label="Your illustrated soda bar"></div>
+      <div class="store-scoreboard"><div><span>AVAILABLE TO SPEND</span><strong id="store-spendable">$0.00</strong></div><div><span>SHIFT WAGE RESERVE</span><strong id="store-reserve">$0.00</strong></div><div><span>LIFETIME SALES</span><strong id="store-lifetime">$0.00</strong></div></div>
+    </div>
+    <div class="store-management">
+      <div class="store-heading"><div><span class="modal-eyebrow">SMALL STEPS. BIG DREAMS.</span><h2>Make it your own.</h2></div><button id="store-back" class="primary-button">BACK TO THE COUNTER</button></div>
+      <p class="store-rule" id="store-rule">Buy between pours. Your business stays with you from day to day.</p>
+      <div id="upgrade-grid" class="upgrade-grid"></div>
+      <div class="business-tools"><p id="save-status">Progress saves on this device.</p><div><a id="download-game" class="text-button" href="" download="Perfect_Pour_V1_01.html">Download game</a><button id="export-save" class="text-button">Export save</button><button id="import-save" class="text-button">Import save</button><button id="reset-business" class="text-button">Start a new business</button></div></div>
+    </div>
+  </section>
+  <div class="status-announcement sr-only" id="announcer" aria-live="polite" aria-atomic="true"></div>
+</div>
+
+<div class="overlay" id="welcome-overlay">
+  <section class="modal welcome-modal" role="dialog" aria-modal="true" aria-labelledby="welcome-title">
+    <div class="modal-eyebrow">WELCOME TO YOUR LITTLE SODA SHOP</div><div class="welcome-fizz" aria-hidden="true"><span>✦</span><svg viewBox="0 0 100 110"><path d="M25 29h53l-7 69H32z" fill="#f7c76d" stroke="#174b49" stroke-width="5"/><path d="M28 57h46l-4 36H33z" fill="#f68d49"/><path d="m53 29 8-22h22" fill="none" stroke="#174b49" stroke-width="5" stroke-linecap="round"/><path d="M23 29h57" stroke="#174b49" stroke-width="5" stroke-linecap="round"/><circle cx="42" cy="66" r="3" fill="#174b49"/><circle cx="62" cy="66" r="3" fill="#174b49"/><path d="M44 79q8 8 16 0" fill="none" stroke="#174b49" stroke-width="4" stroke-linecap="round"/></svg><span>✦</span></div>
+    <h1 id="welcome-title">Every pour<br>has a little <em>magic.</em></h1><p class="modal-description" id="welcome-description">One perfect pour. A business of your own.<br>Serve soda, earn reviews, and build your neighborhood bar.</p>
+    <div class="welcome-mode" role="group" aria-label="Choose pour difficulty"><button class="mode-choice active" id="welcome-hardcore" aria-pressed="true">HARDCORE <small>One pour · +15% base pay</small></button><button class="mode-choice" id="welcome-easy" aria-pressed="false">EASY <small>Top up · serve when ready</small></button></div>
+    <p id="welcome-mode-copy" class="save-notice">Hold Space or the pour button. Release once and the drink is served. Hardcore is the default.</p>
+    <div class="how-steps"><div><b>01</b><p><strong>Match the liquid line.</strong><span>Foam sits above it. Both appear in the side meter.</span></p></div><div><b>02</b><p><strong>Find your rhythm.</strong><span>Good-pour streaks earn combos and milestone bonuses.</span></p></div><div><b>03</b><p><strong>Grow your soda bar.</strong><span>Spend your profits on the storefront, equipment, and a team.</span></p></div></div>
+    <button class="primary-button" id="start-button">OPEN THE SHOP</button><div class="modal-small">Mouse, touch, or keyboard <span>•</span> Offline · V1.01</div>
+    <div id="boot-error" hidden></div>
+  </section>
+</div>
+
+<div class="overlay" id="result-overlay" hidden>
+  <section class="modal result-modal" role="dialog" aria-modal="true" aria-labelledby="result-title"><div class="modal-eyebrow" id="result-eyebrow">A REVIEW JUST CAME IN</div><div class="review-stars" id="review-stars" aria-label="5 out of 5 stars">★★★★★</div><h2 id="result-title">A perfect little pour.</h2><p class="review-quote" id="review-quote">“Just the way I like it!”</p><div class="result-metrics"><div><span>POUR ACCURACY</span><strong id="result-accuracy">100<small>%</small></strong></div><div><span>EARNED</span><strong id="result-earned">$3.25</strong></div></div><div class="result-details" id="result-details"></div><div class="combo-callout" id="result-combo"></div><div class="bonus-breakdown" id="bonus-breakdown" aria-label="Earnings breakdown"></div><div class="rating-change"><span>SHOP RATING</span><strong><span id="old-rating">3.5</span><span class="rating-separator">/</span><span id="new-rating">4.0</span><span class="star-icon">★</span></strong></div><p class="next-price-note" id="next-price-note">Your next customer will pay a little more.</p><div class="modal-actions"><button class="primary-button" id="next-button">NEXT CUSTOMER</button><button class="secondary-button" id="result-store">VISIT YOUR SODA BAR</button></div></section>
+</div>
+
+<div class="overlay" id="summary-overlay" hidden>
+  <section class="modal summary-modal" role="dialog" aria-modal="true" aria-labelledby="summary-title"><div class="modal-eyebrow">THAT’S A WRAP, SODA STAR</div><div class="summary-emblem" aria-hidden="true">✦</div><h2 id="summary-title">One sweet shift.</h2><p class="modal-description" id="summary-message">You made twelve little moments a little brighter.</p><div class="summary-grid"><div><span>POUR SALES</span><strong id="summary-money">$0.00</strong></div><div><span>FINAL RATING</span><strong id="summary-rating">3.5 ★</strong></div><div><span>AVG. ACCURACY</span><strong id="summary-accuracy">0%</strong></div><div><span>PERFECT POURS</span><strong id="summary-perfect">0 / 12</strong></div></div><div class="shift-ledger" id="shift-ledger"></div><div class="personal-best" id="personal-best">Your first shift in the books.</div><div class="modal-actions"><button class="primary-button" id="summary-store">BUILD YOUR BUSINESS</button><button class="secondary-button" id="again-button">OPEN THE NEXT DAY</button></div><div class="modal-small">Cash, reviews, upgrades, and employees carry over.</div></section>
+</div>
+
+<div class="overlay" id="pause-overlay" hidden>
+  <section class="modal compact-modal" role="dialog" aria-modal="true" aria-labelledby="pause-title"><div class="modal-eyebrow">TAKE A BREATHER</div><h2 id="pause-title">On a little break.</h2><p class="modal-description">Your customer can wait. Your soda is paused.</p><button class="primary-button" id="resume-button">BACK TO THE COUNTER</button><button class="text-button" id="pause-restart">Visit your soda bar</button></section>
+</div>
+
+<div class="overlay" id="help-overlay" hidden>
+  <section class="modal compact-modal help-modal" role="dialog" aria-modal="true" aria-labelledby="help-title"><div class="modal-eyebrow">A QUICK REFRESHER</div><h2 id="help-title">The art of the pour.</h2><div class="help-copy"><p><strong>Hardcore is the default.</strong> Hold Space or the pour button once. Release to automatically serve. No second attempt and no topping up. This mode earns 15% extra base pay.</p><p><strong>Easy gives you time.</strong> Release to stop, wait for the foam to settle, and top up. Use Enter or Serve Drink when ready. Choose a mode before starting a cup; changing it resets your streak.</p><p><strong>Liquid is what counts.</strong> The dotted line marks the requested liquid volume. The side bar stacks liquid and foam, just like the cup. Foam can overflow before the soda reaches the rim. When served, foam settles; the beverage inside it counts, but the gas does not.</p><p><strong>Build a streak.</strong> Four- and five-star pours extend your combo. Milestones at 3, 5, and 8 good pours add cash; five-star pours also earn a perfect-pour tip. A lower review breaks the streak.</p><p><strong>Build a business.</strong> Visit Your soda bar to buy upgrades and hire employees. Seating and new hires start next day. Wages are reserved while a shift is open and paid once at closing. Better reviews improve your next customer’s price.</p><p><strong>P or Escape pauses.</strong> If you pause or leave the window while pouring in Hardcore, your one pour ends and is served. Progress saves after each customer and purchase. Export a save to keep a portable backup.</p></div><button class="primary-button" id="close-help">GOT IT</button></section>
+</div>
+
+<div class="overlay" id="restart-overlay" hidden>
+  <section class="modal compact-modal" role="dialog" aria-modal="true" aria-labelledby="restart-title"><div class="modal-eyebrow">A FRESH START</div><h2 id="restart-title">A brand-new business?</h2><p class="modal-description">This resets your cash, reviews, upgrades, employees, and progress. Export a save first if you want to return to this business.</p><button class="primary-button" id="confirm-restart">START A NEW BUSINESS</button><button class="text-button" id="cancel-restart">Keep my business</button></section>
+</div>
+<input type="file" id="import-file" accept=".json,application/json" hidden>
+<div id="toast" class="toast" role="status" hidden></div>
+<script>
+/* Original vector cast for Perfect Pour. No external assets or dependencies. */
+(function () {
+  'use strict';
+
+  const ink = '#173e43';
+  const people = [
+    { skin: '#d99d73', shade: '#c88966', hair: '#43352c', top: '#4a9e99', accent: '#fff2d3', kind: 'cap' },
+    { skin: '#89583f', shade: '#744735', hair: '#302d2e', top: '#e97970', accent: '#fff0ce', kind: 'curls' },
+    { skin: '#f0c5a4', shade: '#e0ab8e', hair: '#253e49', top: '#8ebca9', accent: '#f8e4aa', kind: 'bob' },
+    { skin: '#b87d59', shade: '#a76c4c', hair: '#c9d4c9', top: '#e5b449', accent: '#f7efd7', kind: 'silver' },
+    { skin: '#e4b18c', shade: '#cd9575', hair: '#584037', top: '#e78f79', accent: '#367e80', kind: 'beanie' },
+    { skin: '#704b3c', shade: '#5f3b31', hair: '#2e2e33', top: '#eac35c', accent: '#f8f0d9', kind: 'buns' },
+    { skin: '#f3c7a6', shade: '#e2ad90', hair: '#b96a3c', top: '#497d89', accent: '#f7edda', kind: 'shag' },
+    { skin: '#d8a47b', shade: '#c28e69', hair: '#283840', top: '#87bca8', accent: '#e8ba56', kind: 'knot' }
+  ];
+
+  function backHair(p) {
+    switch (p.kind) {
+      case 'bob': return `<path d="M62 159C48 112 60 62 99 55c33-8 71 5 81 43 10 32 7 76 10 117-18 12-36 10-48 5H76c-14 0-26-7-27-15 8-9 15-24 13-46Z" fill="${p.hair}"/>`;
+      case 'curls': return `<path d="M60 151c-18-9-20-28-11-40-16-14-7-36 9-40-5-20 12-32 29-27 9-18 29-22 43-9 17-14 37-5 40 12 21-1 34 17 25 35 14 15 9 35-4 44 4 17-5 29-18 35Z" fill="${p.hair}"/>`;
+      case 'buns': return `<path d="M65 143C44 117 49 75 83 59c23-13 63-10 84 11 22 23 22 53 7 77Z" fill="${p.hair}"/><path d="M72 74C48 82 32 61 43 42c10-17 38-18 49-1 9 14-2 29-20 33ZM165 73c-23-5-27-24-16-38 13-16 39-10 43 7 5 18-10 34-27 31Z" fill="${p.hair}"/>`;
+      case 'knot': return `<path d="M155 74c8-27 30-26 36-10 10 25-7 49-9 77-1 22 7 38 12 48-22-2-36-20-34-42Z" fill="${p.hair}"/><path d="M60 141c-12-29-9-53 7-72 25-29 76-32 101-3 20 21 23 49 9 80Z" fill="${p.hair}"/>`;
+      default: return `<path d="M62 144c-12-29-9-57 8-74 26-26 67-25 92-2 21 20 24 49 11 78Z" fill="${p.hair}"/>`;
+    }
+  }
+
+  function frontHair(p) {
+    switch (p.kind) {
+      case 'cap': return `<path d="M64 110c-4-28 7-49 34-57 31-8 61 5 70 36l-10 17c-9-9-12-16-13-23-17 10-45 15-69 14l-4 17Z" fill="${p.hair}"/><path d="M56 87c0-30 24-49 57-49 30 0 55 21 57 49l-37 7-77-7Z" fill="#f5e7c6"/><path d="M117 40c-6 9-7 26-5 42" fill="none" stroke="#c2b38e" stroke-width="3"/><path d="M53 86c40-10 80-10 124 3 10 3 13 9 4 13-19 9-59 3-89-2L56 97c-11-1-13-7-3-11Z" fill="#e98256"/><path d="M65 94c35-4 74-3 107 5" fill="none" stroke="#ba6848" stroke-width="2.5"/><path d="M131 60l9 10-12 5-8-10Z" fill="#4a9e99" stroke="none"/>`;
+      case 'curls': return `<path d="M62 111c-12-12-7-28 6-33-2-16 14-25 26-18 7-13 25-15 34-4 13-11 30-3 32 10 18 0 28 16 17 32-7 9-16 7-23 2-7-7-8-17-8-21-10 14-23 19-39 14-11 11-28 12-36 6l-3 18Z" fill="${p.hair}"/><path d="M84 65c9 0 13 5 12 11m26-14c7 1 12 7 10 14m27 1c6 3 9 8 7 14" fill="none" stroke="#4d4140" stroke-width="3"/>`;
+      case 'bob': return `<path d="M60 113c-8-33 8-54 39-59 29-6 56 8 69 35l-8 20c-4-16-10-28-17-33-13 15-34 24-68 27l-6 20Z" fill="${p.hair}"/><path d="M76 85c15-3 31-10 44-20" stroke="#4b6772" stroke-width="3" fill="none"/><path d="M70 158c1 21 2 40-1 55m100-55c-1 21 2 40 6 52" stroke="#4b6772" stroke-width="3" fill="none"/>`;
+      case 'silver': return `<path d="M61 112c-11-13-12-35 0-48 2 10 10 13 17 12-2-20 14-37 33-38-3 8-1 12 4 16 19-15 46-9 57 9 15 17 15 35 2 53l-11-9c-4-18-14-24-23-29-20 15-41 18-66 17l-4 20Z" fill="${p.hair}"/><path d="M82 81c20-3 34-8 44-18m22 4c10 4 16 11 18 20" fill="none" stroke="#9aaea8" stroke-width="3"/>`;
+      case 'beanie': return `<path d="M62 108c0-34 20-57 53-57 36 0 56 23 58 56l-13 7c-4-17-9-24-12-27-13 13-36 17-69 14l-6 14Z" fill="${p.hair}"/><path d="M58 85c-1-36 21-58 57-58 35 0 60 24 59 58Z" fill="#4b9290"/><path d="M75 73c2-19 9-29 18-35m19 34 1-33m24 35c-1-16-6-27-11-36m31 39c-2-11-5-18-10-25" stroke="#306b70" stroke-width="3" fill="none"/><path d="M55 79c36-6 80-5 121 1l1 29c-41-8-83-8-121-2Z" fill="#79b2a6"/><path d="M64 88v12m15-14v12m15-14v12m15-13v12m15-12v12m15-11v12m15-10v12m15-10v12" stroke="#548c84" stroke-width="2.5"/>`;
+      case 'buns': return `<path d="M60 112c-11-27 0-53 27-60 28-13 63-7 79 14 10 12 15 29 9 46l-13-4c-4-14-8-26-17-32-16 14-39 21-68 20l-6 20Z" fill="${p.hair}"/><path d="M87 66c11-5 21-6 32-5m16 1c8 1 14 5 20 11" stroke="#4c4140" stroke-width="3" fill="none"/><path d="M47 72c9 6 21 5 29-1m84-6c7 5 17 6 24 2" fill="none" stroke="#dfad55" stroke-width="5"/>`;
+      case 'shag': return `<path d="M62 114c-17-11-18-28-8-41l15-6c-3-11 2-24 14-30l11 13c17-22 47-20 61-2l15-3c1 11 0 17-1 21 18 10 20 33 6 52l-14-10c-3-12-6-20-12-27-5 10-13 16-25 19l1-15c-13 13-28 16-47 13l-6 18Z" fill="${p.hair}"/><path d="M78 71c10-8 20-12 30-13m24 4c9 0 16 5 21 13" stroke="#da915b" stroke-width="3" fill="none"/>`;
+      case 'knot': return `<path d="M70 110c-16-13-17-34-4-48 21-24 64-30 90-9 19 17 26 40 15 61l-12-10c-3-16-7-26-16-33-18 15-37 24-64 27Z" fill="${p.hair}"/><path d="M92 68c16-11 35-13 50-9" stroke="#54646b" stroke-width="3" fill="none"/><path d="M151 65c17-12 22-25 14-35-8-12-31-11-38 2-6 11 2 25 24 33Z" fill="${p.hair}"/><path d="m144 59 12 8" stroke="#e8ba56" stroke-width="6"/>`;
+    }
+  }
+
+  function clothes(p) {
+    let detail = '';
+    if (p.kind === 'cap') detail = `<path d="m92 231 25 20-21 16-17-30m66-6-25 20 21 16 17-30" fill="${p.accent}"/><path d="M119 253v47" fill="none"/><circle cx="127" cy="279" r="2.2" fill="${ink}" stroke="none"/>`;
+    else if (p.kind === 'beanie') detail = `<path d="M82 228c-14 12-20 25-12 41l28-12 21 12 23-12 28 12c6-18-1-32-13-41l-38 9Z" fill="#f2b39b"/><path d="M101 253v27m35-27v29" fill="none" stroke="#fff0d1" stroke-width="3"/><circle cx="101" cy="282" r="3" fill="#fff0d1" stroke="none"/><circle cx="135" cy="284" r="3" fill="#fff0d1" stroke="none"/>`;
+    else if (p.kind === 'shag') detail = `<path d="M39 266h161v13H32m-5 15h187v6H27" fill="${p.accent}" stroke="none"/><path d="M88 230c6 23 52 24 62-1" fill="none" stroke="${p.accent}" stroke-width="9"/>`;
+    else if (p.kind === 'silver') detail = `<path d="m83 231 36 29 35-30" fill="none" stroke="${p.accent}" stroke-width="10"/><path d="M79 260v40m82-40v40" fill="none" stroke="#c99435" stroke-width="2"/>`;
+    else if (p.kind === 'bob') detail = `<path d="m85 232 34 39 36-39" fill="${p.accent}"/><path d="m76 236 25 64m60-64-26 64" stroke="#5e9a8a" fill="none" stroke-width="4"/>`;
+    else if (p.kind === 'curls') detail = `<path d="m83 232 36 23-23 20-20-34m79-9-36 23 24 20 19-34" fill="${p.accent}"/><path d="M119 257v43" fill="none" stroke-width="2.5"/>`;
+    else if (p.kind === 'buns') detail = `<path d="M86 232c8 24 57 24 67-1" fill="none" stroke="${p.accent}" stroke-width="10"/><path d="M57 273h17m100 0h14m-89 8h16m22 0h16" stroke="#ce9e3e" stroke-width="3" fill="none"/>`;
+    else detail = `<path d="m85 232 34 24 36-24-3 28-34 15-33-16Z" fill="${p.accent}"/><path d="M119 276v24" fill="none" stroke-width="2.5"/>`;
+    return `<path d="M24 300c0-29 9-50 29-59l35-13h62l36 14c20 8 30 29 31 58Z" fill="${p.top}"/><path d="M54 270v30m132-30v30" fill="none" stroke-width="3"/>${detail}`;
+  }
+
+  function customer(index, mood) {
+    const n = Number.isFinite(Number(index)) ? Math.abs(Math.trunc(Number(index))) % people.length : 0;
+    const p = people[n];
+    const expression = mood === 'happy' || mood === 'disappointed' ? mood : 'neutral';
+    const smile = expression === 'happy'
+      ? `<path d="M101 178c9 6 28 7 38-1-2 16-11 23-21 22-10-1-15-9-17-21Z" fill="#7e4842"/><path d="M104 179c10 4 23 4 32-1l-2 7c-10 4-20 3-28 0Z" fill="#fff4dc" stroke="none"/>`
+      : expression === 'disappointed'
+        ? `<path d="M105 187c8-8 19-8 29-1" fill="none" stroke-width="3.5"/>`
+        : `<path d="M104 181c8 8 20 9 31 0" fill="none" stroke-width="3.5"/>`;
+    const brows = expression === 'disappointed'
+      ? `<path d="m84 128 17-6m37 0 17 6" stroke="${p.hair}" stroke-width="4" fill="none"/>`
+      : `<path d="M84 125c5-3 11-3 16-1m38 0c6-3 12-2 17 1" stroke="${p.hair}" stroke-width="4" fill="none"/>`;
+    const eyes = expression === 'happy'
+      ? `<path d="M86 142c4-5 9-5 13 0m39 0c4-5 9-5 13 0" stroke-width="3.5" fill="none"/>`
+      : `<ellipse cx="93" cy="141" rx="3.5" ry="5" fill="${ink}" stroke="none"/><ellipse cx="145" cy="141" rx="3.5" ry="5" fill="${ink}" stroke="none"/>`;
+    const glasses = p.kind === 'bob'
+      ? `<path d="M76 135h30v12c-1 10-28 11-30-1v-11Zm57 0h30v12c-2 10-28 10-30-1v-11Zm-27 4c9-5 18-5 27 0m-57-3-10-3m97 3 10-3" fill="none" stroke="#b47c35" stroke-width="3.5"/>`
+      : p.kind === 'silver'
+        ? `<ellipse cx="92" cy="143" rx="18" ry="15" fill="none" stroke="#3e6267" stroke-width="3"/><ellipse cx="146" cy="143" rx="18" ry="15" fill="none" stroke="#3e6267" stroke-width="3"/><path d="M110 139c6-3 12-3 18 0m-54 0-9-5m99 5 10-6" fill="none" stroke="#3e6267" stroke-width="3"/>`
+        : '';
+    const freckles = p.kind === 'shag'
+      ? `<g fill="#bf7d57" stroke="none"><circle cx="80" cy="160" r="1.8"/><circle cx="88" cy="163" r="1.8"/><circle cx="95" cy="160" r="1.8"/><circle cx="145" cy="160" r="1.8"/><circle cx="153" cy="163" r="1.8"/><circle cx="160" cy="160" r="1.8"/></g>` : '';
+    const jewelry = p.kind === 'buns' || p.kind === 'bob'
+      ? `<path d="M59 157c-8 0-9 13-1 14 6 1 8-7 4-11m118-3c8 0 9 13 1 14-6 1-8-7-4-11" fill="none" stroke="#e3b752" stroke-width="3.5"/>` : '';
+
+    return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 300" aria-hidden="true" focusable="false"><g stroke="${ink}" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round">${backHair(p)}${clothes(p)}<path d="M94 197v35c6 14 40 17 50 0v-37Z" fill="${p.skin}"/><path d="M97 204c15 12 30 12 44 2v15c-15 10-31 8-44-3Z" fill="${p.shade}" stroke="none"/><path d="M67 130c-15-12-22 0-17 15 2 10 10 17 18 13m103-28c15-12 22 0 17 15-2 10-10 17-18 13" fill="${p.skin}"/><path d="M56 138c5-3 8 3 7 10m118-10c-5-3-8 3-7 10" fill="none" stroke="${p.shade}" stroke-width="3"/><path d="M68 103c1-31 23-47 51-47 31 0 52 19 53 48l-3 59c-1 28-22 51-49 53-28-2-49-24-51-52Z" fill="${p.skin}"/><path d="M156 104c9 49 8 78-16 102 18-7 28-23 29-43l3-59-5-21Z" fill="${p.shade}" stroke="none"/>${brows}${eyes}<path d="m118 143-5 20c3 4 8 5 13 2" fill="none" stroke="${p.shade}" stroke-width="3.5"/><ellipse cx="84" cy="165" rx="10" ry="5.5" fill="#e8957b" opacity=".28" stroke="none"/><ellipse cx="151" cy="165" rx="10" ry="5.5" fill="#e8957b" opacity=".28" stroke="none"/>${freckles}${smile}${frontHair(p)}${glasses}${jewelry}</g></svg>`;
+  }
+
+  window.PourArt = Object.freeze({ customer });
+}());
+
+</script>
+<script>
+/* Perfect Pour V1.01 · Original state-driven storefront illustration.
+   No images, fonts, network resources, SVG IDs, or external dependencies. */
+(function () {
+  'use strict';
+  const ink = '#174b49';
+  const cream = '#fff4d9';
+
+  function level(value, max) {
+    const n = Number(value);
+    return Number.isFinite(n) ? Math.max(0, Math.min(max, Math.trunc(n))) : 0;
+  }
+  function safeNumber(value, fallback, min, max) {
+    const n = Number(value);
+    return Number.isFinite(n) ? Math.max(min, Math.min(max, n)) : fallback;
+  }
+  function plant(x, y, scale, coral) {
+    return `<g transform="translate(${x} ${y}) scale(${scale})"><path d="M-18-31h36l-4 32h-28Z" fill="${coral ? '#df967e' : '#d8ad73'}" stroke="${ink}" stroke-width="3"/><path d="M-21-32h42v8h-42Z" fill="${coral ? '#efb099' : '#ebc591'}" stroke="${ink}" stroke-width="3"/><path d="M0-32v-49m-2 37c-21 0-29-13-25-23 17-1 26 10 27 23Zm2-11c23-1 30-15 24-26-17 2-25 13-24 26Zm-1-12c-13-15-9-32 1-36 13 12 12 25-1 36Z" fill="#74a98a" stroke="${ink}" stroke-width="2.5" stroke-linejoin="round"/><path d="M-13-18v12" stroke="#fff4d955" stroke-width="3" stroke-linecap="round"/></g>`;
+  }
+
+  function person(x, y, scale, variant, sitting) {
+    const palettes = [
+      {skin:'#d99d73',hair:'#49382e',shirt:'#eb9a79',pants:'#427675'},
+      {skin:'#8d5a42',hair:'#302f32',shirt:'#edc96c',pants:'#557d7a'},
+      {skin:'#edc3a1',hair:'#566b64',shirt:'#77aaa0',pants:'#355f66'},
+      {skin:'#b67a56',hair:'#493638',shirt:'#e1877c',pants:'#456e73'}
+    ];
+    const p=palettes[variant%palettes.length];
+    const legs=sitting
+      ? `<path d="M-15 76v26h32l8 31m-12-53v16l22 13 6 26" fill="none" stroke="${p.pants}" stroke-width="12"/><path d="m19 135 17 1m-2 1 17 1" stroke="${ink}" stroke-width="6"/>`
+      : `<path d="m-12 78-5 55m27-55 8 55" stroke="${p.pants}" stroke-width="15"/><path d="m-23 137 16 0m20 0h17" stroke="${ink}" stroke-width="6"/>`;
+    return `<g transform="translate(${x} ${y}) scale(${scale})" stroke="${ink}" stroke-width="2.7" stroke-linecap="round" stroke-linejoin="round">${legs}<path d="M-24 34c-10 8-15 23-18 44m65-44c8 7 13 21 15 37" fill="none" stroke="${p.skin}" stroke-width="12"/><path d="M-28 32c10-8 45-8 55 0l-3 47h-49Z" fill="${p.shirt}"/><path d="M-8 18v13c4 6 12 6 17 0V18" fill="${p.skin}"/><ellipse cy="-2" rx="22" ry="28" fill="${p.skin}"/><path d="M-23-7c-7-22 9-34 26-31 19 0 27 15 21 29l-9-10c-8 9-20 11-30 7l-5 11Z" fill="${p.hair}"/><path d="M-10 0v2m20-2v2" stroke-width="3.6"/><path d="M-6 13q7 6 13 0" fill="none" stroke-width="2.2"/><path d="m34 56-1 19m-4-18 14-1-2 22h-10Z" fill="${cream}" stroke-width="2"/><path d="m35 56 3-11h7" fill="none" stroke="#e59061" stroke-width="2.3"/>${variant%4===2?'<path d="M-20-1h16v10h-16Zm24 0h16v10H4ZM-4 3h8" fill="none" stroke-width="1.8"/>':''}</g>`;
+  }
+
+  function staff(x, y, role) {
+    const helper=role==='helper';
+    const skin=helper?'#976345':'#ecc29d';
+    const hair=helper?'#383330':'#925b3c';
+    return `<g transform="translate(${x} ${y})" stroke="${ink}" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M-32 46c1-22 13-33 32-33s31 12 32 33v26h-64Z" fill="${helper?'#f3c867':'#e1907c'}"/><path d="m-17 22 3 46h28l3-46" fill="#f9efda"/><path d="M-12 52h24v13h-24Z" fill="#9ec6b4" stroke-width="1.5"/><path d="M-7 7v14c5 6 10 6 14 0V7" fill="${skin}"/><ellipse cy="-8" rx="21" ry="26" fill="${skin}"/><path d="M-21-12c-7-19 5-32 22-31 19 0 27 13 21 29l-8-8c-11 9-22 10-30 4Z" fill="${hair}"/>${helper?`<path d="M-23-24c0-15 9-25 24-25 14 0 25 10 25 25Z" fill="#79b5aa"/><path d="M-27-24q28-6 56 2l-2 7q-29-6-54-2Z" fill="#f0c665"/>`:`<path d="M-25-25q25-8 48 0v7q-25-7-48 0Z" fill="#b2cbb6"/>`}<path d="M-8-6v2m16-2v2" stroke-width="3.3"/><path d="M-7 5q7 6 14 0" fill="none" stroke-width="2"/>${helper?'<path d="M-26 35-41 42m65-7 17 7" fill="none" stroke-width="8"/>':`<path d="m28 40 10-21" stroke="${skin}" stroke-width="8"/><path d="m32 6 15-1-2 25h-11Z" fill="#b4cf82"/><path d="m37 5 4-11h8" fill="none" stroke="#edbd5c"/>`}</g>`;
+  }
+
+  function patio(x, y, second) {
+    return `<g transform="translate(${x} ${y})" stroke="${ink}" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="0" cy="62" rx="92" ry="12" fill="#174b4915" stroke="none"/><path d="M-74-4v48m25-46v43m-30-15h38m-34-10h30" stroke="#4e8e83" stroke-width="5"/><path d="M-78-4h33v16h-33Z" fill="#a7cabb"/><path d="M50-4v48m25-46v43m-32-15h38m-34-10h30" stroke="#4e8e83" stroke-width="5"/><path d="M46-4h33v16H46Z" fill="#a7cabb"/><path d="M0-8v67m-24 4 24-8 24 8" fill="none" stroke="#56776b" stroke-width="4"/><ellipse cy="-9" rx="48" ry="12" fill="${second?'#edc36f':'#e6b592'}"/><path d="M-47-7v6q47 22 94 0v-6" fill="${second?'#dba74d':'#c9956e'}"/><ellipse cy="-10" rx="48" ry="11" fill="${second?'#f2d18b':'#efd0ab'}"/><path d="m-11-31 13-1-2 22h-9Z" fill="#fff4db" stroke-width="2"/><path d="m-6-32 4-9h7" fill="none" stroke="#e28d69" stroke-width="2"/><path d="M19-23h10l-1 14h-8Z" fill="#d88f6d" stroke-width="1.5"/><path d="M24-23v-10m0 4-6-5m6 3 6-5" stroke="#709b78" stroke-width="2"/></g>`;
+  }
+
+  function signboard(sign) {
+    const frame=sign===0?'#d3b187':sign===1?'#e3b65c':sign===2?'#8ab6a1':'#d5a65a';
+    const back=sign===0?'#eed8b5':sign===1?'#24675e':sign===2?'#244d50':'#173d43';
+    const letters=sign===0?ink:sign===1?'#fff3d5':sign===2?'#f5cb76':'#ffc2b2';
+    let detail='';
+    if(sign===0) detail=`<path d="M237 182h450m-450 41h450" stroke="#bf9b702b" stroke-width="2"/><path d="M255 166h18m381 71h17" stroke="#ba9068" stroke-width="2"/>`;
+    if(sign===2) for(let i=0;i<13;i++) detail+=`<circle cx="${246+i*35}" cy="164" r="3.1" fill="#ffe8a6"/><circle cx="${246+i*35}" cy="242" r="3.1" fill="#ffe8a6"/>`;
+    if(sign===3) detail=`<rect x="232" y="165" width="458" height="77" rx="9" fill="none" stroke="#ed9d9c" stroke-width="8" opacity=".14"/><rect x="232" y="165" width="458" height="77" rx="9" fill="none" stroke="#efb1a5" stroke-width="2"/><text x="460" y="210" fill="none" stroke="#e99b9b" stroke-width="10" opacity=".15" text-anchor="middle" font-family="Trebuchet MS,Arial,sans-serif" font-size="37" font-weight="900" letter-spacing="4">PERFECT POUR</text>`;
+    return `<g stroke="${ink}" stroke-linejoin="round"><rect x="216" y="154" width="490" height="101" rx="8" fill="${frame}" stroke-width="3.5"/><rect x="226" y="162" width="470" height="84" rx="4" fill="${back}" stroke-width="2"/>${detail}<text x="460" y="209" fill="${letters}" stroke="none" text-anchor="middle" font-family="Trebuchet MS,Arial,sans-serif" font-size="37" font-weight="900" letter-spacing="4">PERFECT POUR</text><text x="460" y="233" fill="${sign===0?'#637866':'#f9e9c5'}" stroke="none" text-anchor="middle" font-family="Trebuchet MS,Arial,sans-serif" font-size="12" font-weight="700" letter-spacing="5">SODA POP BAR</text></g>`;
+  }
+
+  function awning(level) {
+    if(level===0)return `<g stroke="${ink}" stroke-width="3"><path d="M211 271h500l9 16H202Z" fill="#7caa97"/><path d="M202 287h518v8H202Z" fill="#4f8072"/></g>`;
+    const c=level===2?'#377a73':'#e69774',pale=level===2?'#f5d28b':'#fff0d3';
+    let stripes='';
+    const left=193,topLeft=215,width=536;
+    for(let i=0;i<12;i++){
+      const x=left+i*width/12,tx=topLeft+i*492/12;
+      stripes+=`<path d="M${tx.toFixed(2)} 266h41l${(x+width/12-(tx+41)).toFixed(2)} 42H${x.toFixed(2)}Z" fill="${i%2===0?c:pale}" stroke="none"/>`;
+      stripes+=`<path d="M${x.toFixed(2)} 308h${(width/12).toFixed(2)}v9q-${(width/24).toFixed(2)} 17-${(width/12).toFixed(2)} 0Z" fill="${i%2===0?c:pale}" stroke="${ink}" stroke-width="2"/>`;
+    }
+    return `<g stroke="${ink}" stroke-width="3" stroke-linejoin="round"><path d="M215 266h492l22 42H193Z" fill="${pale}"/>${stripes}<path d="M215 266h492l22 42H193Z" fill="none"/><path d="M193 309h536" stroke-width="2"/>${level===2?'<path d="M211 261h500" stroke="#d2a44e" stroke-width="6" stroke-linecap="round"/>':''}</g>`;
+  }
+
+  function taps(level) {
+    const face=level===2?'#e6be67':level===1?'#acc8c0':'#5b9c91';
+    const body=level===2?'#ae8650':level===1?'#769c94':'#417870';
+    let handles='';
+    const count=level+1;
+    for(let i=0;i<count;i++){
+      const x=608+(i-(count-1)/2)*20;
+      handles+=`<path d="M${x} 386v21h7v7" fill="none" stroke="${ink}" stroke-width="4"/><path d="M${x} 375v12" stroke="#eb9872" stroke-width="7"/><circle cx="${x}" cy="374" r="5" fill="${['#f2be62','#e6909c','#a8c17a'][i]}" stroke="${ink}" stroke-width="1.5"/>`;
+    }
+    return `<g stroke="${ink}" stroke-linejoin="round"><rect x="569" y="374" width="78" height="62" rx="5" fill="${body}" stroke-width="2.5"/><rect x="575" y="378" width="66" height="43" rx="3" fill="${face}" stroke-width="1.5"/>${handles}<path d="M573 435h72" stroke="#cedad0" stroke-width="3"/><path d="M584 429h48" stroke="#174b4970" stroke-width="2"/><path d="m586 416 11 0-2 13h-7Z" fill="#fff0d2" stroke-width="1.4"/>${level===2?'<path d="m638 392 4 7 7 1-5 5 1 7-7-4-6 3 2-7-5-5 7-1Z" fill="#fff4bc" stroke-width="1.1"/>':''}</g>`;
+  }
+
+  function render(options) {
+    const o=options && typeof options==='object'?options:{};
+    const sign=level(o.sign,3),seating=level(o.seating,2),a=level(o.awning,2),tap=level(o.tap,2);
+    const helper=level(o.helper,1),specialist=level(o.specialist,1);
+    const rating=safeNumber(o.rating,3.5,1,5).toFixed(1),day=Math.floor(safeNumber(o.day,1,1,9999));
+    const sky=['#d9ede4','#e0eee2','#e4ece0'][(day-1)%3];
+    const facade=sign>=2?'#a9cfb7':'#b5d8c1';
+    const welcome=seating===2?person(813,442,.56,3,true):'';
+    return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 620" aria-hidden="true" focusable="false"><title>Your Perfect Pour soda bar</title>
+      <rect width="900" height="620" rx="18" fill="${sky}"/>
+      <circle cx="766" cy="76" r="40" fill="#f4d795"/><circle cx="766" cy="76" r="54" fill="none" stroke="#f4d795" stroke-width="2" opacity=".35"/>
+      <g fill="#fff8e9" opacity=".8"><path d="M62 94c-4-18 8-31 26-29 9-23 41-25 54-3 18-6 38 7 36 26 14-1 23 7 24 17H63c-8-1-10-7-1-11Z"/><path d="M560 80c-2-15 10-22 22-19 9-21 35-21 46-2 16-4 30 5 30 19 11-1 20 5 20 14H561c-8-1-8-8-1-12Z"/></g>
+      <g stroke="#648c80" stroke-width="2" stroke-linejoin="round"><path d="M0 237h147v255H0Z" fill="#c8d3b8"/><path d="M16 223h145v25H0v-12Z" fill="#a5bba3"/><path d="M21 272h45v65H21Zm75 0h33v65H96Z" fill="#e7e9cf"/><path d="M21 365h45v72H21Zm75 0h33v72H96Z" fill="#e7e9cf"/><path d="M19 302h48m-24-29v62m50-33h37m-18-29v62M19 401h48m-24-35v69m50-34h37m-18-35v69" stroke="#afbea6"/><path d="M766 212h134v280H766Z" fill="#d9c9ad"/><path d="M758 205h142v23H758Z" fill="#b6b99e"/><path d="M788 255h37v66h-37Zm57 0h37v66h-37Zm-57 99h37v70h-37Zm57 0h37v70h-37Z" fill="#e8e6ce"/><path d="M786 288h41m-21-32v63m37-31h41m-19-32v63m-79 68h41m-21-32v63m37-31h41m-19-32v63" stroke="#c0c4aa"/></g>
+      <g fill="#91b89c" opacity=".7"><path d="M111 292c-28-28-13-63 7-72-10-39 22-69 52-57 26-18 60 1 59 32 34 10 38 51 10 72 2 27-28 45-51 34-32 24-58 12-77-9Z"/><path d="M751 333c-20-17-16-48 6-59-1-26 25-41 45-29 27-8 45 10 43 35 27 18 19 48-7 53-13 25-45 27-60 7Z"/></g>
+      <path d="M0 485h900v135H0Z" fill="#d5cfb6"/><path d="M0 494h900v83H0Z" fill="#eee2c8"/><path d="M0 577h900v14H0Z" fill="#b9c5ae"/><path d="M0 591h900v29H0Z" fill="#9eafa3"/>
+      <g stroke="#bdb9a029" stroke-width="2"><path d="M0 532h900M84 494l-24 83m125-83-14 83m138-83-6 83m143-83v83m143-83 8 83m127-83 15 83m124-83 25 83"/></g>
+      <path d="M196 492h537l35 20H160Z" fill="#174b4914"/>
+      <g stroke="${ink}" stroke-linejoin="round"><rect x="208" y="142" width="506" height="345" rx="5" fill="${facade}" stroke-width="4"/><path d="M208 433h506v54H208Z" fill="#d9ae7f" stroke-width="3"/><path d="M211 451h500m-499 19h499M248 435v16m58-16v16m58-16v16m58-16v16m58-16v16m58-16v16m58-16v16m58-16v16m-426 1v17m58-17v17m58-17v17m58-17v17m58-17v17m58-17v17m58-17v17m58-17v17m-426 1v13m58-13v13m58-13v13m58-13v13m58-13v13m58-13v13m58-13v13m58-13v13" stroke="#b98c61" stroke-width="1.1"/><path d="M197 126h528v22H197Z" fill="#3e7c70" stroke-width="3.5"/><path d="M206 119h510v9H206Z" fill="#7fae98" stroke-width="2.5"/><path d="M210 145h502" stroke="#d8ecce" stroke-width="2"/>
+      <path d="M227 325h193v132H227Z" fill="#83b6a9" stroke-width="4"/><path d="M535 325h158v132H535Z" fill="#83b6a9" stroke-width="4"/><path d="M231 328h185v126H231Z" fill="#bfd9c0" stroke="none"/><path d="M539 328h150v126H539Z" fill="#bfd9c0" stroke="none"/>
+      <path d="M239 346h166v10H239Z" fill="#bc986b" stroke-width="2"/>
+      <g stroke-width="1.5"><path d="M247 328h10v17h-10Zm18-5h10v22h-10Zm18 3h10v19h-10Zm18 1h10v18h-10Zm18-5h10v23h-10Zm18 4h10v19h-10Z" fill="#e6b469"/><path d="M265 329h10v12h-10m35-10h10v10h-10" fill="#d78b91" stroke="none"/><path d="M283 330h10v11h-10m35-9h10v9h-10" fill="#a7bb7e" stroke="none"/><path d="M252 328v-5m18 0v-5m18 8v-5m17 6v-5m19 0v-4m18 8v-5" fill="none" stroke-width="3"/></g>
+      <path d="M242 380h63v38h-63Z" fill="#f2e7cb" stroke-width="1.7"/><text x="273" y="395" text-anchor="middle" font-family="Trebuchet MS,Arial,sans-serif" font-size="8" font-weight="700" fill="${ink}" stroke="none" letter-spacing="1">FRESH FIZZ</text><path d="M253 403h41m-33 6h26" stroke="#b6b89b" stroke-width="1.3"/>
+      ${helper?staff(361,389,'helper'):''}${specialist?staff(662,390,'specialist'):''}${taps(tap)}
+      <path d="M230 436h187v18H230Zm308 0h152v18H538Z" fill="#b7875e" stroke-width="2"/><path d="M227 435h193v7H227Zm308 0h158v7H535Z" fill="#e6bd85" stroke-width="2"/>
+      <path d="M231 331l83-1-77 104h-6Zm63-1h29l-77 104h-18Z" fill="#fff9df" opacity=".16" stroke="none"/><path d="M541 331h30l-30 41Zm73 0h21l-82 105h-15Z" fill="#fff9df" opacity=".16" stroke="none"/>
+      <path d="M433 313h89v176h-89Z" fill="#49877a" stroke-width="4"/><path d="M442 324h71v108h-71Z" fill="#c5ddd0" stroke-width="2.5"/><path d="m445 327 28 0-28 48m27-48h16l-44 68" fill="#fff9df" opacity=".22" stroke="none"/><path d="M443 444h69v29h-69Z" fill="#81b09b" stroke-width="2"/><path d="M505 401v18" stroke="#f4d58a" stroke-width="5" stroke-linecap="round"/><path d="M432 486h92l10 9H423Z" fill="#6e9180" stroke-width="2"/>
+      <path d="m462 357 16-14 17 14" fill="none" stroke-width="1.2"/><rect x="453" y="357" width="50" height="25" rx="3" fill="#fff2d4" stroke-width="1.8"/><text x="478" y="374" text-anchor="middle" font-family="Trebuchet MS,Arial,sans-serif" font-size="12" font-weight="900" letter-spacing="1.4" fill="${ink}" stroke="none">OPEN</text>
+      <rect x="459" y="393" width="37" height="18" rx="3" fill="#f0cf83" stroke-width="1.3"/><text x="477.5" y="406" text-anchor="middle" font-family="Trebuchet MS,Arial,sans-serif" font-size="9" font-weight="700" fill="${ink}" stroke="none">★ ${rating}</text>
+      <path d="M218 304v128m485-128v128" stroke="#d8ead0" stroke-width="3"/>
+      </g>
+      ${signboard(sign)}${awning(a)}
+      <g stroke="${ink}" stroke-width="2.5" stroke-linecap="round"><path d="M219 170h-14v54m-6 1h13" fill="none"/><path d="M196 216h20l6 14h-32Z" fill="#d8b877"/><path d="M216 230q-10 15-20 0" fill="#fae7a9" opacity=".7"/><path d="M705 170h15v54m-6 1h13" fill="none"/><path d="M711 216h20l6 14h-32Z" fill="#d8b877"/><path d="M731 230q-10 15-20 0" fill="#fae7a9" opacity=".7"/></g>
+      ${plant(220,501,.75,true)}${plant(706,501,.73,false)}
+      <g stroke="${ink}" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="m345 471-10 66m64-66 10 66" fill="none"/><path d="M341 469h61l-4 58h-54Z" fill="#4a7569"/><path d="M347 475h49l-3 45h-43Z" fill="#284f4b" stroke="none"/><text x="371" y="490" font-family="Trebuchet MS,Arial,sans-serif" font-size="8" letter-spacing="1.2" fill="#f6edce" stroke="none" text-anchor="middle">SODA +</text><text x="371" y="503" font-family="Trebuchet MS,Arial,sans-serif" font-size="8" letter-spacing="1.2" fill="#f6edce" stroke="none" text-anchor="middle">SMILES</text><path d="M357 511h28" stroke="#c0d1af" stroke-width="1"/></g>
+      ${seating>0?person(86,436,.54,1,true):''}${seating>0?patio(130,501,false):''}${welcome}${seating>1?patio(767,510,true):''}
+      ${person(569,440,.68,0,false)}
+      <g stroke="${ink}" stroke-width="3" stroke-linecap="round"><path d="M60 462v44m-16-4h32" fill="none"/><path d="M59 455c-34-4-50-30-35-54-12-32 15-57 40-42 26-12 49 11 40 37 20 29-6 62-45 59Z" fill="#7da98a"/><path d="M60 442v-52m0 26-18-14m18 29 21-17" fill="none" stroke="#51806a" stroke-width="2"/></g>
+      <g fill="#697e70" font-family="Trebuchet MS,Arial,sans-serif" font-size="10" letter-spacing="2" font-weight="700"><text x="450" y="609" text-anchor="middle">YOUR LITTLE CORNER OF THE NEIGHBORHOOD</text></g>
+    </svg>`;
+  }
+  window.PourStoreArt=Object.freeze({render});
+}());
+
+</script>
+<script>
+/* Perfect Pour V1.01 · Presentation and input. Simulation, business, saves, and rules are Rust/Wasm. */
+(() => {
+  'use strict';
+  const WASM_BASE64 = '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A9gCIAJBAEGAAvwLACACQgA3A4ADIAJCgICAgBA3A/gCIAJCADcDkAIgAkKAgICAgIDguMAANwOIAiACQs2Zs+bMmbPyPzcDgAIgAkIANwOYAiACQgA3A6ACIAJCADcDqAIgAkEANgKIAyACQoCAgICAgICGwAA3A7ACIAJCADcCjAMgAkIANwO4AiACQgA3ApQDIAJCzZmz5syZs/o/NwPAAiACQgA3A8gCIAJCADcD0AIgAkEANgKgAyACQQA6AOoDIAJBATsB6AMgAkEAOgDtAyACQQA7AOsDIAJCgYCAgMABNwKkAyACQawDakEAQTT8CwAgAkEAOgDuAyACQoCAgICAgICGwAA3A/ACIAJCADcD4AMgAiABQfXzrekGIAEbNgKcAyACEIKAgIAAIAAgAkHwA/wKAAAgAkHwA2okgICAgAALnQcGAn8BfAN/AXwjfwd8IAEoAvgCIQIgAEGoA2pBAEHYAfwLACABLQDpAyEDIAErA6gCIQQgASgCiAMhBSABKAKMAyEGIAEoApADIQcgASsDyAIhCCABKAKUAyEJIAEoApgDIQogASgCnAMhCyABKAKgAyEMIAEtAOgDIQ0gASgCpAMhDiABKAKoAyEPIAEoAqwDIRAgASgCsAMhESABKAK0AyESIAEoArgDIRMgASgCvAMhFCABKALAAyEVIAEoAsQDIRYgASgC2AIhFyABKALcAiEYIAEoAuACIRkgASgC5AIhGiABKALoAiEbIAEoAuwCIRwgAS0A6wMhHSABLQDsAyEeIAEoAsgDIR8gASgCzAMhICABLQDtAyEhIAEoAtADISIgASgC1AMhIyABKALYAyEkIAEoAtwDISUgAS0A7gMhJiABKALgAyEnIAEoAuQDISggASgC/AIhKSABKAKAAyEqIAEoAoQDISsgASsDkAIhLCABKwOwAiEtIAErA7gCIS4gASsDwAIhLyABKwPQAiEwIAErA/ACITEgASsDgAIhMiAAQgA3AzggACAyOQMoIAAgArg5AwggAEKAgICAgIDQrMAANwMAIABCADcDQCAAIDE5A4gDIABCADcDwAEgACAwOQOQASAAIC85A3ggACAuOQNgIAAgLTkDUCAAICxEAAAAAAAAAAAgAhs5AzAgACAruDkDICAAICq4OQMYIAAgKbg5AxAgACAouDkDoAMgACAnuDkDmAMg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gABBiJLAgAALUQEBf0EAIQACQEEAKALAjcCAAA0AQQAhAEEALQCwjsCAAA0AQQAtALGOwIAAQQFxRQ0AQQBBADoAso7AgABByIrAgAAQioCAgABBASEACyAACycBAX9BACEBAkAgAEEBSw0AQciKwIAAIABBAEcQjoCAgAAhAQsgAQsFAEHAAAsIAEHIisCAAAsQAEHIisCAACAAEImAgIAACw0AIAAgARCsgICAAA8LDwAgACABIAIQsICAgAAPCxEAIAAgASACIAMQsoCAgAAPCwMADwsgAQF/AkAgACgCACIBRQ0AIAAoAgQgAUEBEJ6AgIAACwsiAQF/AkAgACgCACIBQQFIDQAgACgCBCABQQEQnoCAgAALCwsAIAAQpICAgAAACywAIAAoAgAgACgCBEEAKAKQl8CAACIAQYGAgIAAIAAbEYCAgIAAgICAgAAACwsAIAAQpoCAgAAAC5YBAQN/I4CAgIAAQRBrIgEkgICAgAACQCAAKAIAIgIoAgQiA0EBcUUNACACKAIAIQIgASADQQF2NgIEIAEgAjYCACABQdCFwIAAIAAoAgQgACgCCCIALQAIIAAtAAkQqYCAgAAACyABQX82AgAgASAANgIMIAFB7IXAgAAgACgCBCAAKAIIIgAtAAggAC0ACRCpgICAAAALrQEBAn8jgICAgABBEGsiBSSAgICAAAJAIAIgAWoiASACTw0AQQBBABDJgICAAAALIAVBBGogACgCACICIAAoAgRBCEEEIARBAUYbIgYgAkEBdCICIAEgAiABSxsiAiAGIAJLGyICIAMgBBCogICAAAJAIAUoAgRBAUcNACAFKAIIIAUoAgwQyYCAgAAACyAFKAIIIQQgACACNgIAIAAgBDYCBCAFQRBqJICAgIAAC7YBAgJ/AX5BASEGQQQhBwJAAkAgBa0gA61+IghCIIinRQ0AQQAhAwwBCwJAIAinIgNBgICAgHggBGtNDQBBACEDDAELAkACQAJAAkAgAUUNACACIAUgAWwgBCADEJ+AgIAAIQcMAQsCQCADDQAgBCEHDAILEKCAgIAAIAMgBBCdgICAACEHCyAHDQAgACAENgIEDAELIAAgBzYCBEEAIQYLQQghBwsgACAHaiADNgIAIAAgBjYCAAvVAgEDfyOAgICAAEEgayIFJICAgIAAAkACQAJAAkACQAJAAkAC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IAQgBkHAAXI6AAAMAgsgAUEMdiEHIAZBP3FBgH9yIQYCQCABQf//A0sNACAEIAU6AAIgBCAGOgABIAQgB0HgAXI6AAAMAgsgBCAFOgADIAQgBjoAAiAEIAdBP3FBgH9yOgABIAQgAUESdkFwcjoAAAwBCyAEIAE6AAALIAAgAyACajYCCEEAC14BAX8CQAJAAkAgAiAAKAIAIAAoAggiA2tNDQAgACADIAJBAUEBEKeAgIAAIAAoAgghAwwBCyACRQ0BCyACRQ0AIAAoAgQgA2ogASAC/AoAAAsgACADIAJqNgIIQQALoQECAn8BfiOAgICAAEEgayICJICAgIAAAkAgASgCAEF/Rw0AIAEoAgwhAyACQQA2AhwgAkKAgICAEDcCFCACQRRqQbiFwIAAIAMoAgAiAygCACADKAIEEM6AgIAAGiACIAIoAhwiAzYCECACIAIpAhQiBDcDCCABIAM2AgggASAENwIACyAAQfSHwIAANgIEIAAgATYCACACQSBqJICAgIAAC4UCAgJ/AX4jgICAgABBIGsiAiSAgICAAAJAIAEoAgBBf0cNACABKAIMIQMgAkEANgIYIAJCgICAgBA3AhAgAkEQakG4hcCAACADKAIAIgMoAgAgAygCBBDOgICAABogAiACKAIYIgM2AgggAiACKQIQIgQ3AwAgASADNgIIIAEgBDcCAAsgASgCCCEDIAFBADYCCCABKQIAIQQgAUKAgICAEDcCACACIAM2AhggAiAENwMQEKCAgIAAAkBBDEEEEJ2AgIAAIgENAEEEQQwQyoCAgAAACyABIAIoAhg2AgggASACKQMQNwIAIABB9IfAgAA2AgQgACABNgIAIAJBIGokgICAgAALCQAgAEEANgIACxQAIABBuIXAgAAgASACEM6AgIAACwkAEK+AgIAAAAvAAQECfwJAAkAgAkUNAEEALQCll8CAACEDQQBBAToApZfAgABBsJfAgAAhBEGAgMSAAEGwl8CAAE0NACACQYCAxIAAQbCXwIAAa0sNACADQf8BcQ0AQYCAxIAAQbCXwIAAayECDAELQQAhBAJAIAJBEHYgAkH//wNxQQBHaiICQAAiA0F/Rw0AQQAhAgwBCyACQRB0IgJBcGogAiADQRB0IgRBACACa0YbIQILIABBADYCCCAAIAI2AgQgACAENgIACxwAAkAgAEUN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AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAzczMzMzM5D8AAAAAAIBxQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAADEAAAAAAAAAAAM3MzMzMzPQ/AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAxAAAAAAAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQAAAAAAAAABAAAADAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAEA/w8AAA==';
+  const $ = id => document.getElementById(id);
+  const canvas = $('game-canvas');
+  const ctx = canvas.getContext('2d');
+  const clamp = (x, a, b) => Math.max(a, Math.min(b, x));
+  const dollars = cents => '$' + (cents / 100).toFixed(2);
+  const percent = fraction => Math.round(fraction * 100);
+  const sodas = [
+    {name:'Sunset Orange',color:'#f49132',light:'#ffd483',flavor:'Bright, citrusy & mellow',fizz:'MILD',note:'A gentle fizz. A lovely place to start.',aside:'A little sunshine in a cup.'},
+    {name:'Cherry Pop',color:'#d95d75',light:'#ffa6b2',flavor:'Sweet cherry, cheeky bubbles',fizz:'BUBBLY',note:'A bubbly personality. Leave a little room for fizz.',aside:'Make it cherry. Make it happy.'},
+    {name:'Lime Lift',color:'#83b559',light:'#ceeb96',flavor:'Fresh lime with a lively lift',fizz:'FIZZY',note:'Lively bubbles. Give the foam a moment.',aside:'Something fresh and a little fizzy.'},
+    {name:'Midnight Cola',color:'#8f573a',light:'#d0a16a',flavor:'Classic cola, extra sparkle',fizz:'EXTRA',note:'Our foamiest pour. Watch the cream-colored foam.',aside:'Classic cola. Extra sparkle, please.'}
+  ];
+  const cups = [
+    {name:'THE CLASSIC',height:230,top:144,bottom:96,curve:0},
+    {name:'THE SHORT STACK',height:174,top:194,bottom:174,curve:3},
+    {name:'THE TALL TALE',height:273,top:126,bottom:103,curve:0},
+    {name:'THE WILD CARD',height:219,top:178,bottom:95,curve:-27}
+  ];
+  const names = ['Jamie','Cleo','Max','Ruth','Finn','Maya','Ollie','Sasha','Ellis','Juniper','Theo','Sunny'];
+  const reviewLines = {
+    5:['“That’s exactly my kind of pour!”','“You’ve got the magic touch.”','“Five stars. Every last little bubble.”','“A perfectly fizzy little moment.”'],
+    4:['“Lovely! Just a tiny bit off the mark.”','“Pretty close. I’ll be back!”','“A very good little soda.”'],
+    3:['“Not quite my order, but not bad.”','“A little more practice and you’ll get it.”','“The soda’s good. Watch that fill line.”'],
+    2:['“The level’s quite a bit off today.”','“Maybe a slower pour next time?”','“Easy on the tap, friend.”'],
+    1:['“Oops. That’s not the pour I ordered.”','“Let’s give that another try next time.”','“The bubbles got the better of this one.”']
+  };
+
+  const F={cash:20,hardcore:21,attempted:22,holding:23,day:24,goal:25,streak:26,bestStreak:27,combo:28,comboBonus:29,milestone:30,perfectTip:31,serviceTip:32,lifetime:33,owned:34,cost:40,canBuy:46,spendable:47,reserve:48,staffSales:49,wages:50,helperActive:51,specialistActive:52,customers:53,basePay:54,modePay:55,signPay:56,foamScale:57,good:58,net:59,lifetimePerfect:60,bestShift:61,businessLevel:62,previousRating:63};
+  const SAVE_KEY='perfect-pour-business-v101';
+  const upgrades=[
+    {name:'A sign with personality',icon:'✦',max:3,unit:'SIGN',description:'From hand-painted charm to a glowing neighborhood landmark.',effect:level=>`+${5*(level+1)}% customer prices in total.`,owned:level=>`Customer prices +${5*level}%.`,button:'UPGRADE SIGN'},
+    {name:'A little patio',icon:'☀',max:2,unit:'PATIO',description:'Make room for more good company out front.',effect:level=>`+${2*(level+1)} customers per day in total, starting next day.`,owned:level=>`+${2*level} customers per day. Seating changes start next day.`,button:'ADD SEATING'},
+    {name:'All-weather welcome',icon:'⌂',max:2,unit:'AWNING',description:'A cozy entrance makes the whole visit feel special.',effect:level=>`+${dollars(15*(level+1))} per 4- or 5-star pour in total.`,owned:level=>`${dollars(15*level)} welcome tip on every good pour.`,button:'UPGRADE AWNING'},
+    {name:'A smoother tap',icon:'♧',max:2,unit:'TAP',description:'Better equipment means fewer runaway bubbles.',effect:level=>`${20*(level+1)}% less foam in total.`,owned:level=>`${20*level}% less foam. Same pouring speed.`,button:'UPGRADE TAP'},
+    {name:'Counter helper',icon:'☺',max:1,unit:'TEAM',description:'A friendly face keeps customers feeling looked after.',effect:()=>'+$0.35 on 3–5 star pours. Wage $1.50/day. Starts next day.',owned:()=>'+$0.35 on 3–5 star pours · $1.50/day wage.',button:'HIRE HELPER'},
+    {name:'Soda specialist',icon:'♜',max:1,unit:'TEAM',description:'A second pair of hands brings in sales of their own.',effect:()=> '2 extra sales at closing, priced by your rating. Wage $2.50/day. Starts next day.',owned:()=> '2 extra sales at closing · $2.50/day wage.',button:'HIRE SPECIALIST'}
+  ];
+  let engine,state,mode='welcome',returnMode='playing',storeReturn='playing',lastFrame=0,simulationClock=0,visualTime=0,lastUi=0;
+  let inputOwner=null,activePointer=null,keyHeld=false,pouring=false,ready=false,lastSpill=0,spillFlash=0,storageAvailable=true,loadedCareer=false,toastTimer;
+  let settings={sound:true};
+  try{const raw=JSON.parse(localStorage.getItem('perfect-pour-v1-settings')||'null');if(raw&&typeof raw.sound==='boolean')settings.sound=raw.sound;}catch(_){}
+  const overlays=['welcome','result','summary','pause','help','restart'];
+  const audio={context:null,gain:null,source:null,buffer:null,pourGain:null};
+  const reducedMotion=window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  function announce(text){$('announcer').textContent=text;}
+  function refreshState(){state=new Float32Array(engine.memory.buffer,engine.state_ptr(),engine.state_len());}
+  function randomSeed(){try{return crypto.getRandomValues(new Uint32Array(1))[0];}catch(_){return(Date.now()^(Math.random()*0xffffffff))>>>0;}}
+  function toast(message){clearTimeout(toastTimer);$('toast').textContent=message;$('toast').hidden=false;toastTimer=setTimeout(()=>$('toast').hidden=true,4200);announce(message);}
+  function setMode(next,focusId){
+    mode=next;simulationClock=performance.now();
+    document.querySelector('.game-shell').inert=!['playing','store'].includes(next);
+    overlays.forEach(name=>$(name+'-overlay').hidden=name!==next);
+    document.querySelector('.game-shell').classList.toggle('is-paused',next==='pause');
+    document.body.dataset.gameMode=next;
+    if(next==='store'||['playing','result','summary','welcome','pause'].includes(next)){
+      const store=next==='store';document.body.dataset.view=store?'store':'counter';
+      $('storefront-view').hidden=!store;$('playfield').hidden=store;$('counter-controls').hidden=store;
+      $('counter-tab').classList.toggle('active',!store);$('store-tab').classList.toggle('active',store);
+      $('counter-tab').setAttribute('aria-pressed',String(!store));$('store-tab').setAttribute('aria-pressed',String(store));
+    }
+    if(ready)updateHud();
+    if(focusId)requestAnimationFrame(()=>$(focusId).focus({preventScroll:true}));
+  }
+  function captureSave(){
+    const ptr=engine.save_ptr(),len=engine.save_len();
+    return{format:'perfect-pour-business',version:101,engine:Array.from(new Float64Array(engine.memory.buffer,ptr,len))};
+  }
+  function applySave(data){
+    if(!data||data.format!=='perfect-pour-business'||data.version!==101||!Array.isArray(data.engine)||data.engine.length!==engine.save_len()||!data.engine.every(Number.isFinite))throw new Error('This is not a compatible Perfect Pour V1.01 save.');
+    const ptr=engine.save_ptr();new Float64Array(engine.memory.buffer,ptr,engine.save_len()).set(data.engine);
+    if(engine.restore_save()!==1)throw new Error('The save data is damaged or contains invalid values.');
+    refreshState();
+  }
+  function saveCareer(){
+    if(!ready)return;
+    try{localStorage.setItem(SAVE_KEY,JSON.stringify(captureSave()));storageAvailable=true;}catch(_){storageAvailable=false;}
+    $('save-status').textContent=storageAvailable?'Your business saves on this device after each customer and purchase. Export a save to take it with you.':'This browser could not save your business. Use Export save before closing the game.';
+  }
+  function exportSave(){
+    if(!ready)return;
+    const data=captureSave();data.exportedAt=new Date().toISOString();
+    const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'}),url=URL.createObjectURL(blob),a=document.createElement('a');
+    a.href=url;a.download=`Perfect_Pour_Day_${Math.round(state[F.day])}_Save.json`;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),5000);toast('Business save exported. Keep it somewhere safe.');
+  }
+  async function importSave(event){
+    const file=event.target.files&&event.target.files[0];event.target.value='';if(!file)return;
+    try{
+      if(file.size>100000)throw new Error('This file is too large to be a game save.');
+      const data=JSON.parse(await file.text());
+      if(!confirm('Import this business? It will replace the business currently open on this device.'))return;
+      applySave(data);clearInput();saveCareer();renderOrder();storeReturn=state[0]===2?'summary':state[0]===1?'result':'playing';renderStore();setMode('store','store-back');toast('Business imported. Hardcore is selected for your next pour.');
+    }catch(error){toast(error instanceof SyntaxError?'That file is not a valid JSON save.':error.message||'The save could not be imported.');}
+  }
+  function updateModeUi(){
+    const hard=state[F.hardcore]===1,locked=state[0]===0&&state[F.attempted]===1;
+    for(const id of ['hardcore-mode','welcome-hardcore','easy-mode','welcome-easy']){
+      const button=$(id),selected=id.includes('hardcore')===hard;
+      button.classList.toggle('active',selected);button.setAttribute('aria-pressed',String(selected));button.disabled=locked;
+      button.title=locked?'Finish this customer before changing mode.':id.includes('hardcore')?'One hold. Release serves. +15% base pay.':'Top up and serve when ready.';
+    }
+    $('welcome-mode-copy').textContent=hard?'Hold Space or the pour button. Release once and the drink is served. Hardcore is the default.':'Hold to pour, release to stop, and top up as often as you like. Press Enter or Serve Drink when ready.';
+    $('serve-button').hidden=hard;$('auto-serve-note').hidden=!hard;
+    $('tip-text').innerHTML=hard?'<strong>One pour. Make it count.</strong><span>Release to serve. Foam contains a little soda, too.</span>':'<strong>Find your fill.</strong><span>Let the foam settle, then top it up.</span>';
+  }
+  function changeDifficulty(hard){
+    if(!ready||pouring)return;
+    if(engine.set_mode(hard?1:0)!==1){toast('Finish this pour before changing the mode.');return;}
+    refreshState();saveCareer();updateHud();if(mode==='store')renderStore();
+    if(mode!=='welcome')toast(hard?'Hardcore: one hold, release to serve. +15% base pay.':'Easy: stop, settle, top up, then serve.');
+  }
+  function clearInput(){inputOwner=null;activePointer=null;pouring=false;$('pour-button').classList.remove('pressed');document.querySelector('.tap-machine').classList.remove('pouring');stopPourSound();}
+  function beginInput(source){
+    if(!ready||mode!=='playing'||inputOwner!==null||state[0]!==0)return false;
+    advanceSimulation(performance.now());if(engine.begin_pour()!==1)return false;
+    refreshState();inputOwner=source;pouring=true;$('pour-button').classList.add('pressed');document.querySelector('.tap-machine').classList.add('pouring');openAudio();startPourSound();updateHud();return true;
+  }
+  function releaseInput(source){
+    if(inputOwner!==source)return;
+    advanceSimulation(performance.now());clearInput();engine.end_pour();refreshState();
+    if(state[0]===1)presentResult(true);else updateHud();
+  }
+  function interruptPour(){if(inputOwner!==null)releaseInput(inputOwner);}
+  function openShop(){
+    if(!ready)return;openAudio();
+    if(state[0]===1){presentResult(false);return;}if(state[0]===2){showSummary(false);return;}
+    renderOrder();setMode('playing','pour-button');saveCareer();tone(440,.13);tone(660,.15,.12);announce('Shop open. '+(state[F.hardcore]?'Hardcore. Hold Space once, then release to serve.':'Easy mode. Hold to pour, and serve when ready.'));
+  }
+  function openNextDay(){
+    if(!ready||state[0]!==2)return;
+    clearInput();engine.next_day(randomSeed());refreshState();saveCareer();renderOrder();setMode('playing','pour-button');tone(440,.13);tone(660,.15,.12);announce(`Day ${state[F.day]}. ${state[F.goal]} customers are coming to your soda bar.`);
+  }
+  function resetBusiness(){
+    clearInput();engine.reset(randomSeed());refreshState();saveCareer();renderOrder();setMode('playing','pour-button');toast('A fresh start. Welcome to Day 1.');
+  }
+  function renderOrder(){
+    const soda=sodas[state[2]],cup=cups[state[3]],order=Math.round(state[1]),target=percent(state[4]),person=(order-1+(state[F.day]-1)*3)%names.length;
+    document.documentElement.style.setProperty('--soda',soda.color);
+    $('customer-name').textContent=names[person];$('customer-number').textContent='CUSTOMER '+String(order).padStart(2,'0');
+    $('order-line').innerHTML='“A '+soda.name+', please.<br><strong>Fill it to '+target+'%!</strong>”';
+    $('customer-aside').textContent=soda.aside;$('customer-art').innerHTML=window.PourArt.customer(person%8,'neutral');
+    $('customer-status').textContent='READY FOR A LITTLE FIZZ';
+    $('tap-name').textContent=soda.name.toUpperCase();$('drink-name').textContent=soda.name;$('drink-flavor').textContent=soda.flavor;
+    $('fizz-label').textContent=soda.fizz;$('fizz-note').textContent=soda.note;$('fizz-meter').setAttribute('aria-label',soda.fizz.toLowerCase()+' fizz');
+    [...$('fizz-meter').children].forEach((dot,i)=>dot.classList.toggle('on',i<=state[2]));
+    $('cup-name').textContent=cup.name;$('cup-capacity').textContent=Math.round(state[5])+' mL';
+    $('target-percent').innerHTML=target+'<small>%</small>';$('target-track').style.left=target+'%';
+    $('payout-multiplier').textContent=state[14].toFixed(2)+'×';lastSpill=state[8];spillFlash=0;updateHud();
+  }
+  function comboMessage(){
+    const streak=Math.round(state[F.streak]);
+    if(streak===0)return'Two good pours unlock a 1.10× combo.';
+    if(streak<3)return`${3-streak} more good ${streak===2?'pour':'pours'} for a $1.00 milestone.`;
+    if(streak<5)return`${5-streak} more good ${streak===4?'pour':'pours'} for a $2.00 milestone.`;
+    if(streak<8)return`${8-streak} more good ${streak===7?'pour':'pours'} for a $4.00 milestone.`;
+    return'Keep your 4- and 5-star pours coming. Your combo is at full strength.';
+  }
+  function updateHud(){
+    if(!state)return;
+    const served=Math.round(state[16]),order=Math.round(state[1]),goal=Math.round(state[F.goal]),hard=state[F.hardcore]===1;
+    $('money').textContent=dollars(state[F.cash]);$('rating').textContent=state[9].toFixed(1);$('day-label').textContent='DAY '+String(state[F.day]).padStart(2,'0');
+    $('customer-count').innerHTML=String(Math.min(order,goal)).padStart(2,'0')+' <small>/ '+goal+'</small>';
+    $('progress-label').textContent=served+' / '+goal+' served';
+    if($('progress-dots').children.length!==goal)$('progress-dots').innerHTML='<i></i>'.repeat(goal);
+    [...$('progress-dots').children].forEach((dot,i)=>{dot.classList.toggle('done',i<served);dot.classList.toggle('current',i===served&&served<goal);});
+    const fill=state[6]/state[5],foam=state[7]/state[5];
+    $('liquid-percent').textContent=percent(fill)+'%';$('foam-percent').textContent=percent(foam)+'%';$('liquid-track').style.width=clamp(fill*100,0,100)+'%';
+    $('foam-track').style.left=clamp(fill*100,0,100)+'%';$('foam-track').style.width=clamp(foam*100,0,100-clamp(fill*100,0,100))+'%';
+    $('serve-button').disabled=mode!=='playing'||hard||state[6]+state[7]<.5;
+    $('pour-button').disabled=mode!=='playing'||state[0]!==0||(hard&&state[F.attempted]===1&&!pouring);
+    $('pause-button').disabled=mode!=='playing';
+    $('game-canvas').setAttribute('aria-label',`Cup: ${percent(fill)} percent soda, ${percent(foam)} percent foam. Target ${percent(state[4])} percent. Spilled ${Math.round(state[8])} milliliters.`);
+    $('combo-label').textContent=state[F.streak]>0?`${state[F.streak]} GOOD POURS · ${state[F.combo].toFixed(2)}× COMBO`:'A FRESH STREAK';$('combo-next').textContent=comboMessage();
+    updateModeUi();
+    let text=hard?'One hold. Release to serve. Aim a little below the line.':'Follow the dotted line. Mind the foam.',kind='';
+    if(spillFlash>0||state[8]>1){text='Oops, a spill! '+Math.round(state[8])+' mL lost.';kind='warning';}
+    else if(fill>state[4]+.025){text=hard?'Past the line. Release to serve.':'A little above the line. Ready to serve?';kind='warning';}
+    else if(Math.abs(fill-state[4])<.025&&fill>.1){text=hard?'At the line. Let go!':'Looking lovely. Let the last bubbles settle.';kind='ready';}
+    else if(foam>.12){text=hard?'Watch the foam. Release before it reaches the rim.':'Quite a cloud of foam. Give it a moment.';}
+    else if(fill>state[4]-.08){text=hard?'Getting close. A little soda is still in the foam.':'Getting close. Pause, settle, then top up.';}
+    $('live-message').textContent=text;$('live-message').className='live-message'+(kind?' '+kind:'');
+  }
+  function serveDrink(){
+    if(!ready||mode!=='playing'||state[F.hardcore]===1||state[6]+state[7]<.5)return;
+    interruptPour();engine.serve();refreshState();if(state[0]===1)presentResult(true);
+  }
+  function presentResult(celebrate){
+    clearInput();refreshState();
+    const stars=Math.round(state[12]),accuracy=Math.round(state[11]),order=Math.round(state[1]),person=(order-1+(state[F.day]-1)*3)%names.length;
+    $('customer-art').innerHTML=window.PourArt.customer(person%8,stars>=4?'happy':stars<=2?'disappointed':'neutral');$('customer-status').textContent=stars>=4?'ONE HAPPY CUSTOMER':'ANOTHER CHANCE NEXT TIME';
+    $('review-stars').innerHTML='★'.repeat(stars)+'<span class="empty">'+'★'.repeat(5-stars)+'</span>';$('review-stars').setAttribute('aria-label',stars+' out of 5 stars');
+    $('result-title').textContent=['','A bubbly little mishap.','Room for a little practice.','A pretty decent pour.','So close to perfect.','A perfect little pour.'][stars];
+    const choices=reviewLines[stars];$('review-quote').textContent=choices[(order+state[F.day]-2)%choices.length];
+    $('result-eyebrow').textContent='A REVIEW JUST CAME IN';
+    $('result-accuracy').innerHTML=accuracy+'<small>%</small>';$('result-earned').textContent=dollars(state[13]);
+    $('result-details').textContent=`Requested ${percent(state[4])}% · Served ${percent(state[6]/state[5])}%`+(state[8]>=.5?` · Spilled ${Math.round(state[8])} mL`:' · No spills');
+    const streak=Math.round(state[F.streak]);
+    $('result-combo').textContent=streak>0?(state[F.milestone]>0?`✦ ${streak}-pour milestone! +${dollars(state[F.milestone])}`:streak>=2?`${['You’re finding your rhythm.','The neighborhood is talking.','Keep that good fizz going.'][streak%3]} ${streak} good pours · ${state[F.combo].toFixed(2)}×`:'A good pour starts a good streak.'): 'A fresh streak starts with your next good pour.';
+    const rows=[['Pour pay',state[F.basePay]],['Streak combo',state[F.comboBonus]],['Milestone reward',state[F.milestone]],['Perfect-pour tip',state[F.perfectTip]],['Welcome & service tips',state[F.serviceTip]]];
+    $('bonus-breakdown').innerHTML=rows.filter((r,i)=>i===0||r[1]>0).map(([label,value])=>'<div class="bonus-row"><span>'+label+'</span><strong>'+dollars(value)+'</strong></div>').join('');
+    $('old-rating').textContent=state[F.previousRating].toFixed(1);$('new-rating').textContent=state[9].toFixed(1);
+    const nextPrice=(.6+state[9]*.2).toFixed(2);
+    $('next-price-note').textContent=order===state[F.goal]?'Last customer served. Close the day to pay wages and count your profits.':`Your next customer’s reputation multiplier: ${nextPrice}×. Good word travels.`;
+    $('next-button').textContent=order===state[F.goal]?'CLOSE THE DAY':'NEXT CUSTOMER';saveCareer();setMode('result','next-button');
+    if(celebrate){openAudio();if(stars>=4){tone(523,.14);tone(659,.16,.12);tone(784,.23,.24);}else{tone(330,.18);tone(294,.22,.16);}if(stars===5)confetti();}
+    announce(`${stars} stars. ${accuracy} percent accuracy. Earned ${dollars(state[13])}. ${streak} good pours in a row.`);
+  }
+  function nextOrder(){
+    if(mode!=='result')return;clearInput();engine.next_order();refreshState();saveCareer();
+    if(state[0]===2){showSummary(true);return;}
+    renderOrder();setMode('playing','pour-button');tone(523,.08);announce(`${sodas[state[2]].name}, filled to ${percent(state[4])} percent. ${sodas[state[2]].fizz} fizz.`);
+  }
+  function showSummary(celebrate){
+    const rating=state[9],goal=state[F.goal];
+    $('summary-money').textContent=dollars(state[10]-state[F.staffSales]);$('summary-rating').textContent=rating.toFixed(1)+' ★';$('summary-accuracy').textContent=Math.round(state[17])+'%';$('summary-perfect').textContent=state[18]+' / '+goal;
+    $('summary-title').textContent=rating>=4.5?'The talk of the block.':rating>=3?'One sweet shift.':'Practice makes the pour.';
+    $('summary-message').textContent=`Day ${state[F.day]} is in the books. ${goal} customers served. Your business keeps growing.`;
+    $('shift-ledger').innerHTML=[['Employee sales',state[F.staffSales]],['Wages paid',-state[F.wages]],['Sales after wages',state[F.net]],['Cash in your business',state[F.cash]]].map(([label,value])=>'<div class="bonus-row"><span>'+label+'</span><strong>'+(value<0?'−'+dollars(-value):dollars(value))+'</strong></div>').join('');
+    $('personal-best').textContent=`Best shift: ${dollars(state[F.bestShift])} · Best streak: ${state[F.bestStreak]} good pours`;
+    $('again-button').textContent='OPEN DAY '+(state[F.day]+1);saveCareer();setMode('summary','summary-store');
+    if(celebrate){if(rating>=4)confetti();tone(523,.2);tone(659,.2,.18);tone(784,.4,.36);}announce(`Day complete. Profit ${dollars(state[F.net])}. Business cash ${dollars(state[F.cash])}.`);
+  }
+  function renderStore(){
+    refreshState();const levels=Array.from(state.slice(F.owned,F.owned+6)).map(Math.round);
+    $('store-art').innerHTML=window.PourStoreArt.render({sign:levels[0],seating:levels[1],awning:levels[2],tap:levels[3],helper:levels[4],specialist:levels[5],rating:state[9],day:state[F.day]});
+    $('store-art').setAttribute('aria-label',`Your soda bar: sign level ${levels[0]}, ${levels[1]} patio upgrades, awning level ${levels[2]}, tap level ${levels[3]}, ${levels[4]+levels[5]} employees.`);
+    $('store-spendable').textContent=dollars(state[F.spendable]);$('store-reserve').textContent=dollars(state[F.reserve]);$('store-lifetime').textContent=dollars(state[F.lifetime]);
+    $('store-description').textContent=`Day ${state[F.day]} · ${state[9].toFixed(1)}-star neighborhood reputation · ${state[F.customers]} customers served. A little shop with a big future.`;
+    $('store-rule').textContent=state[F.canBuy]!==1?'Finish the current cup before buying upgrades. Your pour is paused while you look around.':state[F.reserve]>0?`${dollars(state[F.reserve])} is set aside for today’s staff wages. Seating and new hires start next day; other upgrades apply to the next untouched order.`:'Buy between pours. Seating and new hires start next day; other upgrades apply to the next untouched order.';
+    $('upgrade-grid').innerHTML=upgrades.map((item,i)=>{
+      const level=levels[i],maxed=level>=item.max,cost=state[F.cost+i],affordable=state[F.spendable]>=cost,canBuy=state[F.canBuy]===1&&!maxed&&affordable;
+      let status=maxed?(i>=4?(state[i===4?F.helperActive:F.specialistActive]?'On duty this day':'Joins next day'):'Fully upgraded'):!affordable?`${dollars(Math.max(0,cost-state[F.spendable]))} more to go`:state[F.canBuy]!==1?'Finish this cup first':'Ready when you are';
+      return `<article class="upgrade-card${maxed?' maxed':''}"><div class="upgrade-icon" aria-hidden="true">${item.icon}</div><div class="upgrade-copy"><span class="upgrade-level">${item.unit} · ${i<4?'LEVEL '+level+' / '+item.max:level?'HIRED':'OPEN POSITION'}</span><h3>${item.name}</h3><p>${item.description}</p><div class="upgrade-effect">${maxed?item.owned(level):item.effect(level)}</div></div><button class="buy-button" data-item="${i}" ${canBuy?'':'disabled'} aria-label="${maxed?item.name+' fully owned':item.button+' for '+dollars(cost)}">${maxed?(i>=4?'ON THE TEAM':'LOOKING GOOD'):`${item.button} <strong>${dollars(cost)}</strong>`}</button><span class="upgrade-status">${status}</span></article>`;
+    }).join('');
+    $('store-back').textContent=state[0]===2?'OPEN DAY '+(state[F.day]+1):state[0]===1?'BACK TO THE REVIEW':'BACK TO THE COUNTER';
+    updateHud();
+  }
+  function enterStore(){
+    if(!ready||mode==='welcome')return;
+    interruptPour();storeReturn=state[0]===2?'summary':state[0]===1?'result':'playing';renderStore();setMode('store','store-back');
+  }
+  function leaveStore(){
+    if(mode!=='store')return;
+    if(state[0]===2){openNextDay();return;}if(state[0]===1){presentResult(false);return;}
+    renderOrder();setMode('playing','pour-button');
+  }
+  function buyUpgrade(index){
+    if(mode!=='store'||!Number.isInteger(index)||index<0||index>5)return;
+    if(engine.buy(index)!==1){toast('That upgrade is not available yet.');return;}
+    refreshState();saveCareer();renderStore();tone(523,.1);tone(784,.18,.12);toast(index>=4?`${upgrades[index].name} hired. Their first day is tomorrow.`:index===1?'Patio seating added. More customers arrive next day.':`${upgrades[index].name} upgraded!`);
+    const replacement=$('upgrade-grid').querySelector(`[data-item="${index}"]`);if(replacement&&!replacement.disabled)replacement.focus({preventScroll:true});else $('store-back').focus({preventScroll:true});
+  }
+  function pause(){
+    if(mode==='store')return;
+    if(mode!=='playing')return;interruptPour();if(mode!=='playing')return;setMode('pause','resume-button');announce('Game paused.');
+  }
+  function resume(){if(mode==='pause')setMode('playing','pour-button');}
+  function showHelp(){
+    if(!ready||!['playing','pause','store','welcome'].includes(mode))return;
+    interruptPour();if(mode==='result')return;returnMode=mode;setMode('help','close-help');
+  }
+  function closeHelp(){if(mode==='help')setMode(returnMode,returnMode==='welcome'?'start-button':returnMode==='pause'?'resume-button':returnMode==='store'?'store-back':'pour-button');}
+  function requestRestart(){if(mode!=='store')return;returnMode='store';setMode('restart','cancel-restart');}
+  function cancelRestart(){if(mode==='restart')setMode(returnMode,'store-back');}
+  function openAudio(){
+    if(!settings.sound) return;
+    try {
+      if(!audio.context){
+        const Ctx=window.AudioContext||window.webkitAudioContext;
+        if(!Ctx) return;
+        audio.context=new Ctx(); audio.gain=audio.context.createGain(); audio.gain.gain.value=.25; audio.gain.connect(audio.context.destination);
+        audio.buffer=audio.context.createBuffer(1,audio.context.sampleRate*2,audio.context.sampleRate);
+        const data=audio.buffer.getChannelData(0);let previous=0;
+        for(let i=0;i<data.length;i++){previous=(previous+Math.random()*.16-.08)/1.06;data[i]=previous*2;}
+      }
+      if(audio.context.state==='suspended') audio.context.resume().catch(()=>{});
+    } catch(_) {}
+  }
+  function tone(frequency,duration=.12,delay=0,volume=.16){
+    if(!settings.sound || !audio.context) return;
+    try {const t=audio.context.currentTime+delay,osc=audio.context.createOscillator(),gain=audio.context.createGain();osc.type='sine';osc.frequency.value=frequency;gain.gain.setValueAtTime(0,t);gain.gain.linearRampToValueAtTime(volume,t+.012);gain.gain.exponentialRampToValueAtTime(.001,t+duration);osc.connect(gain);gain.connect(audio.gain);osc.start(t);osc.stop(t+duration+.02);} catch(_){}
+  }
+  function startPourSound(){
+    if(!settings.sound || !audio.context || audio.source) return;
+    try {const src=audio.context.createBufferSource(),filter=audio.context.createBiquadFilter(),gain=audio.context.createGain();src.buffer=audio.buffer;src.loop=true;filter.type='lowpass';filter.frequency.value=1400;gain.gain.value=.45;src.connect(filter);filter.connect(gain);gain.connect(audio.gain);src.start();audio.source=src;audio.pourGain=gain;}catch(_){}
+  }
+  function stopPourSound(){if(audio.source){try{audio.source.stop();}catch(_){}audio.source=null;}}
+  function soundToggle(){
+    settings.sound=!settings.sound;
+    try{localStorage.setItem('perfect-pour-v1-settings',JSON.stringify(settings));}catch(_){}
+    updateSoundButton();
+    if(settings.sound){openAudio();tone(660,.1);if(pouring)startPourSound();}else stopPourSound();
+  }
+  function updateSoundButton(){const b=$('sound-button');b.classList.toggle('muted',!settings.sound);b.setAttribute('aria-label',settings.sound?'Turn sound off':'Turn sound on');b.setAttribute('aria-pressed',String(settings.sound));b.title=settings.sound?'Sound on':'Sound off';}
+  function confetti(){
+    if(reducedMotion)return;
+    for(let i=0;i<25;i++){const el=document.createElement('i');el.className='confetti';el.style.left=(18+Math.random()*64)+'%';el.style.background=['#ffcc6c','#e58f78','#a9d8c9','#fff8e8'][i%4];el.style.setProperty('--drift',(Math.random()*180-90)+'px');el.style.animationDelay=(Math.random()*.25)+'s';el.style.transform=`rotate(${i*37}deg)`;document.body.appendChild(el);setTimeout(()=>el.remove(),2300);}
+  }
+
+  // The drawn fill line uses the same volume-to-height lookup as the soda.
+  // This makes wide, tall, and curved cups honest even when their size is deceptive.
+  let cachedCup=-1,geometry=null;
+  function cupGeometry(index){
+    if(cachedCup===index)return geometry;
+    const cup=cups[index],bottom=393,top=bottom-cup.height,n=240,volume=[0];let sum=0;
+    const width=y=>cup.bottom+(cup.top-cup.bottom)*y+cup.curve*Math.sin(Math.PI*y);
+    for(let i=1;i<=n;i++){const w=width((i-.5)/n);sum+=w*w;volume.push(sum);}
+    for(let i=1;i<=n;i++)volume[i]/=sum;
+    const level=f=>{f=clamp(f,0,1);if(f===0)return bottom;if(f===1)return top;let lo=0,hi=n;while(hi-lo>1){const m=(lo+hi)>>1;if(volume[m]<f)lo=m;else hi=m;}const a=(f-volume[lo])/(volume[hi]-volume[lo]);return bottom-(lo+a)/n*cup.height;};
+    geometry={cup,bottom,top,width,level};cachedCup=index;return geometry;
+  }
+  function cupPath(g){
+    const x=260;ctx.beginPath();ctx.moveTo(x-g.width(1)/2,g.top);
+    for(let i=19;i>=0;i--){const v=i/20;ctx.lineTo(x-g.width(v)/2,g.bottom-v*g.cup.height);}
+    ctx.quadraticCurveTo(x,g.bottom+9,x+g.width(0)/2,g.bottom);
+    for(let i=1;i<=20;i++){const v=i/20;ctx.lineTo(x+g.width(v)/2,g.bottom-v*g.cup.height);}
+    ctx.closePath();
+  }
+  function roundedRect(x,y,w,h,r){ctx.beginPath();ctx.roundRect(x,y,w,h,r);}
+  function draw(){
+    if(!ctx)return;
+    const r=canvas.getBoundingClientRect(),dpr=Math.min(window.devicePixelRatio||1,2),pixelW=Math.round(r.width*dpr),pixelH=Math.round(r.height*dpr);
+    if(canvas.width!==pixelW||canvas.height!==pixelH){canvas.width=pixelW;canvas.height=pixelH;}
+    ctx.setTransform(pixelW/520,0,0,pixelH/440,0,0);ctx.clearRect(0,0,520,440);
+    const s=state||[0,1,0,0,.65,280,0,0,0],soda=sodas[s[2]],g=cupGeometry(s[3]),t=visualTime;
+    const fill=clamp(s[6]/s[5],0,1),foam=clamp(s[7]/s[5],0,1),liquidY=g.level(fill),foamY=g.level(fill+foam),targetY=g.level(s[4]);
+    // Counter shadow and the little paper coaster.
+    ctx.fillStyle='#174b491b';ctx.beginPath();ctx.ellipse(260,405,g.cup.top*.7,10,0,0,Math.PI*2);ctx.fill();
+    ctx.fillStyle='#f6e7c8';ctx.strokeStyle='#174b4955';ctx.lineWidth=1.5;ctx.beginPath();ctx.ellipse(260,400,g.cup.top*.62,10,0,0,Math.PI*2);ctx.fill();ctx.stroke();
+    if(s[8]>.2){ctx.save();ctx.globalAlpha=.38;ctx.fillStyle=soda.color;ctx.beginPath();ctx.ellipse(260,402,Math.min(118,35+s[8]*.45),6+Math.min(4,s[8]*.03),0,0,Math.PI*2);ctx.fill();ctx.restore();}
+    cupPath(g);ctx.fillStyle='#fffdf44d';ctx.fill();ctx.save();ctx.clip();
+    // Liquid, a very small animated meniscus, and rising bubbles.
+    if(fill>0){
+      const gradient=ctx.createLinearGradient(0,liquidY,0,g.bottom);gradient.addColorStop(0,soda.light);gradient.addColorStop(.14,soda.color);gradient.addColorStop(1,soda.color);ctx.fillStyle=gradient;
+      ctx.beginPath();ctx.moveTo(130,g.bottom+12);ctx.lineTo(130,liquidY);for(let x=130;x<=390;x+=5)ctx.lineTo(x,liquidY+Math.sin(x*.045+t*3)*(pouring?1.8:.55));ctx.lineTo(390,g.bottom+12);ctx.closePath();ctx.fill();
+      ctx.save();ctx.beginPath();ctx.rect(120,liquidY+4,280,g.bottom-liquidY);ctx.clip();
+      for(let i=0;i<22;i++){const lane=((i*67)%100)/100,x=260+(lane-.5)*g.cup.top*.75,range=Math.max(1,g.bottom-liquidY),yy=g.bottom-((i*33+t*(15+s[2]*5))%range),rad=1.3+(i%3)*.55;ctx.beginPath();ctx.arc(x,yy,rad,0,Math.PI*2);ctx.fillStyle='#fff8d968';ctx.fill();}
+      ctx.restore();
+    }
+    if(foam>.0004){
+      ctx.fillStyle='#fff8e6';ctx.beginPath();ctx.moveTo(120,liquidY+2);ctx.lineTo(120,foamY);for(let x=120;x<=400;x+=4)ctx.lineTo(x,foamY+Math.sin(x*.15+t*.65)*1.8);ctx.lineTo(400,liquidY+3);ctx.closePath();ctx.fill();
+      ctx.save();ctx.beginPath();ctx.rect(120,foamY+1,280,liquidY-foamY-1);ctx.clip();
+      for(let i=0;i<38;i++){const x=168+(i*37%187),y=foamY+3+(i*19%Math.max(3,Math.floor(liquidY-foamY))),rad=1.3+(i%4)*.8;ctx.beginPath();ctx.arc(x,y,rad,0,Math.PI*2);ctx.strokeStyle='#e3cba363';ctx.lineWidth=.8;ctx.stroke();}ctx.restore();
+    }
+    // Glass highlights remain visible above and below the liquid.
+    ctx.strokeStyle='#ffffff64';ctx.lineWidth=5;ctx.lineCap='round';ctx.beginPath();ctx.moveTo(260-g.width(.86)/2+10,g.bottom-g.cup.height*.86);ctx.lineTo(260-g.width(.18)/2+10,g.bottom-g.cup.height*.18);ctx.stroke();
+    ctx.strokeStyle='#ffffff39';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(260+g.width(.88)/2-9,g.bottom-g.cup.height*.88);ctx.lineTo(260+g.width(.16)/2-9,g.bottom-g.cup.height*.16);ctx.stroke();
+    // A small shop stamp, printed on every cup.
+    const badgeY=g.bottom-52;ctx.fillStyle='#fff5dcbb';ctx.strokeStyle='#174b4970';ctx.lineWidth=1.5;ctx.beginPath();ctx.arc(260,badgeY,22,0,Math.PI*2);ctx.fill();ctx.stroke();ctx.fillStyle='#174b49';ctx.font='bold 16px Trebuchet MS';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText('pp.',260,badgeY-2);ctx.font='7px Trebuchet MS';ctx.fillText('GOOD FIZZ',260,badgeY+11);
+    ctx.restore();
+    // Cup outline and rolled rim.
+    cupPath(g);ctx.strokeStyle='#174b49';ctx.lineWidth=3;ctx.lineJoin='round';ctx.stroke();ctx.beginPath();ctx.ellipse(260,g.top,g.cup.top/2,5,0,0,Math.PI*2);ctx.strokeStyle='#174b49';ctx.lineWidth=2.3;ctx.stroke();
+    // Dashed requested level, mapped from volume (not a naïve cup-height percent).
+    ctx.save();ctx.setLineDash([5,5]);ctx.strokeStyle='#174b49c4';ctx.lineWidth=1.6;ctx.beginPath();ctx.moveTo(260-g.cup.top/2-24,targetY);ctx.lineTo(260+g.cup.top/2+27,targetY);ctx.stroke();ctx.restore();
+    const tagX=260+g.cup.top/2+29;roundedRect(tagX,targetY-17,61,34,9);ctx.fillStyle='#fffaf0';ctx.fill();ctx.strokeStyle='#174b49';ctx.lineWidth=1.5;ctx.stroke();ctx.textAlign='center';ctx.fillStyle='#174b49';ctx.font='bold 17px Trebuchet MS';ctx.fillText(percent(s[4])+'%',tagX+30.5,targetY+.5);
+    ctx.font='9px Trebuchet MS';ctx.fillStyle='#3b6b61';ctx.fillText('FILL LINE',tagX+30,targetY+28);
+    // The stream falls to the visible surface, with small fizzy flecks.
+    if(pouring&&mode==='playing'){
+      const surface=fill+foam>0?foamY:g.bottom-5;ctx.beginPath();ctx.moveTo(254,25);for(let y=25;y<=surface;y+=9)ctx.lineTo(254+Math.sin(y*.1+t*22)*1.4,y);ctx.lineTo(266,surface);for(let y=surface;y>=25;y-=9)ctx.lineTo(266+Math.sin(y*.09+t*24)*1.4,y);ctx.closePath();ctx.fillStyle=soda.color;ctx.globalAlpha=.85;ctx.fill();ctx.globalAlpha=1;ctx.strokeStyle=soda.light;ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(258,29);ctx.lineTo(258,surface-2);ctx.stroke();
+      for(let i=0;i<7;i++){const q=(t*2+i*.147)%1,x=260+Math.sin(i*7.3)*q*22,y=surface-Math.sin(q*Math.PI)*14;ctx.beginPath();ctx.arc(x,y,1.5,0,Math.PI*2);ctx.fillStyle=soda.light;ctx.fill();}
+    }
+    if(spillFlash>0){for(let i=0;i<5;i++){const side=i%2?-1:1,x=260+side*(g.cup.top/2+5+i%2*3),y=g.top+((t*130+i*43)%(g.cup.height+5));ctx.strokeStyle=i%2?'#fff5df':soda.color;ctx.lineWidth=3;ctx.beginPath();ctx.moveTo(x,y);ctx.lineTo(x+side*4,y+13);ctx.stroke();}}
+  }
+
+  // Flush elapsed time on input transitions as well as frames. The Rust engine
+  // owns whether a pour is active, whether an attempt is spent, and its payout.
+  function advanceSimulation(now){
+    const elapsed=simulationClock?clamp((now-simulationClock)/1000,0,3):0;simulationClock=now;
+    if(ready&&mode==='playing'&&state[0]===0){
+      let remaining=elapsed;while(remaining>.000001){const step=Math.min(remaining,.1);engine.step(step,0);remaining-=step;}refreshState();
+      if(state[8]>lastSpill+.03){spillFlash=1.2;if(lastSpill<.1){document.querySelector('.pour-area').classList.add('spilling');setTimeout(()=>document.querySelector('.pour-area').classList.remove('spilling'),350);tone(180,.15);}}
+      lastSpill=state[8];spillFlash=Math.max(0,spillFlash-elapsed);
+    }
+  }
+  function frame(now){
+    const dt=lastFrame?clamp((now-lastFrame)/1000,0,.25):0;lastFrame=now;advanceSimulation(now);
+    if(mode==='playing'&&!reducedMotion)visualTime+=dt;if(now-lastUi>80){updateHud();lastUi=now;}
+    if(mode!=='store')draw();requestAnimationFrame(frame);
+  }
+  $('pour-button').addEventListener('pointerdown',event=>{
+    if(event.button!==0||event.isPrimary===false)return;event.preventDefault();
+    if(beginInput('pointer')){activePointer=event.pointerId;try{event.currentTarget.setPointerCapture(event.pointerId);}catch(_){}}
+  });
+  const releasePointer=event=>{if(inputOwner==='pointer'&&(activePointer===null||event.pointerId===activePointer))releaseInput('pointer');};
+  window.addEventListener('pointerup',releasePointer);window.addEventListener('pointercancel',releasePointer);$('pour-button').addEventListener('lostpointercapture',releasePointer);
+  $('pour-button').addEventListener('contextmenu',event=>event.preventDefault());
+  $('serve-button').addEventListener('click',serveDrink);$('start-button').addEventListener('click',openShop);$('next-button').addEventListener('click',nextOrder);$('again-button').addEventListener('click',openNextDay);
+  $('sound-button').addEventListener('click',soundToggle);$('pause-button').addEventListener('click',pause);$('resume-button').addEventListener('click',resume);$('help-button').addEventListener('click',showHelp);$('close-help').addEventListener('click',closeHelp);
+  for(const id of ['store-tab','restart-button','pause-restart','result-store','summary-store'])$(id).addEventListener('click',enterStore);
+  $('store-back').addEventListener('click',leaveStore);$('counter-tab').addEventListener('click',()=>{if(mode==='store')leaveStore();});
+  $('brand-home').addEventListener('click',event=>{event.preventDefault();enterStore();});
+  for(const id of ['hardcore-mode','welcome-hardcore'])$(id).addEventListener('click',()=>changeDifficulty(true));
+  for(const id of ['easy-mode','welcome-easy'])$(id).addEventListener('click',()=>changeDifficulty(false));
+  $('upgrade-grid').addEventListener('click',event=>{const button=event.target.closest('button[data-item]');if(button&&!button.disabled)buyUpgrade(Number(button.dataset.item));});
+  $('export-save').addEventListener('click',exportSave);$('import-save').addEventListener('click',()=>$('import-file').click());$('import-file').addEventListener('change',importSave);
+  $('reset-business').addEventListener('click',requestRestart);$('confirm-restart').addEventListener('click',resetBusiness);$('cancel-restart').addEventListener('click',cancelRestart);
+  const leaveWindow=()=>{interruptPour();keyHeld=false;if(mode==='playing')pause();};window.addEventListener('blur',leaveWindow);document.addEventListener('visibilitychange',()=>{if(document.hidden)leaveWindow();});
+  function nativeActivation(target){const control=target instanceof Element?target.closest('button,a,input,textarea,select,[contenteditable="true"]'):null;return control&&control.id!=='pour-button';}
+  document.addEventListener('keydown',event=>{
+    if(event.code==='Tab'&&!['playing','store'].includes(mode)){
+      const panel=document.querySelector('.overlay:not([hidden])');if(panel){const items=[...panel.querySelectorAll('button:not(:disabled),a[href]')].filter(el=>!el.hidden);if(items.length){const first=items[0],last=items[items.length-1];if(event.shiftKey&&document.activeElement===first){event.preventDefault();last.focus();}else if(!event.shiftKey&&document.activeElement===last){event.preventDefault();first.focus();}}}
+    }
+    if((event.code==='Space'||event.code==='Enter')&&nativeActivation(event.target))return;
+    if(event.code==='Space'){if(mode==='playing'){event.preventDefault();if(!event.repeat&&!keyHeld){keyHeld=true;beginInput('key');}}return;}
+    if(event.repeat)return;
+    if(event.code==='Enter'&&mode==='playing'){event.preventDefault();serveDrink();}
+    if(event.code==='KeyP'||event.code==='Escape'){
+      if(mode==='playing'){event.preventDefault();pause();}else if(mode==='pause'){event.preventDefault();resume();}else if(mode==='help'){event.preventDefault();closeHelp();}else if(mode==='restart'){event.preventDefault();cancelRestart();}else if(mode==='store'&&event.code==='Escape'){event.preventDefault();leaveStore();}
+    }
+  });
+  document.addEventListener('keyup',event=>{if(event.code==='Space'){if(keyHeld)event.preventDefault();keyHeld=false;releaseInput('key');}});
+  $('download-game').href=window.location.href.split('#')[0];
+  updateSoundButton();document.querySelector('.game-shell').inert=true;$('start-button').disabled=true;$('start-button').textContent='WARMING UP THE FIZZ…';requestAnimationFrame(frame);
+  (async()=>{
+    try{
+      const bytes=Uint8Array.from(atob(WASM_BASE64),ch=>ch.charCodeAt(0));const result=await WebAssembly.instantiate(bytes,{});engine=result.instance.exports;engine.reset(randomSeed());refreshState();ready=true;
+      try{const saved=localStorage.getItem(SAVE_KEY);if(saved){applySave(JSON.parse(saved));loadedCareer=true;}}catch(_){toast('Your previous save could not be loaded. A fresh shop is ready; you can import a backup.');}
+      renderOrder();updateHud();$('start-button').disabled=false;$('start-button').textContent=loadedCareer?'BACK TO MY BUSINESS':'OPEN THE SHOP';
+      if(loadedCareer)$('welcome-description').textContent=`Welcome back. Day ${state[F.day]}, ${dollars(state[F.cash])} in the business, and a ${state[9].toFixed(1)}-star reputation. Your shop is right where you left it.`;
+      $('start-button').focus({preventScroll:true});
+    }catch(error){console.error('Perfect Pour could not start:',error);$('boot-error').hidden=false;$('boot-error').textContent='The game couldn’t start. Open this HTML file in a recent version of Chrome, Edge, Firefox, or Safari with JavaScript enabled.';$('start-button').textContent='UNABLE TO OPEN';}
+  })();
+})();
+
+</script>
+</body>
+</html>

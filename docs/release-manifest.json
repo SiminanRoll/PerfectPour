@@ -1,0 +1,23 @@
+{
+  "game": "Perfect Pour",
+  "version": "1.01",
+  "release_date": "2026-11-26",
+  "html_bytes": 174297,
+  "html_sha256": "affff15983eae6675fcdcf5c3f6c704491eb3021f1b930cb7bde5a0003c61092",
+  "wasm_bytes": 28762,
+  "wasm_sha256": "83762c76f8793552f3e8cffb6a890f75d078bee029860053c933dd85f86745be",
+  "native_tests": 28,
+  "wasm_imports": 0,
+  "repository": "https://github.com/SiminanRoll/PerfectPour",
+  "site_project_id": "appgprj_6b0908af5d34819183b47b403fbcb98b",
+  "browser_checks": [
+    "Hardcore release auto-serves",
+    "Easy top-up and manual Serve",
+    "Full 12-customer day, ten-pour streak, $68.32",
+    "Upgrades and next-day helper/seating",
+    "All eleven upgrade levels through UI",
+    "Export/import and reload",
+    "390x844 responsive layout"
+  ],
+  "verification_limit": "Direct file:// launch blocked by available preview browser; same bundled HTML tested through HTTP."
+}

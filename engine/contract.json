@@ -1,0 +1,229 @@
+{
+  "version": "1.01",
+  "saveVersion": 101,
+  "snapshot": {
+    "type": "f32",
+    "length": 64,
+    "fields": {
+      "phase": 0,
+      "order": 1,
+      "soda": 2,
+      "cup": 3,
+      "target": 4,
+      "capacity": 5,
+      "liquid": 6,
+      "foam": 7,
+      "spill": 8,
+      "rating": 9,
+      "shiftGross": 10,
+      "accuracy": 11,
+      "stars": 12,
+      "payout": 13,
+      "reputationMultiplier": 14,
+      "elapsed": 15,
+      "completed": 16,
+      "averageAccuracy": 17,
+      "perfectPours": 18,
+      "flowRate": 19,
+      "cash": 20,
+      "hardcore": 21,
+      "attempted": 22,
+      "holding": 23,
+      "day": 24,
+      "orderGoal": 25,
+      "streak": 26,
+      "bestStreak": 27,
+      "comboMultiplier": 28,
+      "comboBonus": 29,
+      "milestoneBonus": 30,
+      "perfectTip": 31,
+      "serviceTip": 32,
+      "lifetimeGross": 33,
+      "signLevel": 34,
+      "seatingLevel": 35,
+      "awningLevel": 36,
+      "tapLevel": 37,
+      "helperOwned": 38,
+      "specialistOwned": 39,
+      "signCost": 40,
+      "seatingCost": 41,
+      "awningCost": 42,
+      "tapCost": 43,
+      "helperCost": 44,
+      "specialistCost": 45,
+      "mayBuyNow": 46,
+      "spendableCash": 47,
+      "wageReserve": 48,
+      "staffSales": 49,
+      "wagesPaid": 50,
+      "helperActive": 51,
+      "specialistActive": 52,
+      "lifetimeCustomers": 53,
+      "basePayout": 54,
+      "modeMultiplier": 55,
+      "signMultiplier": 56,
+      "foamMultiplier": 57,
+      "lastWasGood": 58,
+      "shiftNet": 59,
+      "lifetimePerfect": 60,
+      "bestShiftGross": 61,
+      "businessLevel": 62,
+      "previousRating": 63
+    }
+  },
+  "save": {
+    "type": "f64",
+    "length": 80,
+    "fields": {
+      "version": 0,
+      "phase": 1,
+      "order": 2,
+      "soda": 3,
+      "cup": 4,
+      "target": 5,
+      "liquid": 6,
+      "foamReserved": 7,
+      "foamLiquidReserved": 8,
+      "spill": 9,
+      "rating": 10,
+      "shiftGross": 11,
+      "accuracy": 12,
+      "stars": 13,
+      "payout": 14,
+      "reputationMultiplier": 15,
+      "elapsed": 16,
+      "completed": 17,
+      "accuracySum": 18,
+      "perfectPours": 19,
+      "rng": 20,
+      "cash": 21,
+      "savedHardcore": 22,
+      "attempted": 23,
+      "holdingReserved": 24,
+      "day": 25,
+      "orderGoal": 26,
+      "streak": 27,
+      "bestStreak": 28,
+      "comboBonus": 29,
+      "milestoneBonus": 30,
+      "perfectTip": 31,
+      "serviceTip": 32,
+      "lifetimeGross": 33,
+      "signLevel": 34,
+      "seatingLevel": 35,
+      "awningLevel": 36,
+      "tapLevel": 37,
+      "helperOwned": 38,
+      "specialistOwned": 39,
+      "helperActive": 40,
+      "specialistActive": 41,
+      "staffSales": 42,
+      "wagesPaid": 43,
+      "dayClosed": 44,
+      "lifetimeCustomers": 45,
+      "basePayout": 46,
+      "lifetimePerfect": 47,
+      "bestShiftGross": 48,
+      "previousRating": 49,
+      "lastWasGood": 50,
+      "lockedOrderSign": 51,
+      "lockedOrderAwning": 52
+    },
+    "reserved": [
+      53,
+      79
+    ],
+    "notes": [
+      "save_ptr refreshes the buffer from live state.",
+      "For restore: call save_ptr once, write all80 doubles, then restore_save.",
+      "Unfinished cups restart untouched without a payout. Paid reviews remain paid.",
+      "Restoring always selects Hardcore; a saved Easy streak resets."
+    ]
+  },
+  "phases": {
+    "active": 0,
+    "review": 1,
+    "dayComplete": 2
+  },
+  "exports": {
+    "reset": "(seed:u32)->void",
+    "begin_pour": "()->u32",
+    "end_pour": "()->void",
+    "step": "(dt:f32,ignoredLegacyPouring:u32)->void",
+    "serve": "()->u32",
+    "set_mode": "(hardcore:u32)->u32",
+    "next_order": "()->void",
+    "next_day": "(seed:u32)->u32",
+    "buy": "(item:u32)->u32",
+    "state_ptr": "()->pointer",
+    "state_len": "()->u32",
+    "save_ptr": "()->pointer",
+    "save_len": "()->u32",
+    "restore_save": "()->u32"
+  },
+  "upgrades": [
+    {
+      "item": 0,
+      "name": "Sign",
+      "costsCents": [
+        1200,
+        2200,
+        3600
+      ],
+      "effect": "+5% base order price per level"
+    },
+    {
+      "item": 1,
+      "name": "Patio seating",
+      "costsCents": [
+        1800,
+        3000
+      ],
+      "effect": "+2 player customers per level starting next day"
+    },
+    {
+      "item": 2,
+      "name": "Awning",
+      "costsCents": [
+        1600,
+        2800
+      ],
+      "effect": "+15c tip per level on4+ stars"
+    },
+    {
+      "item": 3,
+      "name": "Tap equipment",
+      "costsCents": [
+        2400,
+        4200
+      ],
+      "effect": "20% less gas volume per level, preserving beverage"
+    },
+    {
+      "item": 4,
+      "name": "Counter helper",
+      "costsCents": [
+        3500
+      ],
+      "effect": "+35c on3+ stars,150c wage/day, starts next day"
+    },
+    {
+      "item": 5,
+      "name": "Soda specialist",
+      "costsCents": [
+        5500
+      ],
+      "effect": "2 passive staff sales/day,250c wage/day, starts next day"
+    }
+  ],
+  "moneyUnit": "integer cents",
+  "targetUnit": "fraction of cup capacity",
+  "volumeUnit": "ml",
+  "rules": {
+    "hardcoreDefault": true,
+    "singleAttemptEnforcedByEngine": true,
+    "purchaseDuringAttempt": false,
+    "modeChangeDuringAttempt": false,
+    "reachableTargets": "Same physics probe stops before first overflow; generated requests stay1.5percentage points below it."
+  }
+}

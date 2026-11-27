@@ -1,0 +1,88 @@
+# Perfect Pour V1.01 — release record
+
+## Deliverable
+
+**`Perfect_Pour_V1_01.html`** is the standalone playable release. The source bundle contains the identical built document at `dist/index.html`. Download the HTML and open it in a modern browser; players need no server, frontend hosting, runtime installation, account, or internet connection.
+
+The original V1 release remains preserved separately. V1.01 adds a persistent business without overwriting the original game's artifact or source directory.
+
+## What changed
+
+### A single, decisive pour
+
+Hardcore is the default: hold Space or the Pour button once, then release to automatically serve. The Rust engine enforces a single attempt and rejects a second pour. Even a very short tap counts. Hardcore adds 15% to base earnings.
+
+Easy restores repeated pours, foam-settling time, top-ups, and manual serving with Enter or Serve Drink. Mode selection locks after a cup begins; switching modes between customers resets the streak. Pausing or leaving the window during a Hardcore hold ends and serves the current pour.
+
+### Foam in the side meter
+
+The ticket now displays stacked liquid and foam, a distinct cream hatch for foam, both percentages, and the requested target. The cup and meter reflect occupied volume. Serving scores settled beverage: entrained soda counts, gas does not, and spills still reduce accuracy. The meter stays visible in the phone layout.
+
+### Combo rewards
+
+Four- and five-star pours extend the streak. The base-pay multipliers are 1.10× from two consecutive good pours, 1.20× from three, 1.30× from five, and 1.40× from seven. Exact milestones at three, five, and eight add $1, $2, and $4. Every five-star pour adds a $0.25 perfect tip. Result screens separate base pay, combo earnings, milestone bonuses, and service/perfect tips.
+
+### A storefront and a continuing business
+
+The new storefront view depicts the same shop growing from a modest neighborhood bar into an equipped, decorated business with a patio and employees. Purchases visibly change its sign, awning, patio, taps, and staff.
+
+| Purchase | Additional level prices | Gameplay effect |
+| --- | --- | --- |
+| Sign, three levels | $12 / $22 / $36 | +5% base order price per level |
+| Patio seating, two levels | $18 / $30 | +2 player customers per level beginning next day |
+| Awning, two levels | $16 / $28 | +$0.15 per level on four- and five-star pours |
+| Tap equipment, two levels | $24 / $42 | 20% less foam gas per level, preserving beverage |
+| Counter helper | $35 | +$0.35 on three-star-or-better pours; $1.50 wage per active day |
+| Soda specialist | $55 | Two passive staff sales per active day; $2.50 wage per active day |
+
+Hires and seating take effect next day. Other upgrades apply to the next untouched order, including a customer already waiting whose pour has not begun. Purchases are blocked during an attempted cup.
+
+Shop rating, cash, owned upgrades, employees, streaks, and career records continue across days. Daily counters reset. The helper and specialist are recruited once and paid on each day they work. The game reserves the current shift's owed wages when calculating spendable cash; closing records passive sales and deducts wages once. The specialist's sales depend on closing reputation and signage, with no player combo or Hardcore premium.
+
+### Business saves
+
+Browser autosave checkpoints preserve the business when storage is available. The UI reports storage failure instead of claiming a save succeeded. Export and import provide portable JSON backups in `perfect-pour-business` format, version **101**.
+
+Restoring selects Hardcore. An unfinished cup restarts empty without awarding a payout; a completed review remains paid. Restoring a saved Easy session clears its streak when returning to Hardcore. Import validates the file and engine data before replacing the playable state. Browser local storage for downloaded HTML files varies, so exported backups are the reliable way to move progress between files, browsers, or computers.
+
+## Implementation and packaging
+
+- Dependency-free Rust engine compiled to embedded WebAssembly; Rust crate version `1.0.1`, public game version **V1.01**.
+- Engine-owned single-attempt enforcement, mode lock, rewards, upgrades, wage accounting, day closure, and save validation.
+- `engine/contract.json` defines the V1.01 API, 64 `f32` snapshot fields, 80 `f64` save slots, units, and upgrade costs.
+- Canvas cup/foam rendering and self-contained SVG customer/storefront illustrations.
+- Embedded styles, scripts, Wasm, and synthesized audio; no remote assets, external fonts, analytics, or required runtime services.
+- `python3 scripts/build.py` rebuilds `dist/index.html` from the included precompiled engine.
+- `python3 engine/build_engine.py` runs native tests and rebuilds the engine with an installed `wasm32-unknown-unknown` Rust target.
+
+## Verification record
+
+Results below were recorded against the V1.01 release build. The acceptance matrix is `docs/qa/V101_ACCEPTANCE.md`; its checklist alone is not proof of a pass.
+
+| Check | Final result |
+| --- | --- |
+| Native Rust simulation and economy tests | PASS — 28 tests, including 4,608 one-hold fairness simulations |
+| Actual compiled-Wasm smoke and invariants | PASS — engine smoke and independent business acceptance; all 16 soda/cup pairs and all tap levels |
+| Embedded module and offline dependency verifier | PASS — 28,762-byte Wasm, zero imports; styles, SVG art, scripts, and audio embedded |
+| Offline verifier regression/self-tests | PASS — 14 lexical and dependency cases |
+| Hardcore one-attempt, auto-serve, and interruption behavior | PASS — actual Space hold/release, mouse+Space overlap, and pause during a hold produce one review |
+| Easy repeated pours and manual serving | PASS — two mouse holds increased the same cup, followed by explicit Serve |
+| Meter, rewards, and mode locking | PASS — separate live foam segment; mode controls locked after pour; 10-pour browser streak paid milestones at 3, 5, 8 |
+| Purchases, employee activation, wages, and next day | PASS — browser bought sign, patio, helper; Day 2 had 14 customers and $1.50 wage reserve. All 11 upgrade levels bought through UI in an engine-earned fixture |
+| Save/export/import, reload, and malformed-data behavior | PASS — browser export/import round trip restored Day 2, $3.32, upgrades and helper; reloaded paid review did not pay again; malformed data covered by engine tests |
+| Desktop and narrow-layout actual interface checks | PASS — desktop and 390×844 wrapper; tallest rim clears foam meter; storefront and controls remain usable |
+| Final HTML byte count and SHA-256 | 174,297 bytes · `affff15983eae6675fcdcf5c3f6c704491eb3021f1b930cb7bde5a0003c61092` |
+
+### Test-environment limit
+
+The available preview browser blocks direct `file://` URLs. Direct local-file launch is therefore not represented as browser-tested. Static offline/package checks establish that the release embeds its runtime and assets; actual interface checks use that same HTML through an HTTP preview. A responsive viewport check does not certify a physical phone or every browser's downloaded-file storage behavior.
+
+## Player-facing limits
+
+This version has one soda-bar location, four sodas, four cup shapes, six upgrade categories, and two employee roles. Progression is local; there is no account or cloud sync. Employees produce the effects stated in the shop, rather than simulating autonomous visible pours. Days contain 12 player customers initially, up to 16 with seating; the specialist's two sales settle separately at closing.
+
+There is no time limit, rent system, debt, stock purchasing, or additional branch management in this release. New businesses begin at 3.5 stars. Poor reviews lower later prices but good service can rebuild them.
+
+## Online publication
+
+The user subsequently authorized online publication and supplied `SiminanRoll/PerfectPour`, then made that repository public. The same self-contained build is published with Sites. Source pushes and live publishing are separate operations; the optional GitHub Pages guide explains a future Pages deployment.

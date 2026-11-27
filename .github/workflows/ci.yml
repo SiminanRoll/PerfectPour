@@ -1,0 +1,42 @@
+name: Perfect Pour CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    name: Rust, Wasm, and standalone release
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Check out source
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Test native Rust engine
+        run: cargo test --manifest-path engine/Cargo.toml
+
+      - name: Test compiled Wasm engine
+        run: node tests/engine/wasm-smoke.mjs
+
+      - name: Test business and one-pour acceptance
+        run: node tests/browser/v101-business-acceptance.mjs
+
+      - name: Test offline verifier regressions
+        run: node tests/browser/verify-offline-selftest.mjs
+
+      - name: Build standalone HTML
+        run: python3 scripts/build.py
+
+      - name: Verify offline release
+        run: node tests/browser/verify_offline.mjs dist/index.html
+
+      - name: Check committed release matches source
+        run: git diff --exit-code -- dist/index.html
