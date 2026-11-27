@@ -48,7 +48,8 @@ for(const match of markup.matchAll(/<(\/?)([a-zA-Z][\w:-]*)([^>]*?)>/g)){
 const literalIds=new Set([
   ...[...source.matchAll(/\$\('([^']+)'\)/g)].map(m=>m[1]),
   ...[...source.matchAll(/\btext\('([^']+)'/g)].map(m=>m[1]),
-  'pressure-gentle','pressure-classic','pressure-rush','welcome-hardcore','welcome-easy','hardcore-mode','easy-mode','music-volume','sound-volume'
+  'pressure-gentle','pressure-classic','pressure-rush','hardcore-mode','easy-mode','music-volume','sound-volume',
+  'intro-overlay','intro-start','new-game-button','start-button','menu-settings'
 ]);
 for(const id of literalIds)assert.ok(elements.has(id),`Renderer target #${id} exists in authored HTML`);
 for(const id of ['announcer','sound-button','music-button','help-button']){
@@ -57,6 +58,12 @@ for(const id of ['announcer','sound-button','music-button','help-button']){
 }
 assert.equal(elements.get('announcer').attrs['aria-live'],'polite');
 for(const id of ['pressure-gentle','pressure-classic','pressure-rush','hardcore-mode','easy-mode'])assert.equal(elements.get(id).tag,'button');
+for(const id of ['intro-start','new-game-button','start-button','menu-settings']){
+  const element=elements.get(id);assert.equal(element.tag,'button');
+  assert.equal(element.ancestors.some(parent=>(parent.attrs.class||'').split(/\s+/).includes('game-shell')),false,`${id} remains usable while the game background is inert`);
+}
+for(const id of ['welcome-hardcore','welcome-easy'])assert.equal(elements.has(id),false,'Starting screens do not offer difficulty selection');
+for(const id of ['hardcore-mode','easy-mode'])assert.equal(elements.get(id).ancestors.some(parent=>['intro-overlay','welcome-overlay'].includes(parent.attrs.id)),false,'Difficulty controls remain in the game');
 assert.equal(elements.get('pour-button').tag,'button');
 for(const id of ['review-button','serve-button','next-button','again-button'])assert.equal(elements.has(id),false,`${id} is replaced by the single phase-aware primary button`);
 for(const id of ['primary-label','primary-hint','counter-action-slot','result-action-slot','summary-action-slot'])assert.ok(elements.has(id),`The shared primary action has its ${id} target`);
@@ -131,7 +138,7 @@ assert.ok(storageListenerLine);
 function persistenceFixture({readFails=false,writeFails=false}={}){
   const stored=new Map(keys.LEGACY_SAVE_KEYS.map(key=>[key,'legacy business stays intact']));
   const effects=[],labels=new Map(),restartButton={disabled:false};let writes=0,reloads=0,storageCallback;
-  const scope={...keys,ready:true,externalSave:false,lastSavedRaw:null,storageAvailable:true,
+  const scope={...keys,ready:true,careerActive:true,externalSave:false,lastSavedRaw:null,storageAvailable:true,
     keyHeld:true,settlingSpaceHeld:true,mode:'playing',captureSave:adapter.captureSave,
     localStorage:{
       getItem(key){if(readFails)throw new Error('Storage unavailable');return stored.get(key)??null;},

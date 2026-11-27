@@ -1,10 +1,18 @@
-# Perfect Pour — V1.03.1
+# Perfect Pour — V1.03.2
 
 **[Play Perfect Pour online](https://perfect-pour.pretty-scarf-0591.chatgpt.site/)** · [Source repository](https://github.com/SiminanRoll/PerfectPour)
 
-Craft a custom soda, make the pour, earn a review, and grow a neighborhood soda bar. V1.03.1 consolidates the interface into a compact game screen, with illustrated controls and less repeated instruction. V1.03's custom recipes, cherries, lime, syrup, blend choices, and single primary action remain. The cup carries a pictorial brand stamp without lettering.
+Craft a custom soda, make the pour, earn a review, and grow a neighborhood soda bar. V1.03.2 opens with an animated, illustrated soda and a simple New Game / Continue / Settings menu. The compact counter, custom recipes, cherries, lime, syrup, blend choices, and single primary action remain. The cup carries a pictorial brand stamp without lettering.
 
 **`dist/index.html` is the complete game:** a self-contained HTML file with the Rust/WebAssembly engine, interface, graphics, and synthesized music and effects. It is designed for offline play without an account, frontend server, or runtime downloads. Rust, Python, and Node are development tools; players do not need them.
+
+## Start your shop
+
+Choose **Start** on the animated intro to open the main menu. **New Game** begins in Hardcore. If a business is already saved, starting over requires confirmation; cancel returns to the menu with the business intact. **Continue** appears disabled until a saved business is available and resumes its current customer or closed day. **Settings** opens the audio controls, app-icon download, and optional instructions, then returns to the menu.
+
+The starting screens have no difficulty selector. Switch between Hardcore and Easy in the game. Continuing an unfinished Easy cup preserves that cup's mode; the existing restore rules return later orders to Hardcore. Simply opening the intro, viewing Settings, or leaving the browser window does not create or replace a saved business before New Game or Continue.
+
+The intro and menu adapt to portrait, landscape, and desktop screens. Reduced-motion preferences replace decorative animation with a static presentation. Longer optional instructions scroll inside Settings while its close action stays visible.
 
 ## Play a customer
 
@@ -109,6 +117,7 @@ node tests/engine/v102-balance.mjs
 node tests/browser/v101-business-acceptance.mjs
 node tests/browser/v102-ui-contract.mjs
 node tests/browser/v103-control-flow.mjs
+node tests/browser/v1032-menu.mjs
 node tests/audio/music-lifecycle.mjs
 node tests/audio/game-sounds.mjs
 node tests/browser/verify-offline-selftest.mjs
@@ -116,6 +125,6 @@ python3 scripts/build.py
 node tests/browser/verify_offline.mjs dist/index.html
 ```
 
-Historical filenames now exercise V1.03. Local checks include 40 native tests, 6,048 catalog/mode fixtures, 48 synthetic careers, 94 UI aliases, and production pointer/keyboard handlers. UI harnesses are not browser playtests, and simulated careers are not measured player performance. Direct-file portability is packaging-verified; narrow browser layouts do not certify physical phones, and audio lifecycle tests are not a subjective listening pass.
+Historical filenames also exercise the current game. The suites cover 40 native tests, 6,048 catalog/mode fixtures, 48 synthetic careers, 94 UI aliases, production pointer/keyboard handlers, and startup/save/menu behavior against the shipped Wasm. UI harnesses are not browser playtests, and simulated careers are not measured player performance. Direct-file portability is packaging-verified; narrow browser layouts do not certify physical phones, and audio lifecycle tests are not a subjective listening pass.
 
-See [V1.03.1 notes](docs/V1031_RELEASE.md), [engine integration](engine/README.md), and [release identity](docs/release-manifest.json). [V1.03 notes](docs/V103_RELEASE.md), [V1.02 notes](docs/V102_RELEASE.md), and their acceptance records are retained. These documents describe source and prepublication checks; GitHub CI and deployment records establish subsequent release status.
+See [V1.03.2 notes](docs/V1032_RELEASE.md), [V1.03.2 acceptance evidence](docs/qa/V1032_ACCEPTANCE.md), [engine integration](engine/README.md), and [release identity](docs/release-manifest.json). [V1.03.1 notes](docs/V1031_RELEASE.md), [V1.03 notes](docs/V103_RELEASE.md), [V1.02 notes](docs/V102_RELEASE.md), and their acceptance records are retained. These documents describe source and prepublication checks; GitHub CI and deployment records establish subsequent release status.

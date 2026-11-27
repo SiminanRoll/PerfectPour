@@ -215,7 +215,9 @@ body[data-control-stage="prep"] .live-message{display:none}.milestone-badge{top:
 
 /* Safe-area padding belongs to the viewport shell, not individual scenes. */
 html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
-body{touch-action:manipulation}
+html,body{touch-action:pan-y}
+.help-copy,.modal-review-body,.modal,.order-ticket{touch-action:pan-y}
+#intro-overlay,#welcome-overlay,#pour-button{touch-action:none}
 .game-shell{padding:env(safe-area-inset-top) env(safe-area-inset-right) 0 env(safe-area-inset-left)}
 .global-utility{top:calc(env(safe-area-inset-top) + 7px);right:max(calc(env(safe-area-inset-right) + 12px),calc((100vw - 1440px)/2 + 12px))}
 @media(max-width:800px){.global-utility{top:calc(env(safe-area-inset-top) + 5px);right:calc(env(safe-area-inset-right) + 8px)}}

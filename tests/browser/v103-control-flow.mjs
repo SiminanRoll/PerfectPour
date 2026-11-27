@@ -75,13 +75,14 @@ assert.equal(resolve(state).disabled, true);
 state.mode = 'finished'; assert.equal(resolve(state).action, 'review');
 checks.push('Easy uses the same action for tap-to-serve or hold-to-top-up while the recipe remains locked');
 
-for (const mode of ['welcome','store','pause','help','restart','unknown']) {
+for (const mode of ['intro','welcome','store','pause','help','restart','unknown']) {
   const action=resolve({...clean,mode});
   assert.equal(action.action, 'none');
   assert.equal(action.disabled, true);
   assert.equal(action.showRecipe, false);
   assert.equal(action.showPressure, false);
 }
+for(const mode of ['intro','welcome'])assert.equal(resolve({...clean,mode}).showMode,false,'Starting screens never expose difficulty selection');
 assert.equal(resolve({...clean,mode:'store'}).showMode, true);
 assert.equal(resolve({...clean,recipeLocked:true,selectedSoda:2}).showRecipe, false);
 assert.equal(resolve({...clean,recipeLocked:true,selectedSoda:2}).disabled, true);
@@ -137,8 +138,8 @@ function inputFixture({hardcore=true,mode='playing',primed=false,selected=true}=
   };
   const scope={engine,F,state:snap(),ready:true,externalSave:false,mode,returnMode:'playing',
     pendingPointer:null,suppressPrimaryClick:false,inputOwner:null,activePointer:null,
-    keyHeld:false,settlingSpaceHeld:false,pouring:false,
-    overlays:['welcome','result','summary','pause','help','restart'],Element,
+    keyHeld:false,settlingSpaceHeld:false,menuActivationKey:'',pouring:false,
+    overlays:['intro','welcome','result','summary','pause','help','restart'],Element,
     performance:{now:()=>now},
     setTimeout(fn,delay){const id=++nextTimer;timers.set(id,{fn,at:now+delay});return id;},
     clearTimeout(id){timers.delete(id);},
@@ -242,6 +243,30 @@ enter.api.keyDown(enter.event({code:'Enter'}));assert.equal(enter.scope.mode,'pl
 enter.finish();enter.api.keyDown(enter.event({code:'Enter'}));enter.api.keyDown(enter.event({code:'Enter',repeat:true}));
 assert.equal(enter.counts.review,1);assert.equal(enter.counts.next,0);
 checks.push('actual Space and Enter handlers preserve preparation/settling handoffs and cannot repeat through review into the next customer');
+
+// The test invokes key callbacks at the native activation boundary. It does
+// not synthesize the browser's click: the intervening mode change represents
+// that control's separate click handler, which the menu suite tests directly.
+for(const code of ['Enter','Space']){
+  const launch=inputFixture({mode:'intro'}),intro=new Element('intro-start'),next=new Element('new-game-button');
+  const initial=launch.event({code,target:intro});launch.api.keyDown(initial);
+  assert.equal(initial.prevented,false,`${code} keeps the initial native Start activation`);
+  assert.equal(launch.scope.menuActivationKey,code);
+  launch.mode('welcome');
+  const repeatOnMenu=launch.event({code,target:next,repeat:true});launch.api.keyDown(repeatOnMenu);
+  assert.equal(repeatOnMenu.prevented,true,`Held ${code} cannot activate the newly focused menu control`);
+  launch.mode('preparing');
+  const repeatOnGame=launch.event({code,repeat:true});launch.api.keyDown(repeatOnGame);
+  assert.equal(repeatOnGame.prevented,true,`Held ${code} cannot cross the menu into gameplay`);
+  assert.equal(launch.counts.begin,0);assert.equal(launch.scope.mode,'preparing');
+  const released=launch.event({code,target:intro});launch.api.keyUp(released);
+  assert.equal(released.prevented,false,'Releasing the first native Space must retain its default click');
+  assert.equal(launch.scope.menuActivationKey,'');
+  launch.api.keyDown(launch.event({code:'Enter'}));
+  assert.equal(launch.scope.mode,'playing','A fresh key remains usable after the launch key is released');
+  assert.equal(launch.counts.begin,0);
+}
+checks.push('native menu Enter/Space keep their first activation but held repeats cannot trigger newly focused menu or game controls');
 
 const noClickAfterHold=inputFixture();
 noClickAfterHold.api.primaryPointerDown(noClickAfterHold.event());noClickAfterHold.advance(200);noClickAfterHold.api.releasePointer(noClickAfterHold.event());
