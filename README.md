@@ -1,127 +1,121 @@
-# Perfect Pour — V1.02
+# Perfect Pour — V1.03
 
 **[Play Perfect Pour online](https://perfect-pour.pretty-scarf-0591.chatgpt.site/)** · [Source repository](https://github.com/SiminanRoll/PerfectPour)
 
-Fill the cup, earn a review, and build a neighborhood soda bar. V1.02 combines a larger illustrated pouring station, expressive customers, visible staff, and a growing storefront with pressure choices, meaningful operating costs, and a longer business progression.
+Craft a custom soda, make the pour, earn a review, and grow a neighborhood soda bar. V1.03 adds illustrated recipe requests, visible cherries and lime, syrup, blend choices, and one primary button that follows each customer through service. The cup carries a pictorial brand stamp without lettering.
 
-The distributable is **`dist/index.html`**: one self-contained HTML file containing the compiled Rust/WebAssembly engine, interface, vector graphics, and synthesized music and effects. It is designed for offline play without an account, installation, frontend server, or runtime downloads. Rust, Python, and Node are development tools; players do not need them.
+**`dist/index.html` is the complete game:** a self-contained HTML file with the Rust/WebAssembly engine, interface, graphics, and synthesized music and effects. It is designed for offline play without an account, frontend server, or runtime downloads. Rust, Python, and Node are development tools; players do not need them.
 
 ## Play a customer
 
-Choose a pressure before touching the cup. Hold **Space**, or hold the **Pour** button with a mouse or touch. Watch the liquid, foam, and target marker.
+Read the illustrated ticket, select a soda base, and tap ingredient jars to cycle their quantities. Choose pressure and any requested blend. The starter cherry jar is available immediately; other recipe stations are purchased in Build.
 
-**Hardcore is the default:** releasing commits and automatically serves that single hold. No second attempt or top-up is available. Even a very quick tap consumes the attempt. Pausing or leaving the window during a hold ends it.
+The **same primary button** changes with the current phase:
 
-**Easy:** release to stop, allow the foam to settle, and hold again to top up. Press **Enter** or **Serve Drink** when ready. Both modes use exactly the same fizz physics. Difficulty and pressure lock once the cup has been attempted.
-
-After serving, the cup visibly settles. The finished drink stays until you select **See Review** or press **Enter**. Five-star cups receive a golden finish; reduced motion uses a static highlight. Waiting during this review cannot change the score or pay twice.
-
-| Action | Control |
+| Phase | Primary action |
 | --- | --- |
-| Pour | Hold Space or the Pour button |
-| Commit Hardcore / stop Easy | Release the same control |
-| Serve Easy / review a ready cup | Enter or the displayed button |
-| Pause / resume | P, Escape, or Pause |
-| Shop | Build; Escape returns to the counter |
-| Settings and help | Persistent speaker, music-note, and Help buttons |
-| Keyboard navigation | Tab, then Enter on a focused button |
+| Preparation | Choose a base, then **Ready to pour** |
+| Ready | **Hold to pour**, using the button or Space |
+| Holding | **Release to serve** in Hardcore; **Release to pause** in Easy |
+| Committed | **Settling…**, disabled while the foam falls |
+| Finished cup | **See review** |
+| Customer review | **Next customer**, or **Close the day** for the last guest |
+| Closed day | **Open next day** |
 
-Music and effects have independent toggles and volume controls. The original background music, pouring sounds, fading fizz, reviews, purchases, and streak cues use browser audio synthesis.
+Ready to pour clears the preparation and pressure controls **before aiming starts**. The layout remains stable during the hold. Edit recipe is available before the first pour. Ingredients and pressure lock once pouring begins.
 
-## Pressure, foam, and skill
+**Hardcore is the default:** one continuous hold, then release automatically commits and serves it. A quick tap still consumes that attempt. Pausing or leaving the window during a hold ends it.
 
-| Pressure | Flow compared with Classic | Tradeoff |
+**Easy:** release to pause. The primary button then says Serve drink: a short tap serves, while holding it for 160 ms begins a top-up. Space starts a top-up directly; Enter serves. The same recipe stays locked, and both modes retain the same fizz physics.
+
+The cup visibly settles and then stays until you choose See review. Five-star drinks receive a golden finish; reduced motion keeps a static treatment. Waiting cannot change the score or pay twice. Enter activates the current primary action, except that pouring requires a hold of Space or the button. P, Escape, or Pause controls breaks; Build opens the shop.
+
+## Custom recipes
+
+| Component | Choices | Availability |
+| --- | --- | --- |
+| Base | Orange, Cherry, Lime, Cola | All four from the start |
+| Cherries | 0–2 | Starter jar |
+| Lime | 0–1 wedge | $10 citrus tray |
+| Cherry syrup | 0–2 pumps | $18 syrup rack |
+| Blend | Light / extra soda water, Regular, Bold | $26 mixing dispenser unlocks custom blends |
+
+The first new-business order requests Orange with one cherry. Later requests gradually add combinations, with plain orders between them and at most two add-in types. Customers only request owned ingredients. Buying a station preserves the current ticket; future orders can use it.
+
+The recipe determines flavor and ingredient cost; pressure determines pouring speed. Light, Regular, and Bold use gas multipliers of 1.08, 1, and 0.92. These are game tuning values. Garnishes do not secretly displace liquid or move the target.
+
+Requested cherries add $0.40 each to the menu price, lime $0.35, syrup $0.50 per pump, and a custom blend $0.25. Selected add-ins cost $0.08 per cherry, $0.10 for lime, and $0.12 per pump. Costs apply when the drink commits. Unrequested extras cost money without raising the quote.
+
+Patience starts on the first changed recipe selection or first hold. Reading an untouched ticket is free. Complex requests allow additional preparation time; menus, required settling, and reviews do not consume it.
+
+## Pressure, foam, and reviews
+
+| Pressure | Flow relative to Classic | Tradeoff |
 | --- | ---: | --- |
-| Gentle | 0.55× | More time to judge the fill; less gas expansion; smaller speed tips |
+| Gentle | 0.55× | More aiming time, less gas, lower speed tips |
 | Classic | 1.00× | Standard timing and carbonation |
-| Rush | 1.35× | Faster service, narrower timing, more foam and mess risk |
+| Rush | 1.35× | Faster service, tighter timing, greater foam risk |
 
-Gentle retains visible fizz. Every ordinary recipe/cup/target request has a five-star Gentle solution with starter equipment. The game does **not** filter out harder targets or give Hardcore different physics.
+Gentle retains visible fizz and a five-star solution for every tested base, cup, target, tap level, and blend when the recipe is correct. Hardcore does not filter out difficult targets or substitute easier physics.
 
-Four sodas have different carbonation. Four cups hold **280, 360, 460, and 330 mL**, so apparent height is misleading. Targets remain **45%, 55%, 60%, 65%, 70%, 75%, and 80%**. The side meter shows free liquid and foam separately; the target measures beverage, including soda trapped inside bubbles. Gas occupies headroom but is not soda.
+Four cups hold **280, 360, 460, and 330 mL**. Targets are **45%, 55%, 60%, 65%, 70%, 75%, and 80%**. The meter separates liquid and foam. Beverage trapped in foam counts toward the final fill; gas does not.
 
-The customer’s fill score is:
+Fill accuracy is `clamp(100 − 350 × abs(final_fraction − target_fraction), 0, 100)`. Fill thresholds for five through two stars are 96, 88, 72, and 50. Recipe accuracy separately deducts for incorrect base, quantities, or blend. Overall stars use the lower grade: **five stars require the exact recipe and an excellent fill**. A wrong base cannot exceed two stars. Reviews show recipe and pour scores separately, with specific recipe corrections.
 
-```text
-clamp(100 − 350 × abs(final_beverage_fraction − target_fraction), 0, 100)
-```
-
-Five-, four-, three-, and two-star thresholds are **96, 88, 72, and 50**. Lower scores receive one star. Gas overflow does not masquerade as missing beverage: the game tracks actual beverage waste separately, charges ingredients, and charges bounded cleanup costs for mess.
-
-Empty or severely failed drinks receive no sale. Other errors reduce the sale value. Operating costs can make a bad pour lose money, but cannot create debt or consume reserved payroll. A broke shop can still recover with a good next pour.
-
-Customer patience begins with the **first hold**, so reading and preparation are free. Menus, mandatory settling, and review do not consume it. Speed tips decline during service; excessive delay also reduces sale value and loses secondary demand.
-
-## Reviews and streaks
-
-The shop starts at 3.5 stars. Each review updates reputation using **68% previous rating + 32% new review**. Reputation affects subsequent prices. Recipe and requested quantity determine menu price; signs and Hardcore increase base earnings. Hardcore adds **15% to base pay**, before fixed tips and milestone rewards.
-
-Four- and five-star pours extend the streak; lower grades break it. Combo multipliers rise through **1.10×, 1.20×, 1.30×, 1.45×, 1.60×, 1.75×, and 1.90×**. Milestones pay **$0.75 at 3, $1.25 at 5, $2 at 8, $3 at 12, $4 at 16**, then **$5 every four good pours from 20 onward**. Five stars also earn a $0.25 perfect tip.
-
-Streaks continue across days. Switching difficulty resets the current streak while retaining separate Hardcore and Easy records. Sustained good play earns more than repeatedly resetting early milestones.
+Poor pours can lose money through ingredients and cleanup. Severe failures earn no sale; lesser errors and slow service reduce earnings. Costs cannot create debt or consume reserved wages. Four- and five-star reviews extend streaks, with increasing multipliers and recurring milestones. Difficulty changes reset the current streak while preserving separate records. Hardcore retains its 15% base-pay premium.
 
 ## Build the business
 
-Purchases use earned cash. Prices below are per level, not cumulative. All nine upgrade types change gameplay as well as the illustrated shop.
+All twelve upgrade types have implemented effects. Prices are per level.
 
-| Upgrade | Level prices | Actual benefit |
+| Upgrade | Prices | Benefit |
 | --- | --- | --- |
-| Sign | $12 / $22 / $36 | +8% base price and +2 daily secondary demand per level |
-| Patio | $18 / $30 | +2 specialist capacity, +3 demand, +1 second patience per level |
-| Awning | $14 / $24 | +2 seconds patience and +$0.10 on good pours per level |
-| Tap | $18 / $30 | 20% less foam **gas** and 15% lower cleanup cost per level |
-| Helper | $28 | Half cleanup work/cost; +$0.30 on good pours; $1.50 daily wage |
-| Specialist | $42 | Serves separate queued orders; $2.50 daily wage |
-| Interior | $100 / $180 / $300 | +4 specialist capacity and demand per level; larger premises |
-| Catering | $140 / $240 / $400 | +8 demand and +12% staff sale value per level |
-| Training | $50 / $85 / $130 | +2 specialist capacity, +20% service rate, +6% staff sale value per level |
+| Sign | $12 / $22 / $36 | Higher base prices and demand |
+| Patio | $18 / $30 | More staff capacity, demand, and patience |
+| Awning | $14 / $24 | More patience and good-service tips |
+| Tap | $18 / $30 | Less foam gas and lower cleanup costs |
+| Helper | $28 | Half cleanup, extra service tips; $1.50/day |
+| Specialist | $42 | Serves a separate queue; $2.50/day |
+| Interior | $100 / $180 / $300 | Larger premises, staff capacity, and demand |
+| Catering | $140 / $240 / $400 | More demand and higher staff sale values |
+| Training | $50 / $85 / $130 | Faster staff, more capacity, better staff prices |
+| Citrus tray | $10 | Lime garnish requests |
+| Syrup rack | $18 | Cherry syrup requests |
+| Mixing dispenser | $26 | Light and Bold blend requests |
 
-Sign prices, awning, and tap effects can apply to an untouched current cup. Additional demand, patio, employees, interior, catering, and training become operational next day. Catering requires an interior and specialist; training requires a specialist. Purchases cannot change an already committed receipt.
+The full catalog costs **$1,953**. Employees and capacity investments become operational next day. Catering needs an interior and specialist; training needs a specialist. Each new day has 12 manual customers, with additional orders handled by staff. Menus cannot farm staff income.
 
-The specialist works a separate lane during player service, up to daily capacity and demand. Staff never top up your cup. Training speeds their work; seating and premises give them more capacity. Menus and idle order reading do not produce staff sales. Each new day contains **12 manual customers**, with additional customers handled by staff.
+Payroll is reserved before purchases and charged once at closing. Receipts and daily ledgers separate sales, ingredients, cleanup, wages, and net earnings. Refund figures describe foregone sales, not another cash deduction. Capital purchases are separate from operating profit. Exact effects and prices are documented in [the engine contract](engine/contract.json).
 
-Wages are reserved before purchases and deducted once at closing. The ledger separates sales, ingredients, cleanup, wages, and net earnings. Refunds show foregone sale value, **not another deduction from cash**. Capital purchases are separate from operating net. All upgrades together cost $1,899.
+## Sound, appearance, and saves
 
-## Save and move your business
+Customers keep the same SVG while expressions change, avoiding the disappearance caused by replacing their artwork at release. Pouring and fizz use smoother audio release transitions. Music and effects have independent toggles and volumes.
 
-V1.02 keeps a separate browser save and automatically imports the earlier V1.01 business. Older game tabs cannot replace the new save. If another V1.02 tab updates the same business, the older tab pauses and offers **Load latest save**.
+**Help & settings → Download app icon** exports a **512 × 512 PNG** suitable for a shortcut. It is included in the standalone game; downloading an icon does not install an app automatically.
 
-Autosave records business checkpoints and active pours. Use **Build → Export save** for a portable JSON backup; **Import save** validates it before replacing the current business. Browser storage availability can vary, particularly for directly opened files.
+V1.03 exports version **103** and imports **101, 102, and 103**. Existing cash, upgrades, reputation, and paid cups survive. Earlier current orders stay plain without retroactive recipe costs; custom requests begin with the next customer. Legacy longer days finish their existing goal before returning to 12 customers.
 
-V1.02 exports version **102** and imports versions **101 and 102**. Existing cash, upgrades, reviews, and completed payments survive migration. Older 14/16-customer days finish with their existing goal; the following day uses 12 manual customers.
-
-A restored attempted V1.02 Hardcore cup commits its saved contents once, without a fresh attempt. An unfinished Easy cup resumes stopped in Easy, then returns to Hardcore after that customer. Other restored saves default to Hardcore. Paid reviews cannot pay again. Legacy V1.01 unfinished saves retain their original untouched-checkpoint behavior.
+Autosave preserves preparation and active pours. Interrupted Hardcore commits once on restoration; unfinished Easy resumes stopped. Paid cups cannot pay again. A stale second tab pauses rather than overwriting a newer save. Use **Build → Export save** for a portable backup. Browser storage availability may vary, especially for directly opened files.
 
 ## Build and verify
 
-Rebundle the included Wasm with Python 3:
-
-```sh
-python3 scripts/build.py
-```
-
-To rebuild Rust first:
-
-```sh
-rustup target add wasm32-unknown-unknown
-python3 engine/build_engine.py
-python3 scripts/build.py
-```
-
-The helper runs native tests and builds the dependency-free Rust crate. The interface uses no frontend package manager. Run the included checks from the repository root:
+Rebundle with `python3 scripts/build.py`. To rebuild Rust, install the `wasm32-unknown-unknown` target and run `python3 engine/build_engine.py` first. The build helper runs native tests and produces the dependency-free Wasm.
 
 ```sh
 cargo test --manifest-path engine/Cargo.toml
 node tests/engine/wasm-smoke.mjs
+node tests/engine/v103-recipes.mjs
 node tests/engine/v102-balance.mjs
 node tests/browser/v101-business-acceptance.mjs
 node tests/browser/v102-ui-contract.mjs
+node tests/browser/v103-control-flow.mjs
 node tests/audio/music-lifecycle.mjs
 node tests/audio/game-sounds.mjs
 node tests/browser/verify-offline-selftest.mjs
+python3 scripts/build.py
 node tests/browser/verify_offline.mjs dist/index.html
 ```
 
-The inherited `v101-business-acceptance` filename now tests V1.02 through actual Wasm. It and the UI contract checks are **not browser playtests**. Balance evidence covers 2,016 mode/pressure/recipe/cup/target/tap fixtures and seeded career simulations; synthetic timing profiles are not measured player performance.
+Historical filenames now exercise V1.03. Local checks include 40 native tests, 6,048 catalog/mode fixtures, 48 synthetic careers, 94 UI aliases, and production pointer/keyboard handlers. UI harnesses are not browser playtests, and simulated careers are not measured player performance. Direct-file portability is packaging-verified; narrow browser layouts do not certify physical phones, and audio lifecycle tests are not a subjective listening pass.
 
-See [release notes](docs/V102_RELEASE.md), [acceptance evidence](docs/qa/V102_ACCEPTANCE.md), [engine integration](engine/README.md), and [machine-readable contract](engine/contract.json). Direct `file://` portability is packaging-verified rather than browser-playtested. Narrow phone-layout checks do not certify physical devices. The release record identifies the exact published build; pushing source to GitHub does not itself deploy the Sites game.
+See [V1.03 notes](docs/V103_RELEASE.md), [engine integration](engine/README.md), and [release identity](docs/release-manifest.json). [V1.02 notes](docs/V102_RELEASE.md) and [its acceptance history](docs/qa/V102_ACCEPTANCE.md) are retained. These documents describe source and prepublication checks; GitHub CI and deployment records establish subsequent release status.

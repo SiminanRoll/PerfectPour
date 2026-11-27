@@ -9,12 +9,14 @@ ROOT = Path(__file__).resolve().parents[1]
 source = ROOT / 'web'
 wasm = (ROOT / 'engine' / 'perfect_pour_engine.wasm').read_bytes()
 assert wasm[:8] == b'\x00asm\x01\x00\x00\x00', 'Invalid WebAssembly engine'
-css = (source / 'style.css').read_text() + '\n' + (source / 'business.css').read_text()
+css = (source / 'style.css').read_text() + '\n' + (source / 'business.css').read_text() + '\n' + (source / 'recipe.css').read_text()
 art = (source / 'customer-art.js').read_text()
 store_art = (source / 'storefront-art.js').read_text()
 music = (source / 'music.js').read_text()
 sounds = (source / 'game-sounds.js').read_text()
 cup_finish = (source / 'cup-finish.js').read_text()
+recipe_art = (source / 'recipe-art.js').read_text()
+control_flow = (source / 'control-flow.js').read_text()
 script = (source / 'game.js').read_text().replace('__WASM_BASE64__', base64.b64encode(wasm).decode())
 html = (source / 'index.html').read_text()
 html = html.replace('<!-- STYLE -->', '<style>\n' + css + '\n</style>')
@@ -22,6 +24,8 @@ html = html.replace('<!-- CUSTOMER_ART -->', '<script>\n' + art.replace('</scrip
 html = html.replace('<!-- STOREFRONT_ART -->', '<script>\n' + store_art.replace('</script', '<\\/script') + '\n</script>')
 html = html.replace('<!-- MUSIC_SCRIPT -->', '<script>\n' + music.replace('</script', '<\\/script') + '\n</script>\n<script>\n' + sounds.replace('</script', '<\\/script') + '\n</script>')
 html = html.replace('<!-- CUP_FINISH_SCRIPT -->', '<script>\n' + cup_finish.replace('</script', '<\\/script') + '\n</script>')
+html = html.replace('<!-- RECIPE_ART -->', '<script>\n' + recipe_art.replace('</script', '<\\/script') + '\n</script>')
+html = html.replace('<!-- CONTROL_FLOW -->', '<script>\n' + control_flow.replace('</script', '<\\/script') + '\n</script>')
 html = html.replace('<!-- GAME_SCRIPT -->', '<script>\n' + script.replace('</script', '<\\/script') + '\n</script>')
 assert '__WASM_BASE64__' not in html
 assert '<!-- STYLE -->' not in html
