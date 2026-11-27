@@ -1,8 +1,8 @@
-# Perfect Pour — V1.04
+# Perfect Pour — V1.04.1
 
 **[Play Perfect Pour online](https://perfect-pour.pretty-scarf-0591.chatgpt.site/)** · [Source repository](https://github.com/SiminanRoll/PerfectPour)
 
-Craft a custom soda, make the pour, earn a review, and grow a neighborhood soda bar. V1.04 adds occasional two-soda orders: follow the numbered bottles, pour the requested proportions, and hit the final fill. The animated intro, New Game / Continue / Settings menu, compact counter, custom garnishes, and single primary action remain. The cup carries a pictorial brand stamp without lettering.
+Craft a custom soda, make the pour, earn a review, and grow a neighborhood soda bar. V1.04.1 starts pouring with the first hold, brings the review to the finished cup, and gives Easy a separate serving action. Illustrated ingredients, brief selection feedback, and controls that follow the current phase keep the counter focused on the drink. Occasional two-soda orders, the animated intro, and the New Game / Continue / Settings menu remain. The cup carries a pictorial brand stamp without lettering.
 
 **`dist/index.html` is the complete game:** a self-contained HTML file with the Rust/WebAssembly engine, interface, graphics, and synthesized music and effects. It is designed for offline play without an account, frontend server, or runtime downloads. Rust, Python, and Node are development tools; players do not need them.
 
@@ -16,28 +16,29 @@ The intro and menu adapt to portrait, landscape, and desktop screens. Reduced-mo
 
 ## Play a customer
 
-Read the illustrated ticket, select a soda base, and tap ingredient jars to cycle their quantities. Two-soda orders select their first requested base automatically and show the pouring sequence in the same preparation row. Choose pressure and any requested blend. The starter cherry jar is available immediately; other recipe stations are purchased in Build.
+Read the illustrated ticket and select a soda base. Your owned ingredient jars then appear; tap them to cycle their quantities. Two-soda orders select their first requested base automatically and show the pouring sequence in the same preparation row. Choose pressure and any requested blend before your first hold. The starter cherry jar is available immediately; other recipe stations are purchased in Build and appear at the counter once owned. A selection briefly animates its icon or quantity, with a persistent selected state and a reduced-motion alternative.
 
-The **same primary button** changes with the current phase:
+**Hold always pours.** Once the base is selected, hold the main button or Space to begin directly. There is no Ready confirmation. Easy uses a separate small action for advancing or serving:
 
-| Phase | Primary action |
-| --- | --- |
-| Preparation | Match the recipe, then **Ready to pour** |
-| Ready | **Hold to pour**, using the button or Space; a mix identifies the active soda and part |
-| Holding | Hardcore releases to switch after the first mixed part, or to serve after the last; Easy releases to pause |
-| Easy, paused | Tap **Next soda** or **Serve drink**; hold the same button to top up the current soda |
-| Committed | **Settling…**, disabled while the foam falls |
-| Finished cup | **See review** |
-| Customer review | **Next customer**, or **Close the day** for the last guest |
-| Closed day | **Open next day** |
+| Phase | Main button | Easy's separate action |
+| --- | --- | --- |
+| No base selected | **Choose a base**, disabled | Unavailable |
+| Recipe selected | **Hold to pour**; a mix identifies the active soda and part | Unavailable until a pour is released |
+| Holding | **Pouring…**; release switches or serves in Hardcore, and pauses in Easy | Unavailable while holding |
+| Easy, paused | **Hold to pour** again to top up the current soda | **Next soda** for part one, or **Serve** for the final part |
+| Committed | **Settling…**, disabled while the foam falls | Unavailable |
+| Finished cup and inline review | **Next customer**, or **Close the day** for the last guest | Unavailable |
+| Closed day | **Open next day** | Unavailable |
 
-Ready to pour clears the preparation and pressure controls **before aiming starts**. The layout remains stable during the hold. Edit recipe is available before the first pour. Ingredients and pressure lock once pouring begins.
+Recipe and pressure controls stay editable until pouring actually starts. The first hold clears preparation controls and locks the recipe, pressure, and difficulty for that customer. The cup, target guides, and main action retain their aiming positions during the hold and between mixed-soda parts. Mode and recipe choices return when the next customer needs them.
 
 **Hardcore is the default:** one continuous hold per soda. A single-soda release serves the drink. For a two-soda order, the first release switches taps and the final release serves. A quick tap still consumes that part's attempt. Pausing or leaving the window during a hold ends it; the next soda still requires its own new hold.
 
-**Easy:** release to pause. A short tap on the primary button advances from the first soda or serves the final drink; holding it for 160 ms begins a top-up of the current soda. Space starts a top-up directly; Enter advances or serves. After switching sodas, the first part cannot be topped up again. The same recipe stays locked, and both modes retain the same fizz physics.
+**Easy:** release to pause, then hold again to top up. The primary button has no tap-duration threshold and never doubles as Serve. When ready, choose the separate **Next soda** or **Serve** button; Enter also advances or serves when the pour control has focus. After switching sodas, the first part cannot be topped up again. The same recipe stays locked, and both modes retain the same fizz physics.
 
-The cup visibly settles and then stays until you choose See review. Five-star drinks receive a golden finish; reduced motion keeps a static treatment. Waiting cannot change the score or pay twice. Enter activates the current primary action, except that pouring requires a hold of Space or the button. P, Escape, or Pause controls breaks; Build opens the shop.
+After the final release, the cup visibly settles. Its review appears automatically beside it: stars, net earnings, fill accuracy, and recipe accuracy. Five-star drinks receive a golden finish; reduced motion keeps a static treatment. The cup stays until you explicitly choose **Next customer**. The receipt icon opens optional details and the itemized receipt; **Back to cup** returns to the same finished drink. Waiting, viewing details, or returning from Build cannot pay again.
+
+Enter activates discrete actions; pouring requires a hold of Space or the button. Recipe, menu, and settings controls retain their normal keyboard activation. P, Escape, or Pause controls breaks; Build opens the shop.
 
 ## Custom recipes
 
@@ -65,7 +66,7 @@ The two bottle chips show the requested shares and highlight the current part. B
 
 Each soda retains its own flow, foam, and settling rate. The stream changes with the tap, while the drink's color blends as the second soda enters. Liquid trapped in foam counts toward its soda's retained proportion. Spills affect the actual mix. Part one does not pay, charge ingredients, advance the customer, or grant staff income; the complete drink commits once after its final part.
 
-The review keeps the existing three metrics. For a mixed order, **Recipe + Mix** displays the lower of recipe accuracy and proportion accuracy, with the actual and requested proportions shown in the details. Fill accuracy stays separate. The [engine contract](engine/contract.json) defines the volume accounting, scoring, and save fields.
+The inline review shows fill accuracy separately from **Recipe + mix**, which displays the lower of recipe accuracy and proportion accuracy. The receipt icon opens the actual and requested proportions along with the complete breakdown. The [engine contract](engine/contract.json) defines the volume accounting, scoring, and save fields.
 
 ## Pressure, foam, and reviews
 
@@ -84,6 +85,8 @@ Fill accuracy is `clamp(100 − 350 × abs(final_fraction − target_fraction), 
 Poor pours can lose money through ingredients and cleanup. Severe failures earn no sale; lesser errors and slow service reduce earnings. Costs cannot create debt or consume reserved wages. Four- and five-star reviews extend streaks, with increasing multipliers and recurring milestones. Difficulty changes reset the current streak while preserving separate records. Hardcore retains its 15% base-pay premium.
 
 ## Build the business
+
+The storefront illustrates the business as it grows. Upgrade cards lead with an illustration, the next measurable benefit, and the price. An information control opens the longer description and current effect. Prerequisites, wages, and next-day activation stay visible where they affect the purchase. A successful purchase briefly highlights the storefront; reduced-motion preferences suppress that animation. **Business tools** opens Export, Import, and Reset while the autosave status remains visible.
 
 All twelve upgrade types have implemented effects. Prices are per level.
 
@@ -112,9 +115,9 @@ Customers keep the same SVG while expressions change, avoiding the disappearance
 
 **Help & settings → Download app icon** exports a **512 × 512 PNG** suitable for a shortcut. It is included in the standalone game; downloading an icon does not install an app automatically.
 
-V1.04 exports version **104** and imports **101, 102, 103, and 104**. Existing cash, upgrades, reputation, and paid cups survive. V101/V102 current orders stay plain without retroactive recipe costs. V103 current recipes remain single-soda; new mixed requests can begin with later customers. Legacy longer days finish their existing goal before returning to 12 customers. The save buffer remains 120 values; the runtime snapshot expands to 134 fields.
+V1.04.1 retains save version **104**, the **120-value** save buffer, and the **134-field** runtime snapshot. It imports **101, 102, 103, and 104**. Existing cash, upgrades, reputation, and paid cups survive. V101/V102 current orders stay plain without retroactive recipe costs. V103 current recipes remain single-soda; new mixed requests can begin with later customers. Legacy longer days finish their existing goal before returning to 12 customers. The controls update does not change the Rust engine, scoring, prices, or save format.
 
-Autosave preserves preparation and active pours. Restoring an interrupted first Hardcore mixed part advances to the untouched second part without payment; restoring an interrupted final part commits once. An interrupted single-soda Hardcore pour retains its one-time commit behavior. Unfinished Easy resumes stopped on its current part. Paid cups cannot pay again. V104 uses a separate browser storage key, and a stale second tab pauses rather than overwriting a newer save. Use **Build → Export save** for a portable backup. Browser storage availability may vary, especially for directly opened files.
+Autosave preserves preparation and active pours. Restoring an interrupted first Hardcore mixed part advances to the untouched second part without payment; restoring an interrupted final part commits once. An interrupted single-soda Hardcore pour retains its one-time commit behavior. Unfinished Easy resumes stopped on its current part. Paid cups return to settling or the inline review without paying again. V1.04.1 uses the existing V104 browser storage key, and a stale second tab pauses rather than overwriting a newer save. Use **Build → Business tools → Export** for a portable backup. Browser storage availability may vary, especially for directly opened files.
 
 ## Build and verify
 
@@ -139,4 +142,4 @@ node tests/browser/verify_offline.mjs dist/index.html
 
 Historical filenames also exercise the current game. The suites cover **52 native tests**, 6,048 single-soda catalog/mode fixtures, 3,024 native Gentle mixture cases, 216 compiled-Wasm mixture mode-parity pours, 48 synthetic careers, **104 UI aliases**, production pointer/keyboard handlers, and startup/save/menu behavior against the shipped Wasm. Five genuine V103 fixtures preserve all 124 original snapshot fields when restored by the new engine. UI harnesses are not browser playtests, and simulated careers are not measured player performance. Direct-file portability is packaging-verified; narrow browser layouts do not certify physical phones, and audio lifecycle tests are not a subjective listening pass.
 
-See [V1.04 notes](docs/V104_RELEASE.md), [V1.04 acceptance evidence](docs/qa/V104_ACCEPTANCE.md), [engine integration](engine/README.md), and [release identity](docs/release-manifest.json). [V1.03.2 notes](docs/V1032_RELEASE.md), [V1.03.1 notes](docs/V1031_RELEASE.md), [V1.03 notes](docs/V103_RELEASE.md), [V1.02 notes](docs/V102_RELEASE.md), and their acceptance records are retained. These documents describe source and prepublication checks; GitHub CI and deployment records establish subsequent release status.
+See [V1.04.1 acceptance evidence](docs/qa/V1041_ACCEPTANCE.md), [engine integration](engine/README.md), and [release identity](docs/release-manifest.json). [V1.04 notes](docs/V104_RELEASE.md), [V1.04 acceptance evidence](docs/qa/V104_ACCEPTANCE.md), [V1.03.2 notes](docs/V1032_RELEASE.md), [V1.03.1 notes](docs/V1031_RELEASE.md), [V1.03 notes](docs/V103_RELEASE.md), [V1.02 notes](docs/V102_RELEASE.md), and their acceptance records are retained as historical records. GitHub CI and deployment records establish the final release status.

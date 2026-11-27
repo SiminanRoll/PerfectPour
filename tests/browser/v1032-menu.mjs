@@ -95,7 +95,7 @@ async function fixture({raw=null,key=keys.SAVE_KEY,readFails=false}={}){
   };
   const scope={...keys,F,ready:false,careerActive:false,loadedCareer:false,externalSave:false,
     lastSavedRaw:null,storageAvailable:true,mode:'intro',returnMode:'playing',
-    keyHeld:false,settlingSpaceHeld:false,VISIBLE_FOAM:.001,
+    keyHeld:false,settlingSpaceHeld:false,menuActivationKey:'',VISIBLE_FOAM:.001,
     WASM_BASE64:wasm.toString('base64'),WebAssembly,Uint8Array,Float32Array,Float64Array,atob,
     randomSeed:()=>907,
     localStorage:{getItem(key){if(readFails)throw new Error('Storage denied');return stored.get(key)??null;},setItem(key,value){writes++;stored.set(key,value);}},
@@ -127,7 +127,8 @@ assert.equal(fresh.element('start-button').disabled,true);assert.equal(fresh.wri
 const pristine=fresh.save();
 fresh.api.openShop();fresh.api.newGame();fresh.api.resetBusiness();
 assert.equal(fresh.scope.mode,'intro');assert.equal(fresh.save(),pristine,'Startup actions cannot bypass the intro');
-fresh.api.saveCareer();fresh.api.leaveWindow();
+fresh.api.saveCareer();fresh.scope.menuActivationKey='Enter';fresh.api.leaveWindow();
+assert.equal(fresh.scope.menuActivationKey,'','Leaving the window clears a launch key whose keyup may never arrive');
 assert.equal(fresh.writes(),0,'Blur/pagehide before starting must not create a blank saved business');
 fresh.api.showHelp();assert.equal(fresh.scope.mode,'help');fresh.api.closeHelp();
 assert.deepEqual(fresh.effects.at(-1),{mode:'intro',focus:'intro-start'});

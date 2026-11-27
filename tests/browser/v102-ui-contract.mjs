@@ -66,8 +66,12 @@ for(const id of ['welcome-hardcore','welcome-easy'])assert.equal(elements.has(id
 for(const id of ['hardcore-mode','easy-mode'])assert.equal(elements.get(id).ancestors.some(parent=>['intro-overlay','welcome-overlay'].includes(parent.attrs.id)),false,'Difficulty controls remain in the game');
 assert.equal(elements.get('pour-button').tag,'button');
 for(const id of ['review-button','serve-button','next-button','again-button'])assert.equal(elements.has(id),false,`${id} is replaced by the single phase-aware primary button`);
-for(const id of ['primary-label','primary-hint','counter-action-slot','result-action-slot','summary-action-slot'])assert.ok(elements.has(id),`The shared primary action has its ${id} target`);
+for(const id of ['primary-label','primary-hint','counter-action-slot','summary-action-slot'])assert.ok(elements.has(id),`The shared primary action has its ${id} target`);
 assert.equal(elements.get('pour-button').ancestors.some(parent=>parent.attrs.id==='counter-action-slot'),true,'The one authored primary button starts in the counter action slot');
+for(const id of ['easy-action','finish-details','close-result'])assert.equal(elements.get(id)?.tag,'button',`${id} is an explicit native button`);
+assert.equal(elements.get('easy-action').ancestors.some(parent=>parent.attrs.id==='pour-button'),false,'Easy service is a separate control, not an alternate meaning of the pour button');
+for(const id of ['finish-review','finish-stars','finish-earned','finish-fill','finish-recipe'])assert.ok(elements.has(id),`The automatic inline result has its ${id} target`);
+assert.equal(elements.get('finish-review').ancestors.some(parent=>(parent.attrs.class||'').split(/\s+/).includes('overlay')),false,'The completed-cup result is visible without a full-screen review overlay');
 
 // Exercise the actual save adapter functions against the compiled Rust engine.
 // No DOM or browser APIs are supplied or imitated here.
@@ -205,7 +209,7 @@ for(const [current,old103,old102,old101,expected] of [[null,'103 career','102 ca
 
 console.log(JSON.stringify({result:'PASS',checks:[
   `${Object.keys(F).length} snapshot aliases and every called engine export match the shipped Wasm contract`,
-  'Renderer targets exist; IDs are unique; one primary button has counter/review/day slots; announcer, Help, and audio controls sit outside the inert game shell',
+  'Renderer targets exist; IDs are unique; Easy service is explicit and the completed-cup result is inline with optional receipt details; announcer, Help, and audio controls stay outside the inert game shell',
   'The actual UI save adapter migrates genuine101/102/103 fixtures into104, preserves every recorded legacy snapshot field, rejects malformed data, and retains interrupted-cup rules',
   'Displayed fill-score boundaries agree with the fill grade, including f32 rounding cases',
   'V104 saves use a distinct write key with103/102/101 read fallback; actual saveCareer protects a newer backing save, ignores stale event payloads, pauses once, and reloads only on explicit resume',

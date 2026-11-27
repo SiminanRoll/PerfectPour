@@ -1,10 +1,10 @@
 {
   "game": "Perfect Pour",
-  "version": "1.04",
+  "version": "1.04.1",
   "release_date": "2026-11-27",
-  "revision": "two-soda-ratio-orders-and-numbered-pour-guides",
-  "html_bytes": 402319,
-  "html_sha256": "8505abd7f2c868804ecdd2a14a713a007b6643254b1c2ed480c97d8c948b4075",
+  "revision": "direct-pour-and-contextual-visual-interface",
+  "html_bytes": 432111,
+  "html_sha256": "b133efdb7bf5d375236bbd3b37b3b61716696f14ed425e7d992e10358ec62fa7",
   "wasm_bytes": 44961,
   "wasm_sha256": "f6a5cd045aab69a685544afc130d1d6aefb4ae95288cc343e5efca97ac29fca5",
   "native_tests": 52,
@@ -18,11 +18,12 @@
   "live_url": "https://perfect-pour.pretty-scarf-0591.chatgpt.site",
   "github_ci_url": "https://github.com/SiminanRoll/PerfectPour/actions/workflows/ci.yml",
   "browser_checks": [
-    "Desktop 1280x720: two distinct native Space holds advance Cherry then Cola; first release preserves the same customer and $34.65, final release pays once to $41.67, with visible settling and a golden finished cup before review.",
-    "Desktop mixed-order cup and primary button retain identical resting rectangles across the first release; the pressed button uses its existing 4px feedback translation only.",
-    "Phone 320x568: 25/75 Orange/Cherry request shows 11.25% first guide and 45% total guide; preparation, pouring and review have zero document overflow.",
-    "Phone 320x568: Easy release pauses the current part, a second hold tops it up, a short tap switches to part two, and the final short tap serves. Incorrect proportions yield a lower recipe-plus-mix score.",
-    "Landscape 568x320: Continue restores the untouched second part with its prior liquid, same customer and $34.65, clearly highlights Cola and the final guide, and measures zero document overflow."
+    "Desktop 1280x720: pointer recipe selection focuses Pour and native Space starts immediately. Two Hardcore holds switch Cherry to Cola without early payment, then serve once; a pointer held for six seconds from disabled Settling through Finished does not advance the customer.",
+    "Desktop 1280x720: preparation and post-release cup, gauge, and primary resting rectangles match exactly. The primary action stays 52px tall.",
+    "Phone 320x568: Easy uses a 217x48px primary and separate 76x48px action. Cup, gauge and both actions remain fixed across first hold and release, with the streak row unobscured. A short tap only tops up; held Enter advances one soda; separate Serve pays once.",
+    "Phone 320x568: automatic inline stars, fill/recipe/mix scores and earnings retain the cup. Optional receipt closes to the same result. Paid five-star Continue and returning from Build preserve the paid customer and cash.",
+    "Phone 320x568 and landscape 568x320: all owned ingredient and blend choices fit. Measured document overflow is zero in the inspected preparation, pour, finished and shop states.",
+    "Phone 320x568: storefront artwork is approximately152x89px; upgrade benefits, prices, staff wages and next-day activation remain visible. About and Business tools disclosures stay contained. One $12 sign purchase changes the storefront and cash from $46.09 to $34.09 once."
   ],
   "balance_checks": {
     "catalog_cases": 6048,
@@ -47,7 +48,7 @@
     "report": "engine/balance-report.json",
     "evidence_scope": "Actual V104 Wasm; single-soda catalog retained and generated mixed careers use independent timing variation for each component. Correct recipes are selected instantly; these are sensitivity scenarios, not measured player performance."
   },
-  "verification_limit": "Managed HTTP preview of the actual standalone bundle with viewport-sized iframe checks and isolated earned-progress fixtures. Physical iOS/Android multi-touch, mobile browser chrome, OS/browser accessibility zoom overrides, and direct file launch were not verified. Gesture callbacks and event cancellation are tested separately against the production functions. Optional expanded settings and receipts retain internal scrolling.",
+  "verification_limit": "Managed HTTP preview of the actual standalone bundle, native keyboard/pointer input, and viewport-sized iframes with isolated earned-progress saves. Physical iOS/Android multi-touch, browser chrome, accessibility zoom overrides, direct file launch, subjective listening quality and a broad accessibility audit were not verified.",
   "audio_verification": "Existing music/effects lifecycle and cue suites pass. Pour and fizz audio now follow the active component; no new auditory mix assessment.",
   "music": "Original quiet synthesized loop; independent persisted music and effects volume.",
   "finish_effect": "Golden rim, glass glint, and bounded sparkles for five-star cups; static reduced-motion treatment.",
@@ -60,8 +61,8 @@
     "verified_bytes": 21676,
     "location": "Help & settings"
   },
-  "acceptance_report": "docs/qa/V104_ACCEPTANCE.md",
-  "prior_acceptance_report": "docs/qa/V1032_ACCEPTANCE.md",
+  "acceptance_report": "docs/qa/V1041_ACCEPTANCE.md",
+  "prior_acceptance_report": "docs/qa/V104_ACCEPTANCE.md",
   "startup_flow": "Animated intro, then New Game / Continue / Settings. New Game defaults to Hardcore; in-game difficulty controls remain available. A saved business must be confirmed before replacement.",
   "zoom_control": "Fixed-scale viewport, pan-y/no-zoom touch actions, multi-touch/native gesture cancellation, and Ctrl-wheel cancellation. Ordinary wheel and single-touch events remain available.",
   "mixture_checks": {
@@ -74,5 +75,7 @@
     "native_toolchain": "Existing isolated Rust 1.100.0 toolchain",
     "suite": "tests/engine/v104-mixtures.mjs"
   },
-  "two_soda_orders": "Customer six introduces 50/50; occasional later requests use 25/75, 50/50, or 75/25 after twelve completed customers. Two numbered bottles, two cumulative target lines, one hold per soda in Hardcore, and top-ups plus explicit switching in Easy. Regular blend and at most one simple add-in keep mixed requests short."
+  "two_soda_orders": "Customer six introduces 50/50; occasional later requests use 25/75, 50/50, or 75/25 after twelve completed customers. Two numbered bottles, two cumulative target lines, one hold per soda in Hardcore, and top-ups plus explicit switching in Easy. Regular blend and at most one simple add-in keep mixed requests short.",
+  "control_flow": "Select a recipe, then hold directly. Hardcore release switches the first mixed soda or serves the final soda. Easy primary always pours and pauses; separate Next soda/Serve becomes available after an attempt. Visible settling leads to an inline review; a fresh Next advances. Optional Details returns to the same cup.",
+  "visual_disclosure": "Owned ingredient choices appear after base selection. Short selection/purchase feedback, phase-specific action icons, optional upgrade information, compact Business tools, and a larger portrait storefront reduce persistent controls and text."
 }

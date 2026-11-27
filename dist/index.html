@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
   <meta name="theme-color" content="#124c4c">
   <meta name="description" content="A little soda shop. A perfect pour. An offline soda-pouring and shop-building game. One pour, happy customers, and a business of your own.">
-  <title>Perfect Pour V1.04 · Your soda story</title>
+  <title>Perfect Pour V1.04.1 · Your soda story</title>
   <link rel="icon" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA2NCA2NCI+PHJlY3Qgd2lkdGg9IjY0IiBoZWlnaHQ9IjY0IiByeD0iMTUiIGZpbGw9IiMxNzRiNDkiLz48cGF0aCBkPSJNMTggMTdoMzBsLTQgMzZIMjJ6IiBmaWxsPSIjZmZjYzZjIi8+PHBhdGggZD0iTTM0IDE4IDM5IDhoMTFNMTYgMTdoMzQiIGZpbGw9Im5vbmUiIHN0cm9rZT0iI2ZmZmFmMCIgc3Ryb2tlLXdpZHRoPSI0IiBzdHJva2UtbGluZWNhcD0icm91bmQiLz48Y2lyY2xlIGN4PSIyOCIgY3k9IjM1IiByPSIyIiBmaWxsPSIjMTc0YjQ5Ii8+PGNpcmNsZSBjeD0iMzkiIGN5PSIzNSIgcj0iMiIgZmlsbD0iIzE3NGI0OSIvPjxwYXRoIGQ9Ik0yOCA0NHE2IDYgMTEgMCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjMTc0YjQ5IiBzdHJva2Utd2lkdGg9IjMiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIvPjwvc3ZnPg==">
   <style>
 /* Perfect Pour V1.02 · A warm, illustrated counter. Everything stays offline. */
@@ -513,6 +513,271 @@ html,body{touch-action:pan-y}
 }
 @media(prefers-reduced-motion:reduce){.ratio-chip{transition:none}}
 
+/* V1.04.1 · The first hold reveals controls without moving the aiming stage. */
+body[data-control-stage="prep"] .pour-area{--cup-clearance:108px}
+body[data-control-stage="prep"] .pour-area canvas{bottom:24px}
+body[data-control-stage="prep"] .tap-machine{display:block}
+.order-ticket,body[data-control-stage="prep"] .order-ticket{position:relative;display:block!important;height:min(365px,calc(100% - 16px));max-height:calc(100% - 16px);align-self:center;overflow:hidden}
+.order-ticket>.ticket-top{position:absolute;top:14px;left:15px;right:15px}
+.order-ticket>.recipe-workbench{position:absolute;top:42px;left:14px;right:14px;width:auto;max-width:none;max-height:calc(100% - 56px);margin:0;padding:0;z-index:6;overflow-x:hidden;overflow-y:auto;overscroll-behavior:contain;scrollbar-width:thin;background:var(--paper)}
+.recipe-workbench>.recipe-heading{display:flex;align-items:center;gap:6px;min-height:18px}
+.prep-target{display:inline-flex;align-items:center;justify-content:center;flex:0 0 auto;padding:2px 5px;border-radius:5px;background:#e8eedb;color:#285a4a;font-size:12px;font-weight:800;line-height:1.1;white-space:nowrap;font-variant-numeric:tabular-nums}
+.order-ticket>.mixed-recipe{position:absolute;top:43px;left:14px;right:14px;max-height:calc(100% - 145px);margin:0;overflow-x:hidden;overflow-y:auto;align-content:flex-start}
+.order-ticket>.pour-gauge,body[data-control-stage="prep"] .order-ticket>.pour-gauge{position:absolute;display:grid;left:14px;right:14px;bottom:14px;grid-template-rows:28px 29px 20px;padding-top:9px;height:87px;margin:0;min-height:0}
+.order-ticket>.pour-gauge .level-track{height:16px;margin:8px 0 5px}
+
+/* Easy has a dedicated tap action; its slot is reserved before the first hold. */
+.control-deck .main-controls{display:grid;grid-template-columns:minmax(0,1fr);gap:0;align-items:stretch}
+.control-deck .main-controls>#pour-button{grid-column:1;grid-row:1;min-width:0;max-width:none}
+.easy-action-slot{display:none;min-width:0;min-height:0}
+body[data-difficulty="easy"] .control-deck .main-controls{grid-template-columns:minmax(0,1fr) 80px;gap:8px}
+body[data-difficulty="easy"] .easy-action-slot{display:block;grid-column:2;grid-row:1}
+.easy-action{display:flex;flex-direction:column;justify-content:center;align-items:center;gap:2px;width:100%;height:100%;min-height:48px;min-width:0;padding:5px 4px;border:1px solid #2e6d56;border-radius:12px;background:#e0edcf;box-shadow:0 3px 0 #174b4940;color:#205744;font-size:12px;font-weight:800;line-height:1.05;text-align:center;touch-action:manipulation}
+.easy-action>svg{width:20px;height:20px;flex:0 0 20px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.easy-action>span{font-size:12px;line-height:1.05;white-space:normal}
+.easy-action:disabled{opacity:.5;box-shadow:none;cursor:default}
+.easy-action:not(:disabled):active{transform:translateY(2px);box-shadow:none}
+.easy-action:focus-visible,.finish-details:focus-visible{outline:3px solid #df9b35;outline-offset:3px}
+
+/* The customer gives the verdict beside the finished cup. Receipt is optional. */
+.finish-review{position:relative;width:100%;max-width:280px;margin:0 auto;padding:12px 14px;border:1px solid #91ad87;border-radius:16px 16px 16px 4px;background:#fff9e8;box-shadow:3px 4px 0 #164d4908;color:#174b49}
+.finish-review:after{content:"";position:absolute;left:-6px;bottom:20px;width:10px;height:10px;border-left:1px solid #91ad87;border-bottom:1px solid #91ad87;background:#fff9e8;transform:rotate(45deg)}
+.finish-top{display:flex;align-items:center;justify-content:space-between;gap:8px;min-width:0}
+.finish-stars{font-size:21px;line-height:1;letter-spacing:1px;color:#b78525;white-space:nowrap}
+.finish-stars .empty{color:#b5c0a7}
+.finish-earned{font-size:22px;line-height:1.1;font-variant-numeric:tabular-nums;letter-spacing:-.7px;white-space:nowrap}
+.finish-body{display:grid;grid-template-columns:minmax(0,1fr) 44px;gap:7px;align-items:center;margin-top:6px;min-width:0}
+.finish-copy{min-width:0}
+.finish-review h2{margin:0;font-size:16px;font-weight:800;line-height:1.15;letter-spacing:-.2px}
+.finish-scores{display:flex;align-items:baseline;flex-wrap:wrap;gap:2px 8px;margin-top:4px;min-width:0;font-size:12px;line-height:1.2;color:#52715d}
+.finish-scores>span{display:inline-flex;align-items:baseline;gap:3px;white-space:nowrap}
+.finish-scores strong{font-size:12px;line-height:1.2;color:#174b49;font-variant-numeric:tabular-nums}
+.finish-details{display:grid;place-items:center;width:44px;min-width:44px;height:44px;min-height:44px;padding:10px;border:1px solid #c0cdae;border-radius:10px;background:#edf1df;color:#315f4e}
+.finish-details>svg{width:23px;height:23px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+#result-overlay .modal-actions{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:stretch;gap:9px}
+#result-overlay #close-result{min-height:44px;margin:0}
+#result-overlay #result-store{min-height:44px;margin:0;padding:8px 10px}
+
+@media(max-width:800px){
+ .playfield,body[data-control-stage="prep"] .playfield{grid-template-columns:minmax(0,1fr);grid-template-areas:"customer" "station" "gauge";grid-template-rows:108px minmax(0,1fr) 78px;gap:0;padding-top:7px;padding-bottom:0}
+ .pour-area,body[data-control-stage="prep"] .pour-area{--cup-clearance:56px}
+ .pour-area canvas,body[data-control-stage="prep"] .pour-area canvas{bottom:22px}
+ body[data-control-stage="prep"] .tap-machine{display:block}
+ .order-ticket,body[data-control-stage="prep"] .order-ticket{position:static;display:contents!important;height:auto;max-height:none;overflow:visible}
+ .order-ticket>.recipe-workbench{position:absolute;top:auto;bottom:0;left:12px;right:12px;width:auto;max-width:none;max-height:min(176px,calc(100% - 116px));margin:0;padding:6px 8px;border:1px solid #b6c8a6;border-bottom:0;border-radius:12px 12px 0 0;background:#fffaea;box-shadow:0 -5px 14px #174b4914;z-index:8;align-self:auto;justify-self:auto}
+ .order-ticket>.mixed-recipe{display:none!important}
+ .order-ticket>.pour-gauge,body[data-control-stage="prep"] .order-ticket>.pour-gauge{position:relative;display:grid;grid-area:gauge;left:auto;right:auto;top:auto;bottom:auto;grid-template-rows:24px 23px 19px;height:100%;padding:6px 12px 5px;margin:0 -12px;border-top:1px solid #bccdad;background:var(--paper)}
+ .order-ticket>.pour-gauge .level-track{height:13px;margin:6px 0 4px}
+ .counter-back,body[data-control-stage="prep"] .counter-back{bottom:81px;height:20px}
+ .counter-front,body[data-control-stage="prep"] .counter-front{bottom:78px;height:23px}
+ .finish-review{max-width:none;padding:7px 9px;border-radius:13px 13px 13px 3px;box-shadow:2px 3px 0 #164d4908}
+ .finish-review:after{top:32px;bottom:auto}
+ .finish-stars{font-size:19px;letter-spacing:.8px}
+ .finish-earned{font-size:20px}
+ .finish-body{gap:6px;margin-top:4px}
+ .finish-review h2{font-size:14px;line-height:1.1}
+ .finish-scores{gap:2px 6px;margin-top:3px}
+}
+@media(max-width:360px){
+ .order-ticket>.recipe-workbench{left:9px;right:9px;padding-left:7px;padding-right:7px}
+ .order-ticket>.pour-gauge,body[data-control-stage="prep"] .order-ticket>.pour-gauge{margin-left:-9px;margin-right:-9px;padding-left:10px;padding-right:10px}
+ .finish-review{padding:6px 7px}
+ .finish-stars{font-size:18px;letter-spacing:.4px}
+ .finish-earned{font-size:19px}
+ .finish-scores,.finish-scores strong{font-size:11px}
+ body[data-difficulty="easy"] .control-deck .main-controls{grid-template-columns:minmax(0,1fr) 76px;gap:7px}
+ .prep-target{padding-left:4px;padding-right:4px}
+}
+@media(max-height:650px) and (max-width:800px){
+ .playfield,body[data-control-stage="prep"] .playfield{grid-template-rows:108px minmax(0,1fr) 74px;padding-top:5px;padding-bottom:0}
+ .pour-area,body[data-control-stage="prep"] .pour-area{--cup-clearance:47px}
+ .order-ticket>.pour-gauge,body[data-control-stage="prep"] .order-ticket>.pour-gauge{grid-template-rows:23px 21px 18px;padding-top:5px;padding-bottom:6px}
+ .order-ticket>.pour-gauge .level-track{height:13px;margin-top:5px;margin-bottom:3px}
+ .counter-back,body[data-control-stage="prep"] .counter-back{bottom:77px;height:20px}
+ .counter-front,body[data-control-stage="prep"] .counter-front{bottom:74px;height:23px}
+ .order-ticket>.recipe-workbench{padding-top:5px;padding-bottom:5px}
+}
+@media(min-width:520px) and (max-width:1000px) and (max-height:520px){
+ .playfield,body[data-control-stage="prep"] .playfield{grid-template-columns:minmax(145px,.8fr) minmax(130px,1fr) minmax(210px,1.1fr);grid-template-rows:minmax(0,1fr);grid-template-areas:"customer station ticket";gap:8px;padding:7px 12px 0}
+ .pour-area,body[data-control-stage="prep"] .pour-area{--cup-clearance:52px}
+ .pour-area canvas,body[data-control-stage="prep"] .pour-area canvas{bottom:20px}
+ .order-ticket,body[data-control-stage="prep"] .order-ticket{position:relative;display:block!important;align-self:center;height:calc(100% - 12px);max-height:calc(100% - 12px);margin:0 0 12px;padding:9px;border:1px solid #b7c7a5;border-radius:12px;background:var(--paper);overflow:hidden}
+ .order-ticket>.ticket-top{top:9px;left:9px;right:9px}
+ body[data-control-stage="prep"] .order-ticket>.ticket-top{visibility:hidden}
+ .order-ticket>.recipe-workbench{position:absolute;top:6px;bottom:auto;left:8px;right:8px;width:auto;max-height:calc(100% - 12px);padding:0;border:0;border-radius:0;background:var(--paper);box-shadow:none}
+ .recipe-workbench>.recipe-heading{display:flex;min-height:16px;margin-bottom:3px}
+ .recipe-workbench>.recipe-heading>strong{display:none}
+ .prep-target{margin-right:auto;padding:1px 4px;font-size:12px}
+ .recipe-workbench #recipe-cost{font-size:12px}
+ .order-ticket>.mixed-recipe:not([hidden]){position:absolute;display:flex!important;top:31px;left:8px;right:8px;max-height:calc(100% - 110px);margin:0}
+ .order-ticket>.pour-gauge,body[data-control-stage="prep"] .order-ticket>.pour-gauge{position:absolute;display:grid;grid-area:auto;left:8px;right:8px;bottom:8px;top:auto;grid-template-rows:24px 22px 18px;height:71px;padding:6px 0 0;margin:0;border-top:1px dashed #bcccad;background:none}
+ .order-ticket>.pour-gauge .level-track{height:13px;margin:5px 0 4px}
+ .counter-back,body[data-control-stage="prep"] .counter-back{bottom:12px;height:18px}
+ .counter-front,body[data-control-stage="prep"] .counter-front{bottom:0;height:14px}
+ .finish-review{margin-top:6px;padding:6px 8px}
+ .finish-top{flex-wrap:wrap;gap:4px}
+ .finish-stars{font-size:17px;letter-spacing:.5px}
+ .finish-earned{font-size:19px}
+ .finish-body{grid-template-columns:minmax(0,1fr);gap:3px;margin-top:4px}
+ .finish-review h2{font-size:14px}
+ .finish-scores{gap:2px 6px}
+ .finish-details{width:100%;height:44px;min-height:44px;padding:9px}
+ .finish-details>svg{width:21px;height:21px}
+ .easy-action{min-height:44px;border-radius:10px;padding:3px 4px}
+ body[data-difficulty="easy"] .control-deck .main-controls{grid-template-columns:minmax(0,1fr) 76px;gap:7px}
+}
+
+/* Quiet visual feedback keeps the icons readable without adding instructions. */
+.recipe-workbench .base-option{position:relative}
+.recipe-workbench .base-option[aria-pressed="true"]{border-color:#34735a;background:#e2edce;box-shadow:inset 0 0 0 1px #34735a}
+.recipe-workbench .base-option[aria-pressed="true"]:before{content:none;display:none}
+.recipe-workbench .base-option[aria-pressed="true"]:after{content:"";position:absolute;right:3px;top:3px;display:block;width:13px;height:13px;border:1px solid #fff8e7;border-radius:50%;background:#28634e url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='m5 12 5 5 9-10' fill='none' stroke='%23fff8e7' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center/9px 9px no-repeat;pointer-events:none}
+.recipe-workbench .ingredient-option.selected{border-color:#34735a;background:#e9efd8;box-shadow:inset 0 0 0 1px #34735a}
+.recipe-workbench .ingredient-options{display:flex;flex-wrap:wrap;justify-content:flex-start;gap:5px}
+.recipe-workbench .ingredient-option{flex:0 1 min(86px,calc((100% - 10px)/3));width:min(86px,calc((100% - 10px)/3));min-width:44px;max-width:86px}
+.recipe-workbench>.recipe-heading>strong{display:block;font-size:12px;letter-spacing:0;white-space:nowrap}
+.recipe-workbench .base-option,.recipe-workbench .ingredient-option,.recipe-workbench .blend-options button{transition:background .14s,border-color .14s,box-shadow .14s}
+.recipe-workbench .blend-options button[aria-pressed="true"]{border-color:#34735a;box-shadow:inset 0 -3px 0 #34735a;background:#e5eed4}
+.ratio-chip.is-active .ratio-step{animation:part-highlight .28s ease-out both}
+.finish-review:not([hidden]){animation:verdict-arrive .24s ease-out both}
+body[data-control-stage="pouring"] #primary-hint,body[data-control-stage="settling"] #primary-hint,body[data-control-stage="finished"] #primary-hint{display:none}
+.primary-action.is-waiting>svg{animation:foam-breathe 1.4s ease-in-out infinite}
+.result-modal .modal-eyebrow{display:none}
+.upgrade-card .upgrade-icon{border-radius:14px;background:radial-gradient(ellipse at center,#f6e6ba 0,#f6e6ba00 73%)}
+.upgrade-card.maxed .upgrade-icon{background:radial-gradient(ellipse at center,#dae9c1 0,#dae9c100 73%)}
+.upgrade-card .buy-button:not(:disabled){box-shadow:0 3px 0 #174b4940}
+.upgrade-card .buy-button:not(:disabled):active{box-shadow:none;transform:translateY(2px)}
+#welcome-overlay .menu-action>svg{transition:transform .18s ease-out}
+@media(hover:hover){
+ .recipe-workbench .base-option:hover:not(:disabled),.recipe-workbench .ingredient-option:hover:not(:disabled){border-color:#3e785d;background:#edf4dc}
+ .finish-details:hover{background:#e0ebce;border-color:#789c6a}
+ #welcome-overlay .menu-action:hover>svg{transform:translateX(2px)}
+}
+@keyframes part-highlight{from{box-shadow:0 0 0 4px #edc36d66}to{box-shadow:0 0 0 0 #edc36d00}}
+@keyframes verdict-arrive{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+@keyframes foam-breathe{0%,100%{opacity:.55;transform:scale(.96)}50%{opacity:.9;transform:scale(1.04)}}
+@media(prefers-reduced-motion:reduce){
+ .recipe-workbench .base-option,.recipe-workbench .ingredient-option,.recipe-workbench .blend-options button,.recipe-workbench .base-option>svg,.recipe-workbench .ingredient-picture>b,.ratio-chip .ratio-step,.finish-review,.primary-action.is-waiting>svg,#welcome-overlay .menu-action>svg{animation:none!important;transition:none!important}
+}
+
+/* Functional symbols follow the one main action; the label still names it. */
+.primary-action .action-icon-wait,.primary-action .action-icon-next{display:none}
+.primary-action[data-action="wait"] .action-icon-pour,.primary-action[data-action="next"] .action-icon-pour,.primary-action[data-action="nextDay"] .action-icon-pour{display:none}
+.primary-action[data-action="wait"] .action-icon-wait,.primary-action[data-action="next"] .action-icon-next,.primary-action[data-action="nextDay"] .action-icon-next{display:block}
+.mixed-label{display:none}
+
+/* Keep essential costs and eligibility on the card; descriptions open inside it. */
+.upgrade-card{position:relative;isolation:isolate}
+.upgrade-copy h3,.upgrade-copy>.upgrade-level{padding-right:32px}
+.upgrade-timing{display:block;margin-top:4px;color:#647c5d;font-size:12px;line-height:1.15}
+.upgrade-info{position:absolute;inset:0;z-index:3;pointer-events:none}
+.upgrade-info>summary{position:absolute;top:4px;right:4px;display:grid;place-items:center;width:44px;height:44px;min-width:44px;min-height:44px;margin:0;padding:11px;border:0;border-radius:10px;background:#f3f2df;color:#4a7159;list-style:none;cursor:pointer;pointer-events:auto;z-index:2}
+.upgrade-info>summary::-webkit-details-marker{display:none}
+.upgrade-info>summary>svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.upgrade-info[open]>summary{background:#dbe8ca;color:#1e5b46}
+.upgrade-info>summary:focus-visible{outline:3px solid #df9b35;outline-offset:-3px}
+.upgrade-info-panel{position:absolute;top:6px;left:6px;right:6px;bottom:78px;min-height:0;max-width:100%;padding:10px 44px 10px 10px;border:1px solid #a9bd98;border-radius:10px;background:#fff9e9;box-shadow:0 3px 9px #174b491c;color:#365d48;overflow-x:hidden;overflow-y:auto;overscroll-behavior:contain;scrollbar-width:thin;pointer-events:auto}
+.upgrade-info:not([open])>.upgrade-info-panel{display:none}
+.upgrade-info-panel>strong{display:block;margin:0 0 5px;font-size:14px;line-height:1.15;color:#174b49}
+.upgrade-info-panel>p{margin:0 0 7px;font-size:12px;line-height:1.35}
+.upgrade-info-panel>p:last-child{margin-bottom:0}
+
+/* Save actions live behind one familiar, labelled disclosure. */
+.store-management{grid-template-rows:44px 22px minmax(0,1fr) 44px 44px}
+.business-tools{position:relative;grid-row:5;align-self:end;min-height:44px;height:44px;margin:0;padding:0;border-top:1px solid #d4ddc5;overflow:visible;z-index:7}
+.business-tools>summary{display:flex;align-items:center;gap:6px;width:100%;height:44px;min-height:44px;padding:5px 0;list-style:none;cursor:pointer;color:#355d49;font-size:14px;font-weight:700;line-height:1.1}
+.business-tools>summary::-webkit-details-marker{display:none}
+.business-tools>summary>svg{width:19px;height:19px;flex:0 0 19px;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
+.business-tools>summary:after{content:"";width:6px;height:6px;flex:0 0 6px;margin-left:2px;border-top:1.5px solid currentColor;border-right:1.5px solid currentColor;transform:rotate(-45deg)}
+.business-tools[open]>summary:after{transform:rotate(135deg)}
+.business-tools #save-status{margin-left:auto;min-width:0;font-size:11px;font-weight:500;line-height:1.1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.business-tools>.business-tools-panel{position:absolute;left:0;right:0;bottom:calc(100% + 4px);display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:5px;margin:0;padding:8px;border:1px solid #a9bd98;border-radius:11px;background:#fff9e9;box-shadow:0 3px 12px #174b4926}
+.business-tools:not([open])>.business-tools-panel{display:none}
+.business-tools .text-button{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;min-height:52px;margin:0;padding:5px 3px;border:1px solid #c7d1b6;border-radius:8px;background:#edf1df;text-decoration:none;font-size:12px;line-height:1.1}
+.business-tools .text-button>svg{width:19px;height:19px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+.business-tools #reset-business{margin-left:0;background:#f5e8d7;border-color:#d9c5a7}
+.business-tools>summary:focus-visible{outline:3px solid #df9b35;outline-offset:-3px;border-radius:8px}
+@media(max-width:800px){
+ .store-management{grid-template-rows:40px 20px minmax(0,1fr) 44px 44px}
+}
+@media(max-height:650px) and (max-width:800px){
+ .store-management{grid-template-rows:36px 18px minmax(0,1fr) 40px 44px}
+ .upgrade-info-panel{bottom:70px;padding-top:8px;padding-bottom:8px}
+ .upgrade-timing{margin-top:3px;font-size:11px}
+}
+@media(min-width:520px) and (max-width:1000px) and (max-height:520px){
+ .store-management{grid-template-rows:34px 18px minmax(0,1fr) 38px}
+ .business-tools{position:absolute;left:10px;bottom:7px;width:calc(40% - 20px);height:44px;min-height:44px;margin:0;padding:0}
+ .business-tools>summary{font-size:12px;gap:4px}
+ .business-tools>summary>svg{width:17px;height:17px;flex-basis:17px}
+ .business-tools #save-status{font-size:10px}
+ .business-tools>.business-tools-panel{padding:6px;gap:4px}
+ .business-tools .text-button{min-height:50px;font-size:12px;padding:5px 2px}
+ .upgrade-copy h3,.upgrade-copy>.upgrade-level{padding-right:36px}
+ .upgrade-info>summary{top:0;right:0;background:#fff9e5cc}
+ .upgrade-info-panel{top:3px;left:3px;right:3px;bottom:58px;padding:7px 43px 7px 7px;border-radius:8px}
+ .upgrade-info-panel>strong{font-size:12px;margin-bottom:4px}
+ .upgrade-info-panel>p{font-size:12px;line-height:1.25;margin-bottom:5px}
+ .upgrade-timing{font-size:11px;margin-top:2px}
+}
+@media(min-width:520px) and (max-width:1000px) and (max-height:360px){
+ .store-management{grid-template-rows:30px 18px minmax(0,1fr) 34px}
+ .upgrade-info-panel{bottom:51px}
+ .control-deck{grid-template-rows:44px}
+ .control-deck #pour-button{min-height:44px}
+}
+
+/* Action tracks never inherit intrinsic height from hints or two-line labels. */
+.control-deck{--counter-action-height:52px;grid-template-rows:var(--counter-action-height);row-gap:0}
+.control-deck .main-controls{height:var(--counter-action-height);min-height:0;max-height:var(--counter-action-height);grid-template-rows:var(--counter-action-height);align-self:stretch}
+.control-deck #pour-button{box-sizing:border-box;height:var(--counter-action-height);min-height:0;max-height:var(--counter-action-height);padding-top:5px;padding-bottom:5px;overflow:hidden}
+.control-deck .easy-action-slot{height:var(--counter-action-height);min-height:0;max-height:var(--counter-action-height)}
+.control-deck .easy-action{box-sizing:border-box;height:var(--counter-action-height);min-height:0;max-height:var(--counter-action-height);padding-top:3px;padding-bottom:3px;gap:1px;overflow:hidden}
+.control-deck .easy-action>svg{width:18px;height:18px;flex-basis:18px}
+.control-deck .easy-action>span{font-size:12px;line-height:12px;max-height:24px;overflow:hidden}
+@media(max-width:800px){
+ .control-deck{--counter-action-height:48px;grid-template-rows:var(--counter-action-height) 18px;row-gap:5px}
+ .control-deck #pour-button{box-shadow:0 3px 0 var(--ink)}
+ .control-deck #pour-button.pressed,.control-deck #pour-button:active:not(:disabled){transform:translateY(2px);box-shadow:0 1px 0 var(--ink)}
+ .control-deck #pour-button:disabled{box-shadow:0 2px 0 #98b29c}
+ .control-deck .easy-action>svg{width:14px;height:14px;flex-basis:14px}
+ .control-deck .easy-action>span{font-size:11px;line-height:11.5px;max-height:23px}
+}
+@media(max-height:650px) and (max-width:800px){
+ .control-deck{grid-template-rows:var(--counter-action-height) 16px;row-gap:4px}
+}
+@media(min-width:520px) and (max-width:1000px) and (max-height:520px){
+ .control-deck{--counter-action-height:44px;grid-template-rows:var(--counter-action-height);row-gap:0}
+ .control-deck #pour-button{padding-top:4px;padding-bottom:4px}
+ .control-deck #primary-hint{font-size:11px;line-height:1.1;margin-top:2px}
+ .control-deck .easy-action{padding-top:2px;padding-bottom:2px}
+ .control-deck .easy-action>svg{width:14px;height:14px;flex-basis:14px}
+ .control-deck .easy-action>span{font-size:11px;line-height:11.5px;max-height:23px}
+}
+
+/* Once the cup is complete, the only remaining action fills the footer. */
+body[data-game-mode="finished"] .control-deck .main-controls,body[data-game-mode="summary"] .control-deck .main-controls{grid-template-columns:minmax(0,1fr);column-gap:0}
+body[data-game-mode="finished"] .control-deck .easy-action-slot,body[data-game-mode="summary"] .control-deck .easy-action-slot{display:none}
+body[data-game-mode="finished"] .control-deck #pour-button,body[data-game-mode="summary"] .control-deck #pour-button{grid-column:1/-1}
+
+/* Portrait keeps a readable storefront above the catalog and protected funds. */
+@media(max-width:800px) and (orientation:portrait){
+ .store-hero{display:grid;grid-template-columns:minmax(0,1fr) minmax(132px,1.1fr);grid-template-rows:minmax(0,1fr) 42px;gap:4px 10px;padding:6px 10px;align-items:center}
+ .store-hero .business-goal-card{grid-column:1;grid-row:1;align-self:center;min-width:0;width:100%;margin:0;padding:6px 7px;border-radius:10px;box-shadow:none;background:#fff9e9b8}
+ .store-hero .business-goal-card strong{font-size:13px;line-height:1.15}
+ .store-hero .business-goal-card p{font-size:11px;line-height:1.2;margin-top:4px}
+ .store-hero .business-progress-track{height:4px;margin-top:5px}
+ .store-hero .store-art{grid-column:2;grid-row:1;align-self:stretch;justify-self:stretch;width:100%;height:100%;min-height:0;max-width:none;margin:0}
+ .store-hero .store-art>svg{display:block;width:100%;height:100%;max-height:none;object-fit:contain}
+ .store-hero .store-scoreboard{grid-column:1/-1;grid-row:2;align-self:stretch;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:0;min-height:0;margin:0;padding:5px 0 0}
+ .store-hero .store-scoreboard>div{display:block;padding:0 4px}
+ .store-hero .store-scoreboard span{font-size:11px;line-height:1.1;letter-spacing:0}
+ .store-hero .store-scoreboard strong{font-size:18px;line-height:1.1;margin-top:2px}
+}
+@media(max-width:800px) and (max-height:650px) and (orientation:portrait){
+ .storefront-view{grid-template-rows:148px minmax(0,1fr)}
+}
+
 /* Perfect Pour V1.03.2 · Illustrated title and main menu. */
 .title-overlay{z-index:1100;padding:0;overflow:hidden;background:#143f3e;backdrop-filter:none;-webkit-backdrop-filter:none}
 .title-stage{position:relative;isolation:isolate;width:100%;height:100vh;height:100dvh;max-width:none;min-height:0;overflow:hidden;box-sizing:border-box}
@@ -624,7 +889,7 @@ body[data-game-mode="intro"]>.global-utility,body[data-game-mode="welcome"]>.glo
 
 </style>
 </head>
-<body data-game-mode="intro">
+<body data-game-mode="intro" data-difficulty="hardcore">
     <div class="utility global-utility">
       <button class="icon-button" id="pause-button" aria-label="Pause game" title="Pause (P)"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14M16 5v14"/></svg></button>
       <button class="icon-button" id="help-button" aria-label="Help and settings" title="Help & settings"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M4 17h16"/><circle cx="9" cy="7" r="3"/><circle cx="15" cy="17" r="3"/></svg></button>
@@ -658,7 +923,11 @@ body[data-game-mode="intro"]>.global-utility,body[data-game-mode="welcome"]>.glo
     <div class="shelf" aria-hidden="true"><i class="bottle bottle-orange"></i><i class="bottle bottle-cherry"></i><i class="bottle bottle-lime"></i><i class="bottle bottle-cola"></i><span class="shelf-board"></span></div>
 
     <section class="customer-area" aria-label="Current customer">
-      <div class="order-bubble"><div class="customer-name"><span id="customer-name">Jamie</span><span id="customer-number">CUSTOMER 01</span></div><p id="order-line">Sunset Orange <strong>65%</strong></p><div id="order-recipe" class="recipe-ticket" aria-label="Requested recipe"></div><span class="bubble-small sr-only" id="customer-aside">A little sunshine in a cup.</span><div class="customer-patience"><span aria-hidden="true">◷</span><div class="patience-meter" aria-hidden="true"><i id="patience-track"></i></div><strong id="patience-label">Ready</strong></div></div>
+      <div class="order-bubble" id="order-bubble"><div class="customer-name"><span id="customer-name">Jamie</span><span id="customer-number">CUSTOMER 01</span></div><p id="order-line">Sunset Orange <strong>65%</strong></p><div id="order-recipe" class="recipe-ticket" aria-label="Requested recipe"></div><span class="bubble-small sr-only" id="customer-aside">A little sunshine in a cup.</span><div class="customer-patience"><span aria-hidden="true">◷</span><div class="patience-meter" aria-hidden="true"><i id="patience-track"></i></div><strong id="patience-label">Ready</strong></div></div>
+      <section id="finish-review" class="finish-review" aria-labelledby="finish-title" hidden>
+        <div class="finish-top"><div id="finish-stars" class="finish-stars" aria-label="5 out of 5 stars">★★★★★</div><strong id="finish-earned" class="finish-earned" title="Net earnings from this customer">+$0.00</strong></div>
+        <div class="finish-body"><div class="finish-copy"><h2 id="finish-title">Perfect pour!</h2><div class="finish-scores"><span>Fill <strong id="finish-fill">100%</strong></span><span><span id="finish-recipe-label">Recipe</span> <strong id="finish-recipe">100%</strong></span></div></div><button id="finish-details" class="finish-details icon-button" aria-label="Review details and receipt" title="Details & receipt"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3h12v18l-3-2-3 2-3-2-3 2V3Zm3 5h6M9 12h6M9 16h3"/></svg></button></div>
+      </section>
       <div id="customer-art" class="customer-art" aria-hidden="true"></div>
       <div class="customer-tag"><span class="online-dot"></span><span id="customer-status">READY TO ORDER</span></div>
     </section>
@@ -676,7 +945,7 @@ body[data-game-mode="intro"]>.global-utility,body[data-game-mode="welcome"]>.glo
       <div class="ticket-top"><span>MENU PRICE</span><strong id="order-price">$0.00</strong></div>
       <div class="ticket-drink"><span class="drink-swatch" id="drink-swatch"></span><div><strong id="drink-name">Sunset Orange</strong><span id="drink-flavor">Bright, citrusy & mellow</span></div></div>
       <section class="recipe-workbench" id="recipe-workbench" aria-label="Craft your soda">
-        <div class="recipe-heading"><strong>YOUR MIX</strong><span id="recipe-cost" title="Ingredient cost">$0.00</span></div>
+        <div class="recipe-heading"><strong id="prep-heading">Choose soda</strong><span id="prep-target" class="prep-target">65% target</span><span id="recipe-cost" title="Ingredient cost">$0.00</span></div>
         <div id="mix-prep-sequence" class="mix-prep-sequence" aria-label="Soda pouring sequence" hidden></div>
         <div id="base-options" class="base-options" role="group" aria-label="Choose soda base"></div>
         <div class="ingredient-options" id="ingredient-options" role="group" aria-label="Add ingredients"></div>
@@ -705,8 +974,8 @@ body[data-game-mode="intro"]>.global-utility,body[data-game-mode="welcome"]>.glo
 
   <footer class="control-deck" id="counter-controls">
     <div class="pour-tip"><span class="tip-spark" aria-hidden="true">✦</span><p id="tip-text"><strong>One pour.</strong><span>Release to serve.</span></p></div>
-    <div class="main-controls" id="counter-action-slot"><button id="pour-button" class="pour-button primary-action"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3s-6 7-6 12a6 6 0 0 0 12 0c0-5-6-12-6-12Z"/><path d="M9 16q0 3 3 3"/></svg><span><span id="primary-label">CHOOSE A BASE</span><small id="primary-hint">Match the order above</small></span></button></div>
-    <div class="shift-progress"><div><span>TODAY’S QUEUE</span><strong id="progress-label">0 / 12 served</strong></div><div class="progress-dots" id="progress-dots" aria-hidden="true"></div><button class="text-button" id="restart-button">Build your bar</button></div>
+    <div class="main-controls" id="counter-action-slot"><button id="pour-button" class="pour-button primary-action"><svg viewBox="0 0 24 24" aria-hidden="true"><g class="action-icon-pour"><path d="M12 3s-6 7-6 12a6 6 0 0 0 12 0c0-5-6-12-6-12Z"/><path d="M9 16q0 3 3 3"/></g><g class="action-icon-wait"><circle cx="12" cy="12" r="8"/><path d="M12 7v5l3 2"/></g><g class="action-icon-next"><path d="M4 12h15m-6-6 6 6-6 6"/></g></svg><span><span id="primary-label">CHOOSE A BASE</span><small id="primary-hint">Match the order above</small></span></button><div id="easy-action-slot" class="easy-action-slot"><button id="easy-action" class="easy-action" aria-label="Serve drink" disabled hidden><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12h15m-6-6 6 6-6 6"/></svg><span id="easy-action-label">Serve</span></button></div></div>
+    <div class="shift-progress"><div><span>TODAY’S QUEUE</span><strong id="progress-label">0 / 12 served</strong></div><div class="progress-dots" id="progress-dots" aria-hidden="true"></div><button class="text-button" id="restart-button" hidden>Build your bar</button></div>
     <div class="combo-strip"><strong id="combo-label">Start a streak</strong><span id="combo-next">2 good pours · 1.10×</span></div>
   </footer>
 
@@ -715,7 +984,7 @@ body[data-game-mode="intro"]>.global-utility,body[data-game-mode="welcome"]>.glo
       <div class="store-intro"><div class="modal-eyebrow">YOUR NEIGHBORHOOD FAVORITE</div><h1>Your soda bar.</h1><p id="store-description">Your next chapter starts here.</p></div>
       <div class="business-goal-card"><div><span class="goal-symbol" aria-hidden="true">✦</span><strong id="business-goal">A sign with personality</strong></div><div class="business-progress-track" aria-hidden="true"><i id="business-progress"></i></div><p id="staff-activity">A one-person dream, for now.</p></div>
       <div id="store-art" class="store-art" aria-label="Your illustrated soda bar"></div>
-      <div class="store-scoreboard"><div><span>READY TO SPEND</span><strong id="store-spendable">$0.00</strong></div><div><span>WAGES SET ASIDE</span><strong id="store-reserve">$0.00</strong></div><div><span>TOTAL SALES</span><strong id="store-lifetime">$0.00</strong></div></div>
+      <div class="store-scoreboard"><div><span aria-label="Cash available to spend">SPENDABLE</span><strong id="store-spendable">$0.00</strong></div><div><span aria-label="Wages set aside">WAGES HELD</span><strong id="store-reserve">$0.00</strong></div><div><span>TOTAL SALES</span><strong id="store-lifetime">$0.00</strong></div></div>
     </div>
     <div class="store-management">
       <div class="store-heading"><div><span class="modal-eyebrow">MAKE IT YOURS</span><h2>Upgrades</h2></div><button id="store-back" class="primary-button">BACK TO POUR</button></div>
@@ -726,7 +995,7 @@ body[data-game-mode="intro"]>.global-utility,body[data-game-mode="welcome"]>.glo
         <span id="upgrade-page" role="status" aria-live="polite" aria-atomic="true">1 / 12</span>
         <button id="upgrade-next" class="icon-button" aria-label="Next upgrades" aria-controls="upgrade-grid" title="Next upgrades"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg></button>
       </nav>
-      <div class="business-tools"><p id="save-status" title="Export a portable backup of your business">Autosaved</p><div><button id="export-save" class="text-button" aria-label="Export business save" title="Export business save">Export</button><button id="import-save" class="text-button" aria-label="Import business save" title="Import business save">Import</button><button id="reset-business" class="text-button" aria-label="Start a new business" title="Start a new business">Reset</button></div></div>
+      <details id="business-tools" class="business-tools"><summary><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 8h16v12H4V8Zm5 0V4h6v4M4 13h16m-10-2v4h4v-4"/></svg><span>Business tools</span><span id="save-status" title="Export a portable backup of your business">Autosaved</span></summary><div class="business-tools-panel"><button id="export-save" type="button" class="text-button" aria-label="Export business save" title="Export business save"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12m-5-5 5 5 5-5M4 16v5h16v-5"/></svg><span>Export</span></button><button id="import-save" type="button" class="text-button" aria-label="Import business save" title="Import business save"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 16V4m-5 5 5-5 5 5M4 16v5h16v-5"/></svg><span>Import</span></button><button id="reset-business" type="button" class="text-button" aria-label="Reset business" title="Reset business"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 7a8 8 0 1 1-1 9M5 3v5h5"/></svg><span>Reset</span></button></div></details>
     </div>
   </section>
 </div>
@@ -799,7 +1068,7 @@ body[data-game-mode="intro"]>.global-utility,body[data-game-mode="welcome"]>.glo
         <g class="intro-air-bubbles" stroke="#b5d3ac" stroke-width="3"><circle cx="171" cy="325" r="9"/><circle cx="453" cy="362" r="7"/><circle cx="105" cy="270" r="5"/><circle cx="506" cy="176" r="7"/><circle cx="366" cy="73" r="4"/></g>
       </svg>
     </div>
-    <span class="title-version">V1.04</span>
+    <span class="title-version">V1.04.1</span>
   </section>
 </div>
 
@@ -815,13 +1084,13 @@ body[data-game-mode="intro"]>.global-utility,body[data-game-mode="welcome"]>.glo
         <button class="menu-action menu-settings" id="menu-settings"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M4 17h16"/><circle cx="9" cy="7" r="3"/><circle cx="15" cy="17" r="3"/></svg><span>SETTINGS</span></button>
       </nav>
     </div>
-    <span class="title-version">V1.04</span>
+    <span class="title-version">V1.04.1</span>
   </section>
 </div>
 <p id="boot-error" class="title-boot-error" role="alert" hidden></p>
 
 <div class="overlay" id="result-overlay" hidden>
-  <section class="modal result-modal" role="dialog" aria-modal="true" aria-labelledby="result-title"><div class="modal-review-body"><div class="modal-eyebrow" id="result-eyebrow">THE VERDICT</div><div class="review-stars" id="review-stars" aria-label="5 out of 5 stars">★★★★★</div><h2 id="result-title">A perfect little pour.</h2><p class="review-quote" id="review-quote">“Just the way I like it!”</p><div class="result-metrics"><div><span id="result-recipe-label">RECIPE</span><strong id="result-recipe">100<small>%</small></strong></div><div><span>POUR SCORE</span><strong id="result-accuracy">100<small>%</small></strong></div><div><span>TAKE-HOME</span><strong id="result-earned">$3.25</strong></div></div><div class="result-details" id="result-details"></div><div class="combo-callout" id="result-combo"></div><details class="receipt-details"><summary>View receipt</summary><div class="bonus-breakdown" id="bonus-breakdown" aria-label="Earnings breakdown"></div></details><div class="rating-change"><span>REPUTATION</span><strong><span id="old-rating">3.5</span><span class="rating-separator">/</span><span id="new-rating">4.0</span><span class="star-icon">★</span></strong></div><p class="next-price-note" id="next-price-note">Your next customer will pay a little more.</p></div><div class="modal-actions"><div id="result-action-slot" class="primary-action-slot"></div><button class="text-button" id="result-store">Build your bar</button></div></section>
+  <section class="modal result-modal" role="dialog" aria-modal="true" aria-labelledby="result-title"><div class="modal-review-body"><div class="modal-eyebrow" id="result-eyebrow">THE VERDICT</div><div class="review-stars" id="review-stars" aria-label="5 out of 5 stars">★★★★★</div><h2 id="result-title">A perfect little pour.</h2><p class="review-quote" id="review-quote">“Just the way I like it!”</p><div class="result-metrics"><div><span id="result-recipe-label">RECIPE</span><strong id="result-recipe">100<small>%</small></strong></div><div><span>POUR SCORE</span><strong id="result-accuracy">100<small>%</small></strong></div><div><span>TAKE-HOME</span><strong id="result-earned">$3.25</strong></div></div><div class="result-details" id="result-details"></div><div class="combo-callout" id="result-combo"></div><details class="receipt-details"><summary>View receipt</summary><div class="bonus-breakdown" id="bonus-breakdown" aria-label="Earnings breakdown"></div></details><div class="rating-change"><span>REPUTATION</span><strong><span id="old-rating">3.5</span><span class="rating-separator">/</span><span id="new-rating">4.0</span><span class="star-icon">★</span></strong></div><p class="next-price-note" id="next-price-note">Your next customer will pay a little more.</p></div><div class="modal-actions"><div id="result-action-slot" class="primary-action-slot" hidden></div><button class="primary-button" id="close-result">Back to cup</button><button class="text-button" id="result-store">Build your bar</button></div></section>
 </div>
 
 <div class="overlay" id="summary-overlay" hidden>
@@ -847,7 +1116,7 @@ body[data-game-mode="intro"]>.global-utility,body[data-game-mode="welcome"]>.glo
       <div class="help-rule"><span aria-hidden="true">★</span><p><strong>Earn your stars.</strong>Match the recipe and fill. Good reviews grow streaks and future prices.</p></div>
       <div class="help-rule"><span aria-hidden="true">⌂</span><p><strong>Grow your bar.</strong>Buy equipment, ingredients, seats, and staff. Receipts show what you earn and spend.</p></div>
       </details>
-      <details><summary>Controls & saving</summary><p>Enter or tap readies your recipe. Hold Space or the main button to pour. In Easy, tap or press Enter to switch soda or serve; hold to top up. Enter opens a ready review. P or Escape pauses. Leaving or pausing during a Hardcore pour ends that attempt.</p><p>Your finished cup waits for you. Patience starts with your first recipe change; complex orders allow more time. Menus and settling pause it. Ingredients lock at the first pour. Changing difficulty starts a new streak.</p><p>Music and effects have separate controls. Your business saves on this device; export a backup from Build. Imported earlier saves keep their career progress.</p></details>
+      <details><summary>Controls & saving</summary><p>Match the recipe, then hold Space or the main button to pour. In Easy, release to pause and hold again to top up; tap the smaller action or press Enter to switch soda or serve. The review appears after the foam settles. Enter or Next customer continues. P or Escape pauses. Leaving or pausing during a Hardcore pour ends that attempt.</p><p>Your finished cup stays beside its review; the receipt is in Details. Patience starts with your first recipe change; complex orders allow more time. Menus and settling pause it. Ingredients lock at the first pour. Changing difficulty starts a new streak.</p><p>Music and effects have separate controls. Your business saves on this device; export a backup from Build. Imported earlier saves keep their career progress.</p></details>
     </div><button class="primary-button" id="close-help">GOT IT</button></section>
 </div>
 
@@ -1822,7 +2091,7 @@ body[data-game-mode="intro"]>.global-utility,body[data-game-mode="welcome"]>.glo
 
 </script>
 <script>
-/* Perfect Pour V1.04 · A single primary action follows every soda through service. */
+/* Perfect Pour V1.04.1 · Hold always pours; completed cups advance explicitly. */
 (() => {
   'use strict';
   /**
@@ -1845,6 +2114,9 @@ body[data-game-mode="intro"]>.global-utility,body[data-game-mode="welcome"]>.glo
       action: 'none', label: '', hint: '', disabled: true,
       showRecipe: editable, showPressure: editable,
       showMode: editable || mode === 'store',
+      showEasyAction: !hardcore && ['preparing','playing'].includes(mode),
+      easyDisabled: mode !== 'playing' || !partAttempted || holding,
+      easyLabel: firstPart ? 'NEXT SODA' : 'SERVE',
       stage: 'other'
     };
     const primary = (action, label, hint, stage, disabled = false) =>
@@ -1854,26 +2126,25 @@ body[data-game-mode="intro"]>.global-utility,body[data-game-mode="welcome"]>.glo
       if (!editable) return primary('wait', 'RECIPE LOCKED', 'Finish this cup first', 'prep', true);
       if (!Number.isInteger(selectedSoda) || selectedSoda < 0 || selectedSoda > 3)
         return primary('choose', 'CHOOSE A BASE', 'Pick a soda above', 'prep', true);
-      return primary('ready', 'READY TO POUR', 'Enter or tap', 'prep');
+      return primary('pour', isMix ? 'HOLD '+activeName+' · 1/2' : 'HOLD TO POUR', hardcore ? (firstPart ? 'Release to switch' : 'Release to serve') : 'Release to pause', 'prep');
     }
     if (mode === 'playing') {
-      if (holding) return primary('pour', hardcore ? (firstPart ? 'RELEASE TO SWITCH' : 'RELEASE TO SERVE') : 'RELEASE TO PAUSE',
-        hardcore ? (firstPart ? 'Next: '+(input.nextName || 'soda') : isMix ? 'Your final pour' : 'Your one pour') : firstPart ? 'Then top up or switch' : 'Then top up or serve', 'pouring');
+      if (holding) return primary('pour', 'POURING'+(isMix?' '+activeName:'')+'…',
+        hardcore ? (firstPart ? 'Release to switch' : 'Release to serve') : 'Release to pause', 'pouring');
       // This is also a defensive presentation guard for a committed Hardcore
       // attempt before the renderer has switched to its settling state.
       if (hardcore && partAttempted) return primary('wait', 'SETTLING…', 'Watch your soda settle', 'settling', true);
       if (!Number.isInteger(selectedSoda) || selectedSoda < 0 || selectedSoda > 3)
         return primary('choose', 'CHOOSE A BASE', 'Pick a soda above', 'prep', true);
-      if (!hardcore && partAttempted)
-        return primary('easyServe', firstPart ? 'NEXT SODA' : 'SERVE DRINK', firstPart ? 'Tap to switch · hold to top up' : 'Tap to serve · hold to top up', 'topup');
-      return primary('pour', isMix ? 'HOLD '+activeName+' · '+(firstPart?'1/2':'2/2') : 'HOLD TO POUR', 'Space or hold', 'ready');
+      return primary('pour', isMix ? 'HOLD '+activeName+' · '+(firstPart?'1/2':'2/2') : 'HOLD TO POUR',
+        hardcore ? (firstPart ? 'Release to switch' : 'Release to serve') : 'Release to pause', !hardcore && partAttempted ? 'topup' : 'ready');
     }
     if (mode === 'settling')
       return primary('wait', 'SETTLING…', 'Watch your soda settle', 'settling', true);
     if (mode === 'finished')
-      return primary('review', 'SEE REVIEW', 'Enter or tap', 'finished');
+      return primary('next', input.lastCustomer ? 'CLOSE THE DAY' : 'NEXT CUSTOMER', 'Enter or tap', 'finished');
     if (mode === 'result')
-      return primary('next', input.lastCustomer ? 'CLOSE THE DAY' : 'NEXT CUSTOMER', 'Enter or tap', 'review');
+      return primary('none', 'REVIEW DETAILS', '', 'review', true);
     if (mode === 'summary')
       return primary('nextDay', 'OPEN NEXT DAY', 'Enter or tap', 'closed');
     return result;
@@ -1883,7 +2154,7 @@ body[data-game-mode="intro"]>.global-utility,body[data-game-mode="welcome"]>.glo
 
 </script>
 <script>
-/* Perfect Pour V1.04 · Presentation and input. Simulation, business, saves, and rules are Rust/Wasm. */
+/* Perfect Pour V1.04.1 · Presentation and input. Simulation, business, saves, and rules are Rust/Wasm. */
 (() => {
   'use strict';
   const WASM_BASE64 = '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ACBoszgCoAUgACBpszgCnAUgACAkszgCmAUgACBqszgClAUgACBrszgCkAUgACBsszgCjAUgACBtszgCiAUgACBmszgChAUgACBfOAL4BCAAIGCzOAL0BCAAIGG2OALwBCAAIGKzOALsBCAAIGOzOALoBCAAIF2zOALgBCAAIE04AtwEIAAgTjgC2AQgACBMszgC1AQgACBPszgC0AQgACBQszgCzAQgACBRszgCyAQgACBSszgCxAQgACBTszgCwAQgACBUszgCvAQgACBVszgCuAQgACBWszgCtAQgACBXszgCsAQgACBYszgCrAQgACBZtDgCqAQgACBaszgCpAQgACBbszgCoAQgACBcszgCnAQgACBLszgCmAQgACBItjgCjAQgACBJtjgCiAQgACBKszgChAQgACBCtjgCgAQgACBDtjgC/AMgACA0szgC9AMgACA1szgC8AMgACA8szgC2AMgACA9szgC1AMgACA+szgCyAMgACA/szgCxAMgACAiOALAAyAAICOzOAK8AyAAQwAAAABDAECDRSAsGzgCtAMgAEMAAAAAQwAAL0UgLRs4ArADIAAgHTgCrAMgACAeOAKoAyAAIBg4AqQDIAAgGTgCoAMgACAsszgCnAMgACAtszgCmAMgACAcszgClAMgACAbszgCkAMgACAXszgCjAMgACAaszgCiAMgACAuszgChAMgACAvszgCgAMgACAwszgC/AIgACAxszgC+AIgACAyszgC9AIgACAWOALwAiAAICazOALsAiAAIBWzOALoAiAAICezOALkAiAAICizOALgAiAAIB+zOALQAiAAIBS2OALMAiAAIBOzOALIAiAAIAI4AsQCIAAgAbM4AsACIAAgA7Y4ArwCIAAgBLY4ArgCIAAgBbM4ArQCIAAgBrM4ArACIAAgB7Y4AqwCIAAgCLM4AqgCIAAgCbY4AqQCIAAgCrY4AqACIAAgC7Y4ApwCIAAgDLY4ApgCIAAgDbY4ApQCIAAgDrY4ApACIAAgD7M4AowCIAAgELM4AogCIAAgEbM4AoQCIAAgErM4AoACIABDAACAP0MAAAAAIHBBBEkiFxs4ApQGIAAgeUH/AXGzOAL8BSAAIHRB/wFxszgC2AUgACBeEIqAgIAAszgC5AQgACAlQQFqszgC+AMgACA5Qf8BcbM4AugDIAAgIUH/AXGz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CCACQoCAgICAgID4PzcDyAEgAkHQAWpBAEEw/AsAIAIgAUH1863pBiABGzYCvAYgAhCCgICAACAAIAJBkAj8CgAAIAJBkAhqJICAgIAAC4kBAQJ/AkACQCAAKAL4ByIBIAAoAuQHIgIgACgCoAYgAkEESRsiAiAAKAL8B0EBRhsgAiABQQRJGyIBQQNLDQAgACgCiAciAEEDSQ0BIABBA0HwhsCAABDbgICAAAALIAFBBEHIhsCAABDbgICAAAALIAFBA3QrA6iGwIAAIABBA3QrA9iGwIAAoguBEBYCfwR8BX8CfBN/AnwOfwF+A38DfAR/AXwdfwF8AX8CfAJ/AXwBfwR8AX8BfCOAgICAACECIAEoApgGIQMgAkGAAWsiAkEIakEAQfgA/AsAAkACQCADDQAgASsDQCEEDAELAkAgASgC+AdBBEkNACABKwM4IgUgASsDQCABKwNQoCIGIAYgBmIbIgYgBiAFIAUgBWIbIgUgBiAFYxshBAwBCyABKwPwASEECyABKwMwIQcgASgCpAYhCCABKAKgBiEJIAEoApwGIQogAS0AigghCyABKAL8ByEMIAErA8gBIQ0gASsDwAEhDiABKAIsIQ8gASgCKCEQIAEoAiQhESABLQCJCCESIAEoAvQHIRMgASgC8AchFCABKALsByEVIAEoAugHIRYgASgC5AchFyABKALgByEYIAEoAtwHIRkgASgC2AchGiABKALUByEbIAEtAIgIIRwgAS0AhwghHSABKALQByEeIAEoAswHIR8gASgCyAchICABKALEByEhIAErA7gBISIgASsDsAEhIyABKALAByEkIAEoArwHISUgASgCICEmIAEoAhwhJyABKAIYISggASgCuAchKSABKAK0ByEqIAEoArAHISsgASgCrAchLCABKAKoByEtIAEoAqQHIS4gASgCoAchLyABKAKcByEwIAEoApgHITEgASkDqAEhMiABKAKUByEzIAEoApAHITQgASgCjAchNSABKwOgASE2IAErA5gBITcgASsDkAEhOCABKAKIByE5IAEoAoQHITogASgCgAchOyABLQCGCCE8IAErA4gBIT0gASgC/AYhPiABKAL4BiE/IAEoAvQGIUAgASgC8AYhQSABLQCFCCFCIAEoAuwGIUMgASgC6AYhRCABLQCECCFFIAEtAIMIIUYgASgC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gABBAEGImcCAADYClJnAgABBAEGImcCAADYCkJnAgABBAEGQmcCAADYCnJnAgABBAEGQmcCAADYCmJnAgABBAEGYmcCAADYCpJnAgABBAEGYmcCAADYCoJnAgABBAEGgmcCAADYCrJnAgABBAEGgmcCAADYCqJnAgABBAEGomcCAADYCtJnAgABBAEGwmcCAADYCvJnAgABBAEGomcCAADYCsJnAgABBAEGwmcCAADYCuJnAgABBAEG4mcCAADYCxJnAgABBAEHAmcCAADYCzJnAgABBAEG4mcCAADYCwJnAgABBAEHAmcCAADYCyJnAgABBAEHImcCAADYC1JnAgABBAEHImcCAADYC0JnAgABBAEHQmcCAADYC3JnAgABBAEHQmcCAADYC2JnAgABBAEHYmcCAADYC5JnAgABBAEHYmcCAADYC4JnAgABBAEHgmcCAADYC7JnAgABBAEHgmcCAADYC6JnAgABBAEHomcCAADYC9JnAgABBAEHomcCAADYC8JnAgABBAEHwmcCAADYC/JnAgABBAEHwmcCAADYC+JnAgABBAEH4mcCAADYChJrAgABBAEH4mcCAADYCgJrAgABBAEGAmsCAADYCjJrAgABBAEGImsCAADYClJrAgABBAEGAmsCAADYCiJrAgABBAEGQmsCAADYCnJrAgABBAEGImsCAADYCkJrAgABBAEGYmsCAADYCpJrAgABBAEGQmsCAADYCmJrAgABBAEGgmsCAADYCrJrAgABBAEGYmsCAADYCoJrAgABBAEGomsCAADYCtJrAgABBAEGgmsCAADYCqJrAgABBAEGwmsCAADYCvJrAgABBAEGomsCAADYCsJrAgABBACAGQQ9qQXhxIgBBeGoiAjYC1JrAgABBAEGwmsCAADYCuJrAgABBACAGIABrIAlBWGoiAGpBCGoiCDYCzJrAgAAgAiAIQQFyNgIEIAYgAGpBKDYCBEEAQYCAgAE2AuCawIAAC0EAIQJBACgCzJrAgAAiACADTQ0AQQAgACADayICNgLMmsCAAEEAQQAoAtSawIAAIgAgA2oiCDYC1JrAgAAgCCACQQFyNgIEIAAgA0EDcjYCBCAAQQhqIQILIAFBEGokgICAgAAgAgsDAAALcAECfwJAAkAgAEF8aigCACIDQXhxIgRBBEEIIANBA3EiAxsgAWpJDQACQCAD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AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQAAAAAAAAABAAAADAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABAAAAAAAAAAAAAAABAAAABAAAAAAAAAAAAAAAAAAAAAEAAAAEAAAAAAAAAAEAAAAAAAABAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQD/DwAA';
@@ -1950,7 +2221,7 @@ body[data-game-mode="intro"]>.global-utility,body[data-game-mode="welcome"]>.glo
   let engine,state,mode='intro',returnMode='playing',storeReturn='playing',pauseReturn='preparing',lastFrame=0,simulationClock=0,visualTime=0,lastUi=0;
   let inputOwner=null,activePointer=null,keyHeld=false,settlingSpaceHeld=false,pouring=false,ready=false,lastSpill=0,spillFlash=0,storageAvailable=true,loadedCareer=false,toastTimer;
   let settlingElapsed=0,finishElapsed=0,lastAutosave=0,sceneDirty=true,lastFeedback='',lastSceneKey='',lastSavedRaw=null,externalSave=false;
-  let pendingPointer=null,suppressPrimaryClick=false,recipeUiKey='',iconDownloading=false;
+  let easyPress=null,primaryPress=null,suppressPrimaryClick=false,recipeUiKey='',iconDownloading=false;
   let upgradePage=0,upgradePageSize=1;
   let careerActive=false,menuActivationKey='';
   const blendNames=['Light','Regular','Bold'];
@@ -1965,7 +2236,7 @@ body[data-game-mode="intro"]>.global-utility,body[data-game-mode="welcome"]>.glo
   function randomSeed(){try{return crypto.getRandomValues(new Uint32Array(1))[0];}catch(_){return(Date.now()^(Math.random()*0xffffffff))>>>0;}}
   function toast(message){clearTimeout(toastTimer);$('toast').textContent=message;$('toast').hidden=false;toastTimer=setTimeout(()=>$('toast').hidden=true,4200);announce(message);}
   function setMode(next,focusId){
-    if(next!==mode)cancelPendingPointer();
+    if(next!==mode){easyPress=null;primaryPress=null;}
     mode=next;simulationClock=performance.now();sceneDirty=true;
     if(next!=='settling')settlingElapsed=0;
     document.querySelector('.game-shell').inert=overlays.includes(next);
@@ -1978,7 +2249,7 @@ body[data-game-mode="intro"]>.global-utility,body[data-game-mode="welcome"]>.glo
       $('counter-tab').classList.toggle('active',!store);$('store-tab').classList.toggle('active',store);
       $('counter-tab').setAttribute('aria-pressed',String(!store));$('store-tab').setAttribute('aria-pressed',String(store));
     }
-    const primaryHost=$(next==='result'?'result-action-slot':next==='summary'?'summary-action-slot':'counter-action-slot');
+    const primaryHost=$(next==='summary'?'summary-action-slot':'counter-action-slot');
     if($('pour-button').parentElement!==primaryHost)primaryHost.prepend($('pour-button'));
     if(ready){updateHud();if(next==='store')syncViewportLayout();}
     syncMusic();
@@ -2039,6 +2310,12 @@ body[data-game-mode="intro"]>.global-utility,body[data-game-mode="welcome"]>.glo
     text('primary-label',flow.label);text('primary-hint',flow.hint);
     action.setAttribute('aria-label',flow.label+'. '+flow.hint);
     action.classList.toggle('is-waiting',flow.action==='wait');
+    document.body.dataset.difficulty=hard?'hardcore':'easy';
+    $('easy-action').hidden=!flow.showEasyAction;$('easy-action').disabled=flow.easyDisabled;
+    text('easy-action-label',flow.easyLabel);
+    $('easy-action').setAttribute('aria-label',flow.easyLabel+'. Enter or tap');
+    $('finish-review').hidden=!['finished','result'].includes(mode);
+    $('order-bubble').hidden=['finished','result'].includes(mode);
     document.body.dataset.controlStage=flow.stage;
     $('recipe-workbench').hidden=!flow.showRecipe;$('pressure-controls').hidden=!flow.showPressure;
     document.querySelector('.mode-switch').hidden=!flow.showMode;
@@ -2063,12 +2340,13 @@ body[data-game-mode="intro"]>.global-utility,body[data-game-mode="welcome"]>.glo
     if(mode==='playing')$('pour-button').focus({preventScroll:true});
     if(mode!=='welcome')toast(hard?'Hardcore: one hold per soda. Final release serves. +15% base pay.':'Easy: stop, settle, top up, then serve.');
   }
-  function clearInput(){cancelPendingPointer();inputOwner=null;activePointer=null;pouring=false;$('pour-button').classList.remove('pressed');document.querySelector('.tap-machine').classList.remove('pouring');stopPourSound();}
+  function clearInput(){easyPress=null;primaryPress=null;inputOwner=null;activePointer=null;pouring=false;$('pour-button').classList.remove('pressed');document.querySelector('.tap-machine').classList.remove('pouring');stopPourSound();}
   function beginInput(source){
-    if(!ready||externalSave||mode!=='playing'||inputOwner!==null||state[0]!==0)return false;
-    if(source==='key')cancelPendingPointer();
+    if(!ready||externalSave||!['preparing','playing'].includes(mode)||inputOwner!==null||state[0]!==0||state[F.selectedSoda]>3)return false;
     advanceSimulation(performance.now());if(engine.begin_pour()!==1)return false;
-    refreshState();inputOwner=source;pouring=true;saveCareer();if(externalSave)return;setCustomerMood('pouring');$('pour-button').classList.add('pressed');document.querySelector('.tap-machine').classList.add('pouring');openAudio();startPourSound();updateHud();return true;
+    refreshState();inputOwner=source;pouring=true;easyPress=null;
+    if(mode==='preparing'){$('pressure-controls').open=false;setMode('playing');}
+    saveCareer();if(externalSave)return false;setCustomerMood('pouring');$('pour-button').classList.add('pressed');document.querySelector('.tap-machine').classList.add('pouring');openAudio();startPourSound();updateHud();return true;
   }
   function releaseInput(source){
     if(inputOwner!==source)return;
@@ -2078,7 +2356,7 @@ body[data-game-mode="intro"]>.global-utility,body[data-game-mode="welcome"]>.glo
   function announceNextPart(){
     announce('Part 2: '+sodas[state[F.activeSoda]].name+'. Hold for the final line at '+targetText(state[4])+' percent.');
   }
-  function interruptPour(){cancelPendingPointer();if(inputOwner!==null)releaseInput(inputOwner);}
+  function interruptPour(){easyPress=null;if(inputOwner!==null)releaseInput(inputOwner);}
   function startupSaveCurrent(){
     if(externalSave)return false;
     try{if(localStorage.getItem(SAVE_KEY)!==lastSavedRaw){handleExternalSave();return false;}}catch(_){storageAvailable=false;}
@@ -2103,7 +2381,7 @@ body[data-game-mode="intro"]>.global-utility,body[data-game-mode="welcome"]>.glo
     if(!ready||mode!=='welcome'||!loadedCareer||!startupSaveCurrent())return;
     careerActive=true;openAudio();saveCareer();if(externalSave)return;
     if(state[0]===1){if(state[7]/state[5]>VISIBLE_FOAM)showCommittedPour();else showFinishedCup(false);return;}if(state[0]===2){showSummary(false);return;}
-    renderOrder();setMode(activePlayMode(),state[F.selectedSoda]<4?'pour-button':'base-0');saveCareer();if(externalSave)return;playCue('day');announce('Shop open. '+(state[F.isMix]===1?'Two sodas, in order. ':'Match the recipe, then choose Ready to pour. ')+(state[F.hardcore]?'One hold per soda.':'Easy allows top-ups.'));
+    renderOrder();setMode(activePlayMode(),state[F.selectedSoda]<4?'pour-button':'base-0');saveCareer();if(externalSave)return;playCue('day');announce('Shop open. '+(state[F.isMix]===1?'Two sodas, in order. ':'Match the recipe, then hold Space or the pour button. ')+(state[F.hardcore]?'One hold per soda.':'Easy allows top-ups; use the separate action when ready.'));
   }
   function openNextDay(){
     if(!ready||state[0]!==2)return;
@@ -2112,7 +2390,7 @@ body[data-game-mode="intro"]>.global-utility,body[data-game-mode="welcome"]>.glo
   function resetBusiness(){
     if(!ready||!['welcome','restart'].includes(mode)||!startupSaveCurrent())return;
     if(mode==='welcome'&&loadedCareer){requestRestart();return;}
-    clearInput();engine.reset(randomSeed());refreshState();careerActive=true;loadedCareer=true;openAudio();saveCareer();if(externalSave)return;renderOrder();setMode(activePlayMode(),state[F.selectedSoda]<4?'pour-button':'base-0');playCue('day');announce('Shop open. Match the recipe, then choose Ready to pour.');
+    clearInput();engine.reset(randomSeed());refreshState();careerActive=true;loadedCareer=true;openAudio();saveCareer();if(externalSave)return;renderOrder();setMode(activePlayMode(),state[F.selectedSoda]<4?'pour-button':'base-0');playCue('day');announce('Shop open. Match the recipe, then hold Space or the pour button.');
   }
   function personIndex(){return(Math.round(state[1])-1+(state[F.day]-1)*3)%names.length;}
   function setCustomerMood(mood){
@@ -2169,16 +2447,20 @@ body[data-game-mode="intro"]>.global-utility,body[data-game-mode="welcome"]>.glo
     if(mix)$('mix-prep-sequence').innerHTML=pair;
     [['cherries',F.selectedCherries,true,2],['lime',F.selectedLime,state[F.hasCitrus]===1,1],['syrup',F.selectedSyrup,state[F.hasSyrup]===1,2]].forEach(([name,field,available,max])=>{
       const button=$('ingredient-options').querySelector(`[data-ingredient="${name}"]`),n=state[field];
+      button.hidden=!available;
       text(name+'-count',available?n:'');text(name+'-availability',available?'':'Locked');
       button.disabled=!available||state[F.canRecipe]!==1;button.classList.toggle('selected',n>0);button.classList.toggle('locked',!available);button.setAttribute('aria-label',available?`${name}: ${n}. Tap to cycle zero to ${max}.`:`${name} locked. Unlock in Build.`);button.title=available?`${name}: ${n}. Tap to change.`:'Unlock in Build';
     });
-    $('blend-controls').hidden=state[F.hasMixer]!==1||mix;
+    $('ingredient-options').hidden=state[F.selectedSoda]>3;
+    $('blend-controls').hidden=state[F.hasMixer]!==1||mix||state[F.selectedSoda]>3;
     $('blend-options').querySelectorAll('button').forEach((button,i)=>{button.setAttribute('aria-pressed',String(state[F.selectedBlend]===i));button.disabled=state[F.canRecipe]!==1;});
     text('recipe-cost',dollars(state[F.selectedAddinCost]));
+    text('prep-heading',state[F.selectedSoda]>3?'CHOOSE SODA':'RECIPE');
+    text('prep-target',mix?'1/2 · '+targetText(state[F.activeTarget])+'%':percent(state[4])+'% target');
     $('order-line').classList.toggle('has-ratio',mix);
     if(mix)$('order-line').innerHTML=pair+'<strong>'+percent(state[4])+'%</strong>';
     $('order-recipe').innerHTML=recipeTokens(true);$('order-recipe').setAttribute('aria-label',recipeDescription());
-    $('mixed-recipe').innerHTML='<span class="mixed-label">YOUR MIX</span>'+(mix?pair:state[F.selectedSoda]<4?'<span class="recipe-chip">'+window.PourRecipeArt.icon('base',{soda:state[F.selectedSoda]})+'<b>'+sodaNames[state[F.selectedSoda]]+'</b></span>':'')+recipeTokens(false);
+    $('mixed-recipe').innerHTML=(mix?pair:state[F.selectedSoda]<4?'<span class="recipe-chip">'+window.PourRecipeArt.icon('base',{soda:state[F.selectedSoda]})+'<b>'+sodaNames[state[F.selectedSoda]]+'</b></span>':'')+recipeTokens(false);
     const selected=mix?state[F.activeSoda]:state[F.selectedSoda]<4?state[F.selectedSoda]:state[2],soda=sodas[selected];
     document.documentElement.style.setProperty('--soda',window.PourRecipeArt.tint(soda.color,state[F.selectedBlend],state[F.selectedSyrup]));
     text('tap-name',state[F.selectedSoda]<4?soda.name.toUpperCase():'CHOOSE YOUR BASE');text('drink-name',mix?sodaNames[state[2]]+' + '+sodaNames[state[F.orderedSecondSoda]]:sodas[state[2]].name);text('drink-flavor',mix?'Two sodas. Your perfect mix.':sodas[state[2]].flavor);
@@ -2204,14 +2486,14 @@ body[data-game-mode="intro"]>.global-utility,body[data-game-mode="welcome"]>.glo
     recipe[index]=value;
     if(engine.set_recipe(...recipe)!==1)return;
     refreshState();saveCareer();if(externalSave)return;updateHud();
+    const choice=kind==='base'?$('base-'+value)?.querySelector('svg'):kind==='blend'?$('blend-options').querySelector(`[data-blend="${value}"] svg`):$(kind+'-count');
+    if(!reducedMotion)choice?.animate?.([{transform:'scale(.84)'},{transform:'scale(1.12)',offset:.55},{transform:'scale(1)'}],{duration:210,easing:'ease-out'});
     if(kind==='base')announce(sodas[value].name+' selected.');
     else if(kind==='blend')announce(blendNames[value]+' blend selected.');
     else announce(value+' '+kind+' selected.');
   }
-  function readyToPour(){
-    if(mode!=='preparing'||state[F.selectedSoda]>3)return;
-    $('pressure-controls').open=false;setMode('playing','pour-button');saveCareer();
-    if(!externalSave)announce(state[F.isMix]===1?'Part 1: '+sodas[state[F.activeSoda]].name+'. Fill to the first line at '+targetText(state[F.activeTarget])+' percent. '+(state[F.hardcore]?'Release switches to the next soda.':'Tap Next soda when ready; hold again to top up.'):state[F.hardcore]?'Recipe ready. Hold Space once. Release commits your drink.':'Recipe ready. Hold to pour; after release, tap to serve or hold again to top up.');
+  function focusPourAfterPointer(event){
+    if(event.detail>0&&mode==='preparing'&&state[F.selectedSoda]<4&&!externalSave)$('pour-button').focus({preventScroll:true});
   }
   function editRecipe(){if(mode==='playing'&&state[F.attempted]!==1){setMode('preparing','pour-button');announce('Adjust your recipe before the first pour.');}}
   function renderOrder(){
@@ -2281,9 +2563,9 @@ body[data-game-mode="intro"]>.global-utility,body[data-game-mode="welcome"]>.glo
     renderRecipe();updateModeUi();updateMeter();updateLiveFeedback();updateBusinessVisuals();
   }
   function serveDrink(){
-    if(!ready||mode!=='playing'||state[F.hardcore]===1)return;
-    interruptPour();const part=state[F.pourPart];if(engine.serve()!==1)return;refreshState();
-    if(state[0]===1)showCommittedPour();else{saveCareer();if(externalSave)return;updateHud();if(state[F.pourPart]!==part)announceNextPart();}
+    if(!ready||externalSave||mode!=='playing'||state[F.hardcore]===1||pouring||inputOwner!==null||state[F.holding]===1||state[F.partAttempted]!==1)return;
+    advanceSimulation(performance.now());const part=state[F.pourPart];if(engine.serve()!==1)return;refreshState();
+    if(state[0]===1)showCommittedPour();else{saveCareer();if(externalSave)return;updateHud();$('pour-button').focus({preventScroll:true});if(state[F.pourPart]!==part)announceNextPart();}
   }
   function showCommittedPour(){
     saveCareer();if(externalSave)return;settlingElapsed=0;finishElapsed=0;
@@ -2291,12 +2573,13 @@ body[data-game-mode="intro"]>.global-utility,body[data-game-mode="welcome"]>.glo
     setMode('settling');announce('Pour committed. Watch it settle. Your cup will stay on screen.');
   }
   function showFinishedCup(celebrate){
-    finishElapsed=0;
+    if(celebrate)finishElapsed=0;
     const perfect=state[12]===5;
     setCustomerMood(state[12]>=4?'happy':state[12]<=2?'disappointed':'neutral');
     text('customer-status',perfect?'✦ YOU NAILED IT':state[12]>=4?'ONE HAPPY GUEST':'A POUR TO LEARN FROM');
+    renderReview();
     setMode('finished','pour-button');
-    announce(`Cup settled. ${scoreText(state[11],state[F.fillStars])} percent fill accuracy.${state[F.isMix]===1?' '+Math.floor(state[F.mixAccuracy])+' percent mix accuracy.':''} Final fill ${percent(state[F.beverageMl]/state[5])} percent. Choose See review when ready.`);
+    announce(`Cup settled. ${Math.round(state[12])} out of 5 stars. ${scoreText(state[11],state[F.fillStars])} percent fill accuracy.${state[F.isMix]===1?' '+Math.floor(state[F.mixAccuracy])+' percent mix accuracy.':''} Net ${signedMoney(state[F.lastNet])}. ${state[1]===state[F.goal]?'Close the day':'Next customer'} when ready.`);
     if(celebrate&&!document.hidden&&document.hasFocus()){
       openAudio();playCue(perfect?'perfect':state[12]>=4?'good':'bad');
       if(state[F.milestone]>0){playCue('streak',{streak:state[F.streak]});confetti();}
@@ -2306,16 +2589,18 @@ body[data-game-mode="intro"]>.global-utility,body[data-game-mode="welcome"]>.glo
   function ledgerRow(label,value,extra=''){
     return'<div class="bonus-row '+extra+'"><span>'+label+'</span><strong>'+signedMoney(value)+'</strong></div>';
   }
-  function presentResult(celebrate){
-    clearInput();refreshState();
+  function renderReview(){
     const stars=Math.round(state[12]),accuracy=scoreText(state[11],state[F.fillStars]),order=Math.round(state[1]),streak=Math.round(state[F.streak]);
     setCustomerMood(stars>=4?'happy':stars<=2?'disappointed':'neutral');
-    $('review-stars').innerHTML='★'.repeat(stars)+'<span class="empty">'+'★'.repeat(5-stars)+'</span>';$('review-stars').setAttribute('aria-label',stars+' out of5 stars');
-    text('result-title',['','Try the next cup.','Keep practicing.','Getting there.','Lovely pour!','Perfect pour!'][stars]);
+    const starMarkup='★'.repeat(stars)+'<span class="empty">'+'★'.repeat(5-stars)+'</span>';
+    for(const id of ['review-stars','finish-stars']){$(id).innerHTML=starMarkup;$(id).setAttribute('aria-label',stars+' out of 5 stars');}
+    const title=['','Try the next cup.','Keep practicing.','Getting there.','Lovely pour!','Perfect pour!'][stars];
+    text('result-title',title);text('finish-title',title);text('finish-earned',signedMoney(state[F.lastNet]));text('finish-fill',accuracy+'%');
     const choices=reviewLines[stars],fillError=state[F.beverageMl]/state[5]-state[4],mix=state[F.isMix]===1,actualShare=state[F.beverageMl]>0?clamp(state[F.firstBeverageMl]/state[F.beverageMl],0,1):0;
     text('review-quote',state[F.recipeMistakes]?'“Check my recipe next time!”':mix&&state[F.mixStars]<5?'“A little more '+sodaNames[actualShare>state[F.firstShare]?state[F.orderedSecondSoda]:state[2]]+' next time!”':stars<=2?(fillError<0?'“I was hoping for a fuller cup.”':'“That’s more soda than I ordered.”'):choices[(order+state[F.day]-2)%choices.length]);
     text('result-eyebrow',state[F.refund]>0&&state[F.basePay]===0?'ORDER REFUNDED':'GUEST REVIEW');
     text('result-recipe-label',mix?'RECIPE + MIX':'RECIPE');
+    text('finish-recipe-label',mix?'Recipe + mix':'Recipe');text('finish-recipe',Math.floor(mix?Math.min(state[F.recipeAccuracy],state[F.mixAccuracy]):state[F.recipeAccuracy])+'%');
     $('result-recipe').innerHTML=Math.floor(mix?Math.min(state[F.recipeAccuracy],state[F.mixAccuracy]):state[F.recipeAccuracy])+'<small>%</small>';
     $('result-accuracy').innerHTML=accuracy+'<small>%</small>';text('result-earned',signedMoney(state[F.lastNet]));
     $('result-details').innerHTML=mix?`<span>◉ ${percent(state[F.beverageMl]/state[5])}% / ${percent(state[4])}% fill</span><span>Mix ${percent(actualShare)}/${100-percent(actualShare)} · goal ${percent(state[F.firstShare])}/${100-percent(state[F.firstShare])}</span>`+(state[F.waste]>.5?`<span>◒ ${Math.round(state[F.waste])} mL wasted</span>`:''):`<span>◎ ${percent(state[4])}% target</span><span>◉ ${percent(state[F.beverageMl]/state[5])}% poured</span><span>◒ ${Math.round(state[F.waste])} mL wasted</span>`;
@@ -2329,12 +2614,16 @@ body[data-game-mode="intro"]>.global-utility,body[data-game-mode="welcome"]>.glo
     text('old-rating',state[F.previousRating].toFixed(1));text('new-rating',state[9].toFixed(1));
     const delta=state[9]-state[F.previousRating];
     text('next-price-note',order===state[F.goal]?'Day complete':delta>.025?'Better reputation · better prices':delta<-.025?'Reputation down':'Reputation steady');
-    saveCareer();if(externalSave)return;setMode('result','pour-button');
+  }
+  function presentResult(celebrate){
+    clearInput();refreshState();renderReview();
+    const stars=Math.round(state[12]),accuracy=scoreText(state[11],state[F.fillStars]),streak=Math.round(state[F.streak]);
+    saveCareer();if(externalSave)return;setMode('result','close-result');
     if(celebrate)playCue(stars===5?'perfect':stars>=4?'good':'bad');
     announce(`${stars} ${stars===1?'star':'stars'}. ${accuracy} percent fill accuracy.${state[F.isMix]===1?' '+Math.floor(state[F.mixAccuracy])+' percent mix accuracy.':''} Net ${signedMoney(state[F.lastNet])}. ${streak} good ${streak===1?'pour':'pours'} in a row.`);
   }
   function nextOrder(){
-    if(mode!=='result')return;clearInput();engine.next_order();refreshState();saveCareer();if(externalSave)return;
+    if(mode!=='finished')return;clearInput();engine.next_order();refreshState();saveCareer();if(externalSave)return;
     if(state[0]===2){showSummary(true);return;}
     renderOrder();setMode(activePlayMode(),state[F.selectedSoda]<4?'pour-button':'base-0');announce(recipeDescription()+(state[F.isMix]===1?' Pour the highlighted soda first.':''));
   }
@@ -2367,7 +2656,8 @@ body[data-game-mode="intro"]>.global-utility,body[data-game-mode="welcome"]>.glo
       const canBuy=state[F.canBuy]===1&&!maxed&&affordable&&!prerequisite;
       const status=maxed?(i===4||i===5?(state[i===4?F.helperActive:F.specialistActive]?'ON DUTY':'STARTS TOMORROW'):'FULLY BUILT'):prerequisite||(!affordable?`${dollars(Math.max(0,cost-state[F.spendable]))} to go`:state[F.canBuy]!==1?'Finish your cup first':'READY');
       const icon=window.PourStoreArt.upgradeIcon?window.PourStoreArt.upgradeIcon(i,level):'✦';
-      return `<article class="upgrade-card${maxed?' maxed':''}${prerequisite?' locked':''}"><div class="upgrade-icon" aria-hidden="true">${icon}</div><div class="upgrade-copy"><span class="upgrade-level">${item.unit} · ${level}/${item.max}</span><h3>${item.name}</h3><p>${item.description}</p><div class="upgrade-effect">${maxed?item.owned(level):item.effect(level)}</div><span class="upgrade-current">${level&&!maxed?'Now: '+item.owned(level):''}</span></div><button class="buy-button" data-item="${i}" ${canBuy?'':'disabled'} aria-label="${maxed?item.name+' fully owned':(i===4||i===5?'Hire ':'Build ')+item.name+' for '+dollars(cost)}">${maxed?'✓ OWNED':`${i===4||i===5?'HIRE':'BUILD'} <strong>${dollars(cost)}</strong>`}</button><span class="upgrade-status">${status}</span></article>`;
+      const timing=!maxed?([4,5].includes(i)?'Starts next day':[1,6,7,8].includes(i)?'Capacity next day':''):'';
+      return `<article class="upgrade-card${maxed?' maxed':''}${prerequisite?' locked':''}"><div class="upgrade-icon" aria-hidden="true">${icon}</div><div class="upgrade-copy"><span class="upgrade-level">${item.unit} · ${level}/${item.max}</span><h3>${item.name}</h3><div class="upgrade-effect">${maxed?item.owned(level):item.effect(level)}</div>${timing?'<span class="upgrade-timing">'+timing+'</span>':''}</div><button class="buy-button" data-item="${i}" ${canBuy?'':'disabled'} aria-label="${maxed?item.name+' fully owned':(i===4||i===5?'Hire ':'Build ')+item.name+' for '+dollars(cost)}">${maxed?'✓ OWNED':`${i===4||i===5?'HIRE':'BUILD'} <strong>${dollars(cost)}</strong>`}</button><span class="upgrade-status">${status}</span><details class="upgrade-info" name="upgrade-info"><summary aria-label="About ${item.name}" title="About ${item.name}"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 11v6m0-11v1"/></svg></summary><div class="upgrade-info-panel"><strong>${item.name}</strong><p>${item.description}</p><p>${level?'Current: '+item.owned(level):'Next: '+item.effect(level)}</p></div></details></article>`;
     }).join('');
     text('upgrade-page',(upgradePage+1)+' / '+pages);
     $('upgrade-page').setAttribute('aria-label',`Page ${upgradePage+1} of ${pages}. Upgrades ${first+1} to ${last} of ${upgrades.length}.`);
@@ -2401,13 +2691,14 @@ body[data-game-mode="intro"]>.global-utility,body[data-game-mode="welcome"]>.glo
   function leaveStore(){
     if(mode!=='store')return;
     if(state[0]===2){openNextDay();return;}
-    if(state[0]===1){if(state[7]/state[5]>VISIBLE_FOAM)showCommittedPour();else if(storeReturn==='finished')showFinishedCup(false);else presentResult(false);return;}
+    if(state[0]===1){if(state[7]/state[5]>VISIBLE_FOAM)showCommittedPour();else showFinishedCup(false);return;}
     renderOrder();setMode(state[F.attempted]?'playing':storeReturn==='playing'?'playing':'preparing',state[F.selectedSoda]<4?'pour-button':'base-0');
   }
   function buyUpgrade(index){
     if(mode!=='store'||!Number.isInteger(index)||index<0||index>=upgrades.length)return;
     if(engine.buy(index)!==1){toast('That upgrade needs more cash or another building first.');return;}
     refreshState();saveCareer();if(externalSave)return;renderStore();playCue('purchase');
+    if(!reducedMotion)$('store-art').animate?.([{filter:'brightness(1)'},{filter:'brightness(1.12)',offset:.35},{filter:'brightness(1)'}],{duration:500,easing:'ease-out'});
     toast((index===4||index===5)?`${upgrades[index].name} joins tomorrow.`:[1,6,7,8].includes(index)?`${upgrades[index].name} built. New capacity starts tomorrow.`:`${upgrades[index].name} upgraded.`);
     const replacement=$('upgrade-grid').querySelector(`[data-item="${index}"]`);if(replacement&&!replacement.disabled)replacement.focus({preventScroll:true});else $('store-back').focus({preventScroll:true});
   }
@@ -2420,7 +2711,7 @@ body[data-game-mode="intro"]>.global-utility,body[data-game-mode="welcome"]>.glo
     if(!ready||!['preparing','playing','pause','store','intro','welcome','settling','finished','result','summary'].includes(mode))return;
     interruptPour();returnMode=mode;setMode('help','close-help');
   }
-  function closeHelp(){if(mode==='help')setMode(returnMode,returnMode==='intro'?'intro-start':returnMode==='welcome'?'menu-settings':returnMode==='pause'?'resume-button':returnMode==='store'?'store-back':returnMode==='finished'?'pour-button':returnMode==='result'?'pour-button':returnMode==='summary'?'pour-button':returnMode==='settling'?'help-button':'pour-button');}
+  function closeHelp(){if(mode==='help')setMode(returnMode,returnMode==='intro'?'intro-start':returnMode==='welcome'?'menu-settings':returnMode==='pause'?'resume-button':returnMode==='store'?'store-back':returnMode==='result'?'close-result':returnMode==='settling'?'help-button':'pour-button');}
   function requestRestart(){if(!['store','welcome'].includes(mode))return;returnMode=mode;setMode('restart','cancel-restart');}
   function cancelRestart(){if(mode==='restart')setMode(returnMode,returnMode==='welcome'?'new-game-button':'store-back');}
   function saveSettings(){try{localStorage.setItem('perfect-pour-v1-settings',JSON.stringify(settings));}catch(_){}}
@@ -2575,54 +2866,50 @@ body[data-game-mode="intro"]>.global-utility,body[data-game-mode="welcome"]>.glo
     const viewportObserver=new ResizeObserver(syncViewportLayout);
     viewportObserver.observe(canvas);viewportObserver.observe(document.documentElement);
   }
-  function cancelPendingPointer(){
-    if(pendingPointer){clearTimeout(pendingPointer.timer);pendingPointer=null;}
-  }
   function primaryAction(){
     if(!ready||externalSave||$('pour-button').disabled)return;
     const action=$('pour-button').dataset.action;
-    if(action==='ready')readyToPour();
-    else if(action==='easyServe')serveDrink();
-    else if(action==='review')viewReview();
-    else if(action==='next')nextOrder();
+    if(action==='next')nextOrder();
     else if(action==='nextDay')openNextDay();
     else if(action==='pour')announce('Hold Space or hold the button to pour.');
   }
   function primaryPointerDown(event){
-    if(event.button!==0||event.isPrimary===false||pendingPointer||inputOwner!==null)return;
+    if(event.button!==0||event.isPrimary===false)return;
+    if(inputOwner!==null){primaryPress=null;suppressPrimaryClick=true;event.preventDefault();return;}
     suppressPrimaryClick=false;
+    primaryPress={id:event.pointerId,action:$('pour-button').dataset.action,mode};
     if($('pour-button').disabled||mode==='settling'){suppressPrimaryClick=true;event.preventDefault();return;}
-    if(mode!=='playing')return;
+    if(!['preparing','playing'].includes(mode))return;
     const action=$('pour-button').dataset.action;
-    if(action!=='pour'&&action!=='easyServe')return;
+    if(action!=='pour')return;
     event.preventDefault();suppressPrimaryClick=true;
     try{event.currentTarget.setPointerCapture(event.pointerId);}catch(_){}
-    if(action==='pour'){
-      if(beginInput('pointer'))activePointer=event.pointerId;
-      return;
-    }
-    const pending={id:event.pointerId,held:false,timer:null};pendingPointer=pending;
-    pending.timer=setTimeout(()=>{
-      if(pendingPointer!==pending||mode!=='playing'||externalSave||inputOwner!==null)return;
-      pending.held=true;
-      if(beginInput('pointer'))activePointer=pending.id;
-    },160);
+    if(beginInput('pointer'))activePointer=event.pointerId;
   }
   function releasePointer(event){
-    if(inputOwner==='pointer'&&(activePointer===null||event.pointerId===activePointer)){
-      releaseInput('pointer');return;
-    }
-    if(pendingPointer&&pendingPointer.id===event.pointerId){
-      const shouldServe=!pendingPointer.held;cancelPendingPointer();
-      if(shouldServe&&mode==='playing'&&inputOwner===null)serveDrink();
-    }
-  }
-  function cancelPrimaryPointer(event){
-    if(pendingPointer&&pendingPointer.id===event.pointerId)cancelPendingPointer();
     if(inputOwner==='pointer'&&(activePointer===null||event.pointerId===activePointer))releaseInput('pointer');
   }
+  function cancelPrimaryPointer(event){
+    if(easyPress&&easyPress.id===event.pointerId)easyPress=null;
+    if(primaryPress&&primaryPress.id===event.pointerId)primaryPress=null;
+    if(inputOwner==='pointer'&&(activePointer===null||event.pointerId===activePointer))releaseInput('pointer');
+  }
+  function easyPointerDown(event){
+    if(event.button!==0||event.isPrimary===false)return;
+    const valid=ready&&!externalSave&&mode==='playing'&&state[F.hardcore]!==1&&!pouring&&inputOwner===null&&state[F.holding]!==1&&state[F.partAttempted]===1;
+    easyPress={id:event.pointerId,part:state[F.pourPart],valid};
+    if(!valid)event.preventDefault();
+  }
+  function easyAction(event){
+    if(event&&event.detail>0){
+      const press=easyPress;easyPress=null;
+      if(!press||!press.valid||press.part!==state[F.pourPart])return;
+    }
+    serveDrink();
+  }
   function primaryClick(event){
-    if(suppressPrimaryClick&&event.detail!==0){suppressPrimaryClick=false;event.preventDefault();return;}
+    const press=primaryPress;primaryPress=null;
+    if(event.detail!==0&&(suppressPrimaryClick||!press||press.action!==$('pour-button').dataset.action||press.mode!==mode)){suppressPrimaryClick=false;event.preventDefault();return;}
     suppressPrimaryClick=false;primaryAction();
   }
   $('pour-button').addEventListener('pointerdown',primaryPointerDown);
@@ -2630,43 +2917,50 @@ body[data-game-mode="intro"]>.global-utility,body[data-game-mode="welcome"]>.glo
   $('pour-button').addEventListener('lostpointercapture',cancelPrimaryPointer);
   $('pour-button').addEventListener('contextmenu',event=>event.preventDefault());
   $('pour-button').addEventListener('click',primaryClick);
+  $('easy-action').addEventListener('pointerdown',easyPointerDown);$('easy-action').addEventListener('click',easyAction);
+  $('finish-details').addEventListener('click',viewReview);$('close-result').addEventListener('click',()=>{if(mode==='result')showFinishedCup(false);});
   $('intro-start').addEventListener('click',showMainMenu);$('new-game-button').addEventListener('click',newGame);$('menu-settings').addEventListener('click',showHelp);
   $('start-button').addEventListener('click',openShop);$('edit-recipe').addEventListener('click',editRecipe);
-  $('base-options').addEventListener('click',event=>{const button=event.target.closest('button[data-base]');if(button&&!button.disabled)changeRecipe('base',Number(button.dataset.base));});
+  $('base-options').addEventListener('click',event=>{const button=event.target.closest('button[data-base]');if(button&&!button.disabled){changeRecipe('base',Number(button.dataset.base));focusPourAfterPointer(event);}});
   $('ingredient-options').addEventListener('click',event=>{
     const button=event.target.closest('button[data-ingredient]');if(!button||button.disabled)return;
     const kind=button.dataset.ingredient,field={cherries:F.selectedCherries,lime:F.selectedLime,syrup:F.selectedSyrup}[kind],max=kind==='lime'?1:2;
-    changeRecipe(kind,(state[field]+1)%(max+1));openAudio();playCue('ingredient',{kind:kind==='cherries'?'cherry':kind});
+    changeRecipe(kind,(state[field]+1)%(max+1));openAudio();playCue('ingredient',{kind:kind==='cherries'?'cherry':kind});focusPourAfterPointer(event);
   });
-  $('blend-options').addEventListener('click',event=>{const button=event.target.closest('button[data-blend]');if(button&&!button.disabled)changeRecipe('blend',Number(button.dataset.blend));});
+  $('blend-options').addEventListener('click',event=>{const button=event.target.closest('button[data-blend]');if(button&&!button.disabled){changeRecipe('blend',Number(button.dataset.blend));focusPourAfterPointer(event);}});
   $('sound-button').addEventListener('click',soundToggle);$('music-button').addEventListener('click',musicToggle);$('pause-button').addEventListener('click',pause);$('resume-button').addEventListener('click',resume);$('help-button').addEventListener('click',showHelp);$('close-help').addEventListener('click',closeHelp);
   for(const id of ['store-tab','restart-button','pause-restart','result-store','summary-store'])$(id).addEventListener('click',enterStore);
   $('store-back').addEventListener('click',leaveStore);$('counter-tab').addEventListener('click',()=>{if(mode==='store')leaveStore();});
   $('brand-home').addEventListener('click',event=>{event.preventDefault();enterStore();});
-  $('hardcore-mode').addEventListener('click',()=>changeDifficulty(true));
-  $('easy-mode').addEventListener('click',()=>changeDifficulty(false));
-  ['pressure-gentle','pressure-classic','pressure-rush'].forEach((id,index)=>$(id)?.addEventListener('click',()=>changePressure(index)));
+  $('hardcore-mode').addEventListener('click',event=>{changeDifficulty(true);focusPourAfterPointer(event);});
+  $('easy-mode').addEventListener('click',event=>{changeDifficulty(false);focusPourAfterPointer(event);});
+  ['pressure-gentle','pressure-classic','pressure-rush'].forEach((id,index)=>$(id)?.addEventListener('click',event=>{changePressure(index);focusPourAfterPointer(event);}));
   for(const [id,key,module] of [['music-volume','musicVolume','PourMusic'],['sound-volume','soundVolume','PerfectPourSounds']]){const slider=$(id);if(slider){slider.value=settings[key]*100;slider.addEventListener('input',()=>{settings[key]=clamp(Number(slider.value)/100,0,1);window[module]?.setVolume(settings[key]);saveSettings();});}}
   $('upgrade-grid').addEventListener('click',event=>{const button=event.target.closest('button[data-item]');if(button&&!button.disabled)buyUpgrade(Number(button.dataset.item));});
   $('upgrade-prev').addEventListener('click',()=>changeUpgradePage(-1));$('upgrade-next').addEventListener('click',()=>changeUpgradePage(1));
   $('export-save').addEventListener('click',exportSave);$('import-save').addEventListener('click',()=>$('import-file').click());$('import-file').addEventListener('change',importSave);
   $('reset-business').addEventListener('click',requestRestart);$('confirm-restart').addEventListener('click',resetBusiness);$('cancel-restart').addEventListener('click',cancelRestart);
-  const leaveWindow=()=>{interruptPour();keyHeld=false;settlingSpaceHeld=false;if(['playing','preparing'].includes(mode))pause();saveCareer();if(externalSave)return;window.PourMusic?.stop();window.PerfectPourSounds?.suspend();};window.addEventListener('blur',leaveWindow);window.addEventListener('focus',syncMusic);document.addEventListener('visibilitychange',()=>{if(document.hidden)leaveWindow();else syncMusic();});
+  const leaveWindow=()=>{interruptPour();keyHeld=false;settlingSpaceHeld=false;menuActivationKey='';if(['playing','preparing'].includes(mode))pause();saveCareer();if(externalSave)return;window.PourMusic?.stop();window.PerfectPourSounds?.suspend();};window.addEventListener('blur',leaveWindow);window.addEventListener('focus',syncMusic);document.addEventListener('visibilitychange',()=>{if(document.hidden)leaveWindow();else syncMusic();});
   function nativeActivation(target){const control=target instanceof Element?target.closest('button,a,input,textarea,select,summary,[contenteditable="true"]'):null;return control&&control.id!=='pour-button';}
   function keyDown(event){
-    // A held launch key belongs to its original menu control, even after focus moves.
-    if(menuActivationKey===event.code){if(event.repeat){event.preventDefault();return;}menuActivationKey='';}
+    // Discrete activation belongs to its original control until keyup, even
+    // when serving or closing a menu changes focus underneath a held Enter.
+    if(menuActivationKey===event.code){event.preventDefault();return;}
     if(['intro','welcome'].includes(mode)&&['Enter','Space'].includes(event.code)){
       if(event.repeat){event.preventDefault();return;}
       menuActivationKey=event.code;
       if(!nativeActivation(event.target)){event.preventDefault();if(mode==='intro')showMainMenu();}
       return;
     }
+    if(event.code==='Enter'){
+      if(event.repeat){event.preventDefault();return;}
+      menuActivationKey=event.code;
+    }
     // A Space pressed before pouring is ready cannot turn into a different
     // action when the primary button changes its role while that key is held.
-    if(event.code==='Space'&&((['settling','preparing'].includes(mode)&&!nativeActivation(event.target))||settlingSpaceHeld)){
+    if(event.code==='Space'&&(((mode==='settling'||mode==='preparing'&&state[F.selectedSoda]>3)&&!nativeActivation(event.target))||settlingSpaceHeld)){
       event.preventDefault();settlingSpaceHeld=true;
-      if(mode==='preparing'&&!event.repeat)announce('Finish your recipe, then choose Ready to pour with Enter or a tap.');
+      if(mode==='preparing'&&!event.repeat)announce('Choose a soda base, then hold Space to pour.');
       return;
     }
     if(event.code==='Tab'&&overlays.includes(mode)){
@@ -2677,13 +2971,17 @@ body[data-game-mode="intro"]>.global-utility,body[data-game-mode="welcome"]>.glo
       event.preventDefault();
       if(!event.repeat&&!keyHeld){
         keyHeld=true;
-        if(mode==='playing'){cancelPendingPointer();beginInput('key');}
-        else if(['finished','result','summary'].includes(mode))primaryAction();
+        if(['preparing','playing'].includes(mode))beginInput('key');
+        else if(['finished','summary'].includes(mode))primaryAction();
       }
       return;
     }
     if(event.repeat)return;
-    if(event.code==='Enter'&&['preparing','playing','finished','result','summary'].includes(mode)){event.preventDefault();cancelPendingPointer();primaryAction();return;}
+    if(event.code==='Enter'&&['preparing','playing','finished','summary'].includes(mode)){
+      event.preventDefault();
+      if(mode==='playing'&&state[F.hardcore]!==1&&state[F.partAttempted]===1)easyAction();else primaryAction();
+      return;
+    }
     if(event.code==='KeyP'||event.code==='Escape'){
       if(['playing','preparing'].includes(mode)){event.preventDefault();pause();}else if(mode==='pause'){event.preventDefault();resume();}else if(mode==='help'){event.preventDefault();closeHelp();}else if(mode==='restart'){event.preventDefault();cancelRestart();}else if(mode==='store'&&event.code==='Escape'){event.preventDefault();leaveStore();}
     }
