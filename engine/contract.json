@@ -3,7 +3,7 @@
   "saveVersion": 101,
   "snapshot": {
     "type": "f32",
-    "length": 64,
+    "length": 65,
     "fields": {
       "phase": 0,
       "order": 1,
@@ -68,8 +68,14 @@
       "lifetimePerfect": 60,
       "bestShiftGross": 61,
       "businessLevel": 62,
-      "previousRating": 63
-    }
+      "previousRating": 63,
+      "beverageMl": 64
+    },
+    "notes": [
+      "Fields 0 through 63 retain their existing indexes.",
+      "liquid and foam describe the visible cup, including during a paid review.",
+      "beverageMl is min(capacity, liquid plus beverage trapped in foam); use it for the scored receipt amount."
+    ]
   },
   "save": {
     "type": "f64",
@@ -137,6 +143,7 @@
       "save_ptr refreshes the buffer from live state.",
       "For restore: call save_ptr once, write all80 doubles, then restore_save.",
       "Unfinished cups restart untouched without a payout. Paid reviews remain paid.",
+      "Paid and closed cups save their settled beverage in field 6, with reserved fields 7 and 8 still zero; version 101 stays compatible.",
       "Restoring always selects Hardcore; a saved Easy streak resets."
     ]
   },
@@ -224,6 +231,8 @@
     "singleAttemptEnforcedByEngine": true,
     "purchaseDuringAttempt": false,
     "modeChangeDuringAttempt": false,
-    "reachableTargets": "Same physics probe stops before first overflow; generated requests stay1.5percentage points below it."
+    "targetSelection": "All requests from 45, 55, 60, 65, 70, 75, and 80 percent remain available for every soda, cup, mode, and tap level. The first career order remains 65 percent Orange.",
+    "scoredVolume": "Free liquid plus the beverage trapped in foam, capped at capacity. Gas does not count as beverage; visible overflow keeps its existing penalty.",
+    "reviewSettling": "Phase 1 step advances only the existing cup physics with pouring disabled. Elapsed service time, score, payout, and career state remain final. Phase 2 step does nothing."
   }
 }

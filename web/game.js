@@ -8,6 +8,7 @@
   const clamp = (x, a, b) => Math.max(a, Math.min(b, x));
   const dollars = cents => '$' + (cents / 100).toFixed(2);
   const percent = fraction => Math.round(fraction * 100);
+  const VISIBLE_FOAM = .001;
   const sodas = [
     {name:'Sunset Orange',color:'#f49132',light:'#ffd483',flavor:'Bright, citrusy & mellow',fizz:'MILD',note:'A gentle fizz. A lovely place to start.',aside:'A little sunshine in a cup.'},
     {name:'Cherry Pop',color:'#d95d75',light:'#ffa6b2',flavor:'Sweet cherry, cheeky bubbles',fizz:'BUBBLY',note:'A bubbly personality. Leave a little room for fizz.',aside:'Make it cherry. Make it happy.'},
@@ -29,7 +30,7 @@
     1:['“Oops. That’s not the pour I ordered.”','“Let’s give that another try next time.”','“The bubbles got the better of this one.”']
   };
 
-  const F={cash:20,hardcore:21,attempted:22,holding:23,day:24,goal:25,streak:26,bestStreak:27,combo:28,comboBonus:29,milestone:30,perfectTip:31,serviceTip:32,lifetime:33,owned:34,cost:40,canBuy:46,spendable:47,reserve:48,staffSales:49,wages:50,helperActive:51,specialistActive:52,customers:53,basePay:54,modePay:55,signPay:56,foamScale:57,good:58,net:59,lifetimePerfect:60,bestShift:61,businessLevel:62,previousRating:63};
+  const F={cash:20,hardcore:21,attempted:22,holding:23,day:24,goal:25,streak:26,bestStreak:27,combo:28,comboBonus:29,milestone:30,perfectTip:31,serviceTip:32,lifetime:33,owned:34,cost:40,canBuy:46,spendable:47,reserve:48,staffSales:49,wages:50,helperActive:51,specialistActive:52,customers:53,basePay:54,modePay:55,signPay:56,foamScale:57,good:58,net:59,lifetimePerfect:60,bestShift:61,businessLevel:62,previousRating:63,beverageMl:64};
   const SAVE_KEY='perfect-pour-business-v101';
   const upgrades=[
     {name:'A sign with personality',icon:'✦',max:3,unit:'SIGN',description:'From hand-painted charm to a glowing neighborhood landmark.',effect:level=>`+${5*(level+1)}% customer prices in total.`,owned:level=>`Customer prices +${5*level}%.`,button:'UPGRADE SIGN'},
@@ -40,9 +41,10 @@
     {name:'Soda specialist',icon:'♜',max:1,unit:'TEAM',description:'A second pair of hands brings in sales of their own.',effect:()=> '2 extra sales at closing, priced by your rating. Wage $2.50/day. Starts next day.',owned:()=> '2 extra sales at closing · $2.50/day wage.',button:'HIRE SPECIALIST'}
   ];
   let engine,state,mode='welcome',returnMode='playing',storeReturn='playing',lastFrame=0,simulationClock=0,visualTime=0,lastUi=0;
-  let inputOwner=null,activePointer=null,keyHeld=false,pouring=false,ready=false,lastSpill=0,spillFlash=0,storageAvailable=true,loadedCareer=false,toastTimer;
-  let settings={sound:true};
-  try{const raw=JSON.parse(localStorage.getItem('perfect-pour-v1-settings')||'null');if(raw&&typeof raw.sound==='boolean')settings.sound=raw.sound;}catch(_){}
+  let inputOwner=null,activePointer=null,keyHeld=false,settlingSpaceHeld=false,pouring=false,ready=false,lastSpill=0,spillFlash=0,storageAvailable=true,loadedCareer=false,toastTimer;
+  let settlingElapsed=0,finishElapsed=0;
+  let settings={sound:true,music:true};
+  try{const raw=JSON.parse(localStorage.getItem('perfect-pour-v1-settings')||'null');if(raw){if(typeof raw.sound==='boolean')settings.sound=raw.sound;if(typeof raw.music==='boolean')settings.music=raw.music;}}catch(_){}
   const overlays=['welcome','result','summary','pause','help','restart'];
   const audio={context:null,gain:null,source:null,buffer:null,pourGain:null};
   const reducedMotion=window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -52,17 +54,19 @@
   function toast(message){clearTimeout(toastTimer);$('toast').textContent=message;$('toast').hidden=false;toastTimer=setTimeout(()=>$('toast').hidden=true,4200);announce(message);}
   function setMode(next,focusId){
     mode=next;simulationClock=performance.now();
-    document.querySelector('.game-shell').inert=!['playing','store'].includes(next);
+    if(next!=='settling')settlingElapsed=0;
+    document.querySelector('.game-shell').inert=!['playing','store','finished'].includes(next);
     overlays.forEach(name=>$(name+'-overlay').hidden=name!==next);
     document.querySelector('.game-shell').classList.toggle('is-paused',next==='pause');
     document.body.dataset.gameMode=next;
-    if(next==='store'||['playing','result','summary','welcome','pause'].includes(next)){
+    if(next==='store'||['playing','settling','finished','result','summary','welcome','pause'].includes(next)){
       const store=next==='store';document.body.dataset.view=store?'store':'counter';
       $('storefront-view').hidden=!store;$('playfield').hidden=store;$('counter-controls').hidden=store;
       $('counter-tab').classList.toggle('active',!store);$('store-tab').classList.toggle('active',store);
       $('counter-tab').setAttribute('aria-pressed',String(!store));$('store-tab').setAttribute('aria-pressed',String(store));
     }
     if(ready)updateHud();
+    syncMusic();
     if(focusId)requestAnimationFrame(()=>$(focusId).focus({preventScroll:true}));
   }
   function captureSave(){
@@ -96,15 +100,20 @@
     }catch(error){toast(error instanceof SyntaxError?'That file is not a valid JSON save.':error.message||'The save could not be imported.');}
   }
   function updateModeUi(){
-    const hard=state[F.hardcore]===1,locked=state[0]===0&&state[F.attempted]===1;
+    const hard=state[F.hardcore]===1,showingCup=['settling','finished'].includes(mode),locked=(state[0]===0&&state[F.attempted]===1)||showingCup;
     for(const id of ['hardcore-mode','welcome-hardcore','easy-mode','welcome-easy']){
       const button=$(id),selected=id.includes('hardcore')===hard;
       button.classList.toggle('active',selected);button.setAttribute('aria-pressed',String(selected));button.disabled=locked;
       button.title=locked?'Finish this customer before changing mode.':id.includes('hardcore')?'One hold. Release serves. +15% base pay.':'Top up and serve when ready.';
     }
     $('welcome-mode-copy').textContent=hard?'Hold Space or the pour button. Release once and the drink is served. Hardcore is the default.':'Hold to pour, release to stop, and top up as often as you like. Press Enter or Serve Drink when ready.';
-    $('serve-button').hidden=hard;$('auto-serve-note').hidden=!hard;
-    $('tip-text').innerHTML=hard?'<strong>One pour. Make it count.</strong><span>Release to serve. Foam contains a little soda, too.</span>':'<strong>Find your fill.</strong><span>Let the foam settle, then top it up.</span>';
+    $('serve-button').hidden=hard||showingCup;$('auto-serve-note').hidden=!hard&&!showingCup;
+    $('pour-button').hidden=showingCup;$('review-button').hidden=!showingCup;$('review-button').disabled=mode!=='finished';
+    $('review-button-label').textContent=mode==='settling'?'SETTLING…':'SEE CUSTOMER REVIEW';
+    $('review-button-hint').textContent=mode==='settling'?'Watch the cup':'or press Enter';
+    $('pour-status-heading').textContent=mode==='settling'?'POUR COMMITTED':mode==='finished'?(state[12]===5?'✦ PERFECT POUR':Math.round(state[11])+'% ACCURACY'):'RELEASE TO SERVE';
+    $('pour-status-detail').textContent=mode==='settling'?'Let the bubbles settle.':mode==='finished'?`Final ${percent(state[F.beverageMl]/state[5])}% · Target ${percent(state[4])}%`:'One hold. That’s your pour.';
+    $('tip-text').innerHTML=mode==='settling'?'<strong>Watch the fizz settle.</strong><span>Your pour is committed. Let the soda find its level.</span>':mode==='finished'?'<strong>Your finished pour.</strong><span>Open the review whenever you’re ready.</span>':hard?'<strong>One pour. Make it count.</strong><span>Release commits the cup. The fizz keeps settling.</span>':'<strong>Find your fill.</strong><span>Let the foam settle, then top it up.</span>';
   }
   function changeDifficulty(hard){
     if(!ready||pouring)return;
@@ -121,12 +130,12 @@
   function releaseInput(source){
     if(inputOwner!==source)return;
     advanceSimulation(performance.now());clearInput();engine.end_pour();refreshState();
-    if(state[0]===1)presentResult(true);else updateHud();
+    if(state[0]===1)showCommittedPour();else updateHud();
   }
   function interruptPour(){if(inputOwner!==null)releaseInput(inputOwner);}
   function openShop(){
     if(!ready)return;openAudio();
-    if(state[0]===1){presentResult(false);return;}if(state[0]===2){showSummary(false);return;}
+    if(state[0]===1){showFinishedCup(false);return;}if(state[0]===2){showSummary(false);return;}
     renderOrder();setMode('playing','pour-button');saveCareer();tone(440,.13);tone(660,.15,.12);announce('Shop open. '+(state[F.hardcore]?'Hardcore. Hold Space once, then release to serve.':'Easy mode. Hold to pour, and serve when ready.'));
   }
   function openNextDay(){
@@ -178,15 +187,35 @@
     let text=hard?'One hold. Release to serve. Aim a little below the line.':'Follow the dotted line. Mind the foam.',kind='';
     if(spillFlash>0||state[8]>1){text='Oops, a spill! '+Math.round(state[8])+' mL lost.';kind='warning';}
     else if(fill>state[4]+.025){text=hard?'Past the line. Release to serve.':'A little above the line. Ready to serve?';kind='warning';}
-    else if(Math.abs(fill-state[4])<.025&&fill>.1){text=hard?'At the line. Let go!':'Looking lovely. Let the last bubbles settle.';kind='ready';}
+    else if(Math.abs(fill-state[4])<.025&&fill>.1){text=hard?'At the line. Foam will add more soda.':'Looking lovely. Let the last bubbles settle.';kind='ready';}
     else if(foam>.12){text=hard?'Watch the foam. Release before it reaches the rim.':'Quite a cloud of foam. Give it a moment.';}
     else if(fill>state[4]-.08){text=hard?'Getting close. A little soda is still in the foam.':'Getting close. Pause, settle, then top up.';}
+    if(state[0]===1){text=mode==='settling'?'Pour committed. Watch the fizz settle.':mode==='finished'?(state[12]===5?'A perfect pour. Enjoy that little shine.':'Your finished pour. Take a moment.'):'Served. Ready for the next customer.';kind='';}
     $('live-message').textContent=text;$('live-message').className='live-message'+(kind?' '+kind:'');
   }
   function serveDrink(){
     if(!ready||mode!=='playing'||state[F.hardcore]===1||state[6]+state[7]<.5)return;
-    interruptPour();engine.serve();refreshState();if(state[0]===1)presentResult(true);
+    interruptPour();engine.serve();refreshState();if(state[0]===1)showCommittedPour();
   }
+  function showCommittedPour(){
+    // The Rust engine has already locked and paid this pour. Keep the actual
+    // cup on screen until the foam is visually settled, then wait for the player.
+    saveCareer();settlingElapsed=0;finishElapsed=0;
+    $('customer-status').textContent='POUR COMMITTED · FIZZ SETTLING';
+    setMode('settling');announce('Pour committed. Watch the fizz settle. Your cup will stay on screen.');
+  }
+  function showFinishedCup(celebrate){
+    finishElapsed=0;
+    const perfect=state[12]===5,person=(Math.round(state[1])-1+(state[F.day]-1)*3)%names.length;
+    $('customer-art').innerHTML=window.PourArt.customer(person%8,state[12]>=4?'happy':state[12]<=2?'disappointed':'neutral');
+    $('customer-status').textContent=perfect?'✦ A PERFECT LITTLE POUR':'YOUR FINISHED POUR';
+    setMode('finished','review-button');
+    announce(`Cup settled. ${Math.round(state[11])} percent accuracy. Final fill ${percent(state[F.beverageMl]/state[5])} percent. Choose See customer review when you are ready.`);
+    if(celebrate&&!document.hidden&&document.hasFocus()){
+      openAudio();if(state[12]>=4){tone(523,.14);tone(659,.16,.12);tone(784,.23,.24);}else{tone(330,.18);tone(294,.22,.16);}
+    }
+  }
+  function viewReview(){if(mode==='finished')presentResult(false);}
   function presentResult(celebrate){
     clearInput();refreshState();
     const stars=Math.round(state[12]),accuracy=Math.round(state[11]),order=Math.round(state[1]),person=(order-1+(state[F.day]-1)*3)%names.length;
@@ -196,7 +225,7 @@
     const choices=reviewLines[stars];$('review-quote').textContent=choices[(order+state[F.day]-2)%choices.length];
     $('result-eyebrow').textContent='A REVIEW JUST CAME IN';
     $('result-accuracy').innerHTML=accuracy+'<small>%</small>';$('result-earned').textContent=dollars(state[13]);
-    $('result-details').textContent=`Requested ${percent(state[4])}% · Served ${percent(state[6]/state[5])}%`+(state[8]>=.5?` · Spilled ${Math.round(state[8])} mL`:' · No spills');
+    $('result-details').textContent=`Requested ${percent(state[4])}% · Settled fill ${percent(state[F.beverageMl]/state[5])}%`+(state[8]>=.5?` · Spilled ${Math.round(state[8])} mL`:' · No spills');
     const streak=Math.round(state[F.streak]);
     $('result-combo').textContent=streak>0?(state[F.milestone]>0?`✦ ${streak}-pour milestone! +${dollars(state[F.milestone])}`:streak>=2?`${['You’re finding your rhythm.','The neighborhood is talking.','Keep that good fizz going.'][streak%3]} ${streak} good pours · ${state[F.combo].toFixed(2)}×`:'A good pour starts a good streak.'): 'A fresh streak starts with your next good pour.';
     const rows=[['Pour pay',state[F.basePay]],['Streak combo',state[F.comboBonus]],['Milestone reward',state[F.milestone]],['Perfect-pour tip',state[F.perfectTip]],['Welcome & service tips',state[F.serviceTip]]];
@@ -257,16 +286,16 @@
     if(mode==='store')return;
     if(mode!=='playing')return;interruptPour();if(mode!=='playing')return;setMode('pause','resume-button');announce('Game paused.');
   }
-  function resume(){if(mode==='pause')setMode('playing','pour-button');}
+  function resume(){if(mode==='pause'){openAudio();setMode('playing','pour-button');}}
   function showHelp(){
-    if(!ready||!['playing','pause','store','welcome'].includes(mode))return;
-    interruptPour();if(mode==='result')return;returnMode=mode;setMode('help','close-help');
+    if(!ready||!['playing','pause','store','welcome','finished'].includes(mode))return;
+    interruptPour();if(mode==='result'||mode==='settling')return;returnMode=mode;setMode('help','close-help');
   }
-  function closeHelp(){if(mode==='help')setMode(returnMode,returnMode==='welcome'?'start-button':returnMode==='pause'?'resume-button':returnMode==='store'?'store-back':'pour-button');}
+  function closeHelp(){if(mode==='help')setMode(returnMode,returnMode==='welcome'?'start-button':returnMode==='pause'?'resume-button':returnMode==='store'?'store-back':returnMode==='finished'?'review-button':'pour-button');}
   function requestRestart(){if(mode!=='store')return;returnMode='store';setMode('restart','cancel-restart');}
   function cancelRestart(){if(mode==='restart')setMode(returnMode,'store-back');}
   function openAudio(){
-    if(!settings.sound) return;
+    if(!settings.sound&&!settings.music) return;
     try {
       if(!audio.context){
         const Ctx=window.AudioContext||window.webkitAudioContext;
@@ -276,7 +305,8 @@
         const data=audio.buffer.getChannelData(0);let previous=0;
         for(let i=0;i<data.length;i++){previous=(previous+Math.random()*.16-.08)/1.06;data[i]=previous*2;}
       }
-      if(audio.context.state==='suspended') audio.context.resume().catch(()=>{});
+      if(audio.context.state==='suspended') audio.context.resume().then(syncMusic).catch(()=>{});
+      else syncMusic();
     } catch(_) {}
   }
   function tone(frequency,duration=.12,delay=0,volume=.16){
@@ -294,7 +324,18 @@
     updateSoundButton();
     if(settings.sound){openAudio();tone(660,.1);if(pouring)startPourSound();}else stopPourSound();
   }
-  function updateSoundButton(){const b=$('sound-button');b.classList.toggle('muted',!settings.sound);b.setAttribute('aria-label',settings.sound?'Turn sound off':'Turn sound on');b.setAttribute('aria-pressed',String(settings.sound));b.title=settings.sound?'Sound on':'Sound off';}
+  function updateSoundButton(){const b=$('sound-button');b.classList.toggle('muted',!settings.sound);b.setAttribute('aria-label',settings.sound?'Turn sound effects off':'Turn sound effects on');b.setAttribute('aria-pressed',String(settings.sound));b.title=settings.sound?'Sound effects on':'Sound effects off';}
+  function syncMusic(){
+    if(!window.PourMusic)return;
+    const allowed=settings.music&&audio.context&&!document.hidden&&document.hasFocus()&&['playing','settling','finished','result','summary','store'].includes(mode);
+    if(allowed)window.PourMusic.start(audio.context);else window.PourMusic.stop();
+  }
+  function musicToggle(){
+    settings.music=!settings.music;
+    try{localStorage.setItem('perfect-pour-v1-settings',JSON.stringify(settings));}catch(_){}
+    updateMusicButton();if(settings.music)openAudio();syncMusic();
+  }
+  function updateMusicButton(){const b=$('music-button');b.classList.toggle('muted',!settings.music);b.setAttribute('aria-label',settings.music?'Turn music off':'Turn music on');b.setAttribute('aria-pressed',String(settings.music));b.title=settings.music?'Music on':'Music off';}
   function confetti(){
     if(reducedMotion)return;
     for(let i=0;i<25;i++){const el=document.createElement('i');el.className='confetti';el.style.left=(18+Math.random()*64)+'%';el.style.background=['#ffcc6c','#e58f78','#a9d8c9','#fff8e8'][i%4];el.style.setProperty('--drift',(Math.random()*180-90)+'px');el.style.animationDelay=(Math.random()*.25)+'s';el.style.transform=`rotate(${i*37}deg)`;document.body.appendChild(el);setTimeout(()=>el.remove(),2300);}
@@ -340,7 +381,7 @@
       for(let i=0;i<22;i++){const lane=((i*67)%100)/100,x=260+(lane-.5)*g.cup.top*.75,range=Math.max(1,g.bottom-liquidY),yy=g.bottom-((i*33+t*(15+s[2]*5))%range),rad=1.3+(i%3)*.55;ctx.beginPath();ctx.arc(x,yy,rad,0,Math.PI*2);ctx.fillStyle='#fff8d968';ctx.fill();}
       ctx.restore();
     }
-    if(foam>.0004){
+    if(foam>VISIBLE_FOAM){
       ctx.fillStyle='#fff8e6';ctx.beginPath();ctx.moveTo(120,liquidY+2);ctx.lineTo(120,foamY);for(let x=120;x<=400;x+=4)ctx.lineTo(x,foamY+Math.sin(x*.15+t*.65)*1.8);ctx.lineTo(400,liquidY+3);ctx.closePath();ctx.fill();
       ctx.save();ctx.beginPath();ctx.rect(120,foamY+1,280,liquidY-foamY-1);ctx.clip();
       for(let i=0;i<38;i++){const x=168+(i*37%187),y=foamY+3+(i*19%Math.max(3,Math.floor(liquidY-foamY))),rad=1.3+(i%4)*.8;ctx.beginPath();ctx.arc(x,y,rad,0,Math.PI*2);ctx.strokeStyle='#e3cba363';ctx.lineWidth=.8;ctx.stroke();}ctx.restore();
@@ -363,13 +404,14 @@
       for(let i=0;i<7;i++){const q=(t*2+i*.147)%1,x=260+Math.sin(i*7.3)*q*22,y=surface-Math.sin(q*Math.PI)*14;ctx.beginPath();ctx.arc(x,y,1.5,0,Math.PI*2);ctx.fillStyle=soda.light;ctx.fill();}
     }
     if(spillFlash>0){for(let i=0;i<5;i++){const side=i%2?-1:1,x=260+side*(g.cup.top/2+5+i%2*3),y=g.top+((t*130+i*43)%(g.cup.height+5));ctx.strokeStyle=i%2?'#fff5df':soda.color;ctx.lineWidth=3;ctx.beginPath();ctx.moveTo(x,y);ctx.lineTo(x+side*4,y+13);ctx.stroke();}}
+    if(mode==='finished'&&s[12]===5&&window.PourFinish)window.PourFinish.draw(ctx,{top:g.top,bottom:g.bottom,widthAt:g.width,centerX:260,time:finishElapsed,reducedMotion});
   }
 
   // Flush elapsed time on input transitions as well as frames. The Rust engine
   // owns whether a pour is active, whether an attempt is spent, and its payout.
   function advanceSimulation(now){
     const elapsed=simulationClock?clamp((now-simulationClock)/1000,0,3):0;simulationClock=now;
-    if(ready&&mode==='playing'&&state[0]===0){
+    if(ready&&((mode==='playing'&&state[0]===0)||(['settling','finished','result'].includes(mode)&&state[0]===1))){
       let remaining=elapsed;while(remaining>.000001){const step=Math.min(remaining,.1);engine.step(step,0);remaining-=step;}refreshState();
       if(state[8]>lastSpill+.03){spillFlash=1.2;if(lastSpill<.1){document.querySelector('.pour-area').classList.add('spilling');setTimeout(()=>document.querySelector('.pour-area').classList.remove('spilling'),350);tone(180,.15);}}
       lastSpill=state[8];spillFlash=Math.max(0,spillFlash-elapsed);
@@ -377,7 +419,9 @@
   }
   function frame(now){
     const dt=lastFrame?clamp((now-lastFrame)/1000,0,.25):0;lastFrame=now;advanceSimulation(now);
-    if(mode==='playing'&&!reducedMotion)visualTime+=dt;if(now-lastUi>80){updateHud();lastUi=now;}
+    if(mode==='settling'){settlingElapsed+=dt;if(settlingElapsed>=.8&&state[7]/state[5]<=VISIBLE_FOAM)showFinishedCup(true);}
+    if(mode==='finished')finishElapsed+=dt;
+    if(['playing','settling','finished','result'].includes(mode)&&!reducedMotion)visualTime+=dt;if(now-lastUi>80){updateHud();lastUi=now;}
     if(mode!=='store')draw();requestAnimationFrame(frame);
   }
   $('pour-button').addEventListener('pointerdown',event=>{
@@ -387,8 +431,8 @@
   const releasePointer=event=>{if(inputOwner==='pointer'&&(activePointer===null||event.pointerId===activePointer))releaseInput('pointer');};
   window.addEventListener('pointerup',releasePointer);window.addEventListener('pointercancel',releasePointer);$('pour-button').addEventListener('lostpointercapture',releasePointer);
   $('pour-button').addEventListener('contextmenu',event=>event.preventDefault());
-  $('serve-button').addEventListener('click',serveDrink);$('start-button').addEventListener('click',openShop);$('next-button').addEventListener('click',nextOrder);$('again-button').addEventListener('click',openNextDay);
-  $('sound-button').addEventListener('click',soundToggle);$('pause-button').addEventListener('click',pause);$('resume-button').addEventListener('click',resume);$('help-button').addEventListener('click',showHelp);$('close-help').addEventListener('click',closeHelp);
+  $('serve-button').addEventListener('click',serveDrink);$('review-button').addEventListener('click',viewReview);$('start-button').addEventListener('click',openShop);$('next-button').addEventListener('click',nextOrder);$('again-button').addEventListener('click',openNextDay);
+  $('sound-button').addEventListener('click',soundToggle);$('music-button').addEventListener('click',musicToggle);$('pause-button').addEventListener('click',pause);$('resume-button').addEventListener('click',resume);$('help-button').addEventListener('click',showHelp);$('close-help').addEventListener('click',closeHelp);
   for(const id of ['store-tab','restart-button','pause-restart','result-store','summary-store'])$(id).addEventListener('click',enterStore);
   $('store-back').addEventListener('click',leaveStore);$('counter-tab').addEventListener('click',()=>{if(mode==='store')leaveStore();});
   $('brand-home').addEventListener('click',event=>{event.preventDefault();enterStore();});
@@ -397,22 +441,26 @@
   $('upgrade-grid').addEventListener('click',event=>{const button=event.target.closest('button[data-item]');if(button&&!button.disabled)buyUpgrade(Number(button.dataset.item));});
   $('export-save').addEventListener('click',exportSave);$('import-save').addEventListener('click',()=>$('import-file').click());$('import-file').addEventListener('change',importSave);
   $('reset-business').addEventListener('click',requestRestart);$('confirm-restart').addEventListener('click',resetBusiness);$('cancel-restart').addEventListener('click',cancelRestart);
-  const leaveWindow=()=>{interruptPour();keyHeld=false;if(mode==='playing')pause();};window.addEventListener('blur',leaveWindow);document.addEventListener('visibilitychange',()=>{if(document.hidden)leaveWindow();});
+  const leaveWindow=()=>{interruptPour();keyHeld=false;settlingSpaceHeld=false;if(mode==='playing')pause();if(window.PourMusic)window.PourMusic.stop();};window.addEventListener('blur',leaveWindow);window.addEventListener('focus',syncMusic);document.addEventListener('visibilitychange',()=>{if(document.hidden)leaveWindow();else syncMusic();});
   function nativeActivation(target){const control=target instanceof Element?target.closest('button,a,input,textarea,select,[contenteditable="true"]'):null;return control&&control.id!=='pour-button';}
   document.addEventListener('keydown',event=>{
-    if(event.code==='Tab'&&!['playing','store'].includes(mode)){
+    // Consume a Space press begun during handoff through its eventual keyup,
+    // even if the finished cup focuses its review button while the key is held.
+    if(event.code==='Space'&&(mode==='settling'||settlingSpaceHeld)){event.preventDefault();settlingSpaceHeld=true;return;}
+    if(event.code==='Tab'&&!['playing','store','finished'].includes(mode)){
       const panel=document.querySelector('.overlay:not([hidden])');if(panel){const items=[...panel.querySelectorAll('button:not(:disabled),a[href]')].filter(el=>!el.hidden);if(items.length){const first=items[0],last=items[items.length-1];if(event.shiftKey&&document.activeElement===first){event.preventDefault();last.focus();}else if(!event.shiftKey&&document.activeElement===last){event.preventDefault();first.focus();}}}
     }
     if((event.code==='Space'||event.code==='Enter')&&nativeActivation(event.target))return;
     if(event.code==='Space'){if(mode==='playing'){event.preventDefault();if(!event.repeat&&!keyHeld){keyHeld=true;beginInput('key');}}return;}
     if(event.repeat)return;
+    if(event.code==='Enter'&&mode==='finished'){event.preventDefault();viewReview();return;}
     if(event.code==='Enter'&&mode==='playing'){event.preventDefault();serveDrink();}
     if(event.code==='KeyP'||event.code==='Escape'){
       if(mode==='playing'){event.preventDefault();pause();}else if(mode==='pause'){event.preventDefault();resume();}else if(mode==='help'){event.preventDefault();closeHelp();}else if(mode==='restart'){event.preventDefault();cancelRestart();}else if(mode==='store'&&event.code==='Escape'){event.preventDefault();leaveStore();}
     }
   });
-  document.addEventListener('keyup',event=>{if(event.code==='Space'){if(keyHeld)event.preventDefault();keyHeld=false;releaseInput('key');}});
-  updateSoundButton();document.querySelector('.game-shell').inert=true;$('start-button').disabled=true;$('start-button').textContent='WARMING UP THE FIZZ…';requestAnimationFrame(frame);
+  document.addEventListener('keyup',event=>{if(event.code==='Space'){if(keyHeld||settlingSpaceHeld)event.preventDefault();const consumed=settlingSpaceHeld;keyHeld=false;settlingSpaceHeld=false;if(!consumed)releaseInput('key');}});
+  updateSoundButton();updateMusicButton();document.querySelector('.game-shell').inert=true;$('start-button').disabled=true;$('start-button').textContent='WARMING UP THE FIZZ…';requestAnimationFrame(frame);
   (async()=>{
     try{
       const bytes=Uint8Array.from(atob(WASM_BASE64),ch=>ch.charCodeAt(0));const result=await WebAssembly.instantiate(bytes,{});engine=result.instance.exports;engine.reset(randomSeed());refreshState();ready=true;

@@ -10,6 +10,9 @@ fn advance(g: &mut Game, seconds: f64, fps: u32) {
 }
 
 fn perfect(g: &mut Game) {
+    // Economy fixtures use a low-fizz recipe. Generated requests are no longer
+    // guaranteed to permit a perfect uninterrupted pour with every soda.
+    g.soda = 0;
     assert!(g.begin_pour());
     advance(g, g.target * g.capacity / RATES[g.soda], 120);
     g.end_pour();
@@ -55,7 +58,10 @@ fn hardcore_release_scores_once_and_forbids_every_topup_path() {
     assert!(!g.serve());
     g.end_pour();
     g.step(0.25);
-    assert_eq!(*g.state(), paid);
+    assert_eq!(&g.state()[..6], &paid[..6]);
+    assert_eq!(&g.state()[8..], &paid[8..]);
+    assert!(g.state()[6] > paid[6]);
+    assert!(g.state()[7] < paid[7]);
     assert_eq!(g.completed, 1);
 }
 
@@ -130,7 +136,10 @@ fn foam_settles_without_losing_beverage_or_counting_gas_as_soda() {
     assert!(g.foam < before_foam * 0.01);
     assert!((g.liquid + g.foam_liquid - actual).abs() < 0.0001);
     g.serve();
+    assert!((g.beverage_ml() - actual).abs() < 0.0001);
+    advance(&mut g, 4.0, 60);
     assert!((g.liquid - actual).abs() < 0.0001);
+    assert_eq!((g.foam, g.foam_liquid), (0.0, 0.0));
 }
 
 #[test]
@@ -174,36 +183,165 @@ fn invalid_times_and_idle_frames_cannot_start_a_pour() {
 }
 
 #[test]
-fn generated_orders_are_fair_one_hold_pours_for_many_seeds_and_taps() {
-    let mut seen = [[false; 4]; 4];
+fn generated_orders_use_every_target_for_each_soda_cup_and_tap_level() {
+    let targets = [0.45, 0.55, 0.60, 0.65, 0.70, 0.75, 0.80];
+    let mut seen = [[[[false; 7]; 4]; 4]; 3];
     for tap in 0..=2 {
         for seed in 1..=64 {
             let mut g = Game::new(seed);
             g.upgrades[3] = tap;
             for day in 1..=2 {
                 while g.phase != 2 {
-                    seen[g.soda][g.cup] = true;
-                    perfect(&mut g);
-                    assert_eq!(g.spill, 0.0, "seed={seed} day={day} tap={tap}");
-                    assert!(g.accuracy > 99.99);
+                    let target = targets.iter().position(|value| *value == g.target).unwrap();
+                    seen[tap as usize][g.soda][g.cup][target] = true;
+                    assert!(g.begin_pour());
+                    g.end_pour();
                     g.next_order();
                 }
                 if day == 1 { assert!(g.next_day(seed + 7919)); }
             }
         }
     }
-    assert!(seen.iter().flatten().all(|x| *x));
+    assert!(seen.iter().flatten().flatten().flatten().all(|value| *value));
 }
 
 #[test]
-fn same_seed_repeats_order_sequence_and_mode_does_not_change_requests() {
-    let mut a = Game::new(777);
-    let mut b = Game::new(777);
-    b.set_mode(false);
-    for _ in 0..12 {
-        assert_eq!((a.soda, a.cup, a.target), (b.soda, b.cup, b.target));
-        perfect(&mut a); perfect(&mut b);
-        a.next_order(); b.next_order();
+fn same_seed_repeats_order_sequence_across_modes_and_tap_levels() {
+    let mut games = Vec::new();
+    for hardcore in [true, false] {
+        for tap in 0..=2 {
+            let mut g = Game::new(777);
+            g.set_mode(hardcore);
+            g.upgrades[3] = tap;
+            games.push(g);
+        }
+    }
+    for day in 1..=2 {
+        for _ in 0..12 {
+            let expected = (games[0].soda, games[0].cup, games[0].target);
+            for g in &mut games {
+                assert_eq!((g.soda, g.cup, g.target), expected);
+                assert!(g.begin_pour());
+                g.end_pour();
+                if !g.hardcore { assert!(g.serve()); }
+                g.next_order();
+            }
+        }
+        if day == 1 {
+            for g in &mut games { assert!(g.next_day(7919)); }
+        }
+    }
+}
+
+#[test]
+fn both_modes_share_pouring_settling_and_scoring_physics() {
+    for soda in 0..4 {
+        for cup in 0..4 {
+            for tap in 0..=2 {
+                for seconds in [0.8, 2.5] {
+                    let mut hard = Game::new(1);
+                    hard.soda = soda;
+                    hard.cup = cup;
+                    hard.capacity = CAPACITIES[cup];
+                    hard.upgrades[3] = tap;
+                    let mut easy = hard.clone();
+                    easy.set_mode(false);
+                    assert!(hard.begin_pour());
+                    assert!(easy.begin_pour());
+                    advance(&mut hard, seconds, 60);
+                    advance(&mut easy, seconds, 60);
+                    assert_eq!((hard.liquid, hard.foam, hard.foam_liquid, hard.spill),
+                        (easy.liquid, easy.foam, easy.foam_liquid, easy.spill));
+                    hard.end_pour();
+                    easy.end_pour();
+                    assert_eq!(hard.phase, 1);
+                    assert_eq!(easy.phase, 0);
+                    advance(&mut hard, 0.5, 60);
+                    advance(&mut easy, 0.5, 60);
+                    assert_eq!((hard.liquid, hard.foam, hard.foam_liquid, hard.spill),
+                        (easy.liquid, easy.foam, easy.foam_liquid, easy.spill));
+                    assert!(easy.serve());
+                    assert!((hard.accuracy - easy.accuracy).abs() < 0.000001);
+                    assert_eq!(hard.stars, easy.stars);
+                }
+            }
+        }
+    }
+}
+
+#[test]
+fn easy_can_wait_and_top_up_a_high_fizz_order_that_overflows_in_one_hold() {
+    let mut hard = Game::new(1);
+    hard.soda = 3;
+    hard.target = 0.80;
+    let mut easy = hard.clone();
+    easy.set_mode(false);
+    let seconds = hard.target * hard.capacity / RATES[hard.soda];
+    hard.begin_pour();
+    advance(&mut hard, seconds, 120);
+    hard.end_pour();
+    assert!(hard.spill > 50.0);
+    assert!(hard.accuracy < 60.0);
+    assert!(!hard.begin_pour());
+    for hold in 0..4 {
+        assert!(easy.begin_pour());
+        advance(&mut easy, seconds / 4.0, 120);
+        easy.end_pour();
+        if hold < 3 { advance(&mut easy, 4.0, 60); }
+    }
+    assert_eq!(easy.spill, 0.0);
+    assert!(easy.serve());
+    assert!(easy.accuracy > 99.99);
+    assert!(easy.foam > 50.0);
+}
+
+#[test]
+fn high_fizz_stop_timing_changes_fill_overflow_and_review() {
+    let mut pours = Vec::new();
+    for seconds in [1.6, 1.85, 2.5] {
+        let mut g = Game::new(1);
+        g.soda = 3;
+        g.begin_pour();
+        advance(&mut g, seconds, 120);
+        g.end_pour();
+        pours.push(g);
+    }
+    let (early, on_time, late) = (&pours[0], &pours[1], &pours[2]);
+    assert!(early.beverage_ml() < on_time.beverage_ml());
+    assert!(early.accuracy < on_time.accuracy);
+    assert_eq!(on_time.spill, 0.0);
+    assert!(on_time.accuracy > 99.0);
+    assert!(on_time.liquid < on_time.target * on_time.capacity - 10.0);
+    assert!(on_time.foam > 100.0);
+    assert!(late.spill > 0.0);
+    assert!(late.accuracy < on_time.accuracy);
+}
+
+#[test]
+fn served_foam_settles_without_changing_the_paid_result_or_service_time() {
+    for hardcore in [true, false] {
+        let mut g = Game::new(1);
+        g.soda = 3;
+        g.set_mode(hardcore);
+        g.begin_pour();
+        advance(&mut g, 1.0, 120);
+        let cup = (g.liquid, g.foam, g.foam_liquid);
+        g.end_pour();
+        if !hardcore { assert!(g.serve()); }
+        assert_eq!((g.liquid, g.foam, g.foam_liquid), cup);
+        assert!(g.foam > 20.0);
+        let paid = *g.state();
+        let beverage = g.beverage_ml();
+        advance(&mut g, 15.0, 60);
+        assert_eq!((g.foam, g.foam_liquid), (0.0, 0.0));
+        assert!((g.liquid - beverage).abs() < 0.000001);
+        assert_eq!(&g.state()[..6], &paid[..6]);
+        assert_eq!(&g.state()[8..], &paid[8..]);
+        assert!(!g.begin_pour());
+        assert!(!g.serve());
+        g.end_pour();
+        assert_eq!(g.completed, 1);
+        assert_eq!(g.cash as f32, paid[20]);
     }
 }
 
@@ -236,6 +374,7 @@ fn four_star_pours_build_combo_and_three_star_pours_break_it() {
     g.end_pour();
     assert_eq!((g.stars, g.streak, g.last_perfect_tip), (4, 1, 0));
     g.next_order();
+    g.soda = 0;
     let seconds = (g.target - 0.06) * g.capacity / RATES[g.soda];
     g.begin_pour(); advance(&mut g, seconds, 120); g.end_pour();
     assert_eq!((g.stars, g.streak), (3, 0));
@@ -337,6 +476,7 @@ fn staff_sales_and_payroll_are_real_and_processed_once_per_day() {
     assert_eq!(g.lifetime_customers, 26);
     let state = *g.state();
     g.next_order(); g.end_pour(); g.serve();
+    g.step(0.25);
     assert_eq!(*g.state(), state);
 }
 
@@ -368,13 +508,20 @@ fn next_day_preserves_career_and_resets_only_shift_fields() {
 fn f64_save_roundtrip_preserves_paid_review_and_blocks_duplicate_reward() {
     let mut g = Game::new(1);
     perfect(&mut g);
+    assert!(g.foam > 0.0);
     let s = g.save();
+    assert_eq!(s[0], 101.0);
+    assert_eq!(s[6], g.beverage_ml());
+    assert_eq!((s[7], s[8]), (0.0, 0.0));
     let mut restored = Game::restore(&s).unwrap();
+    assert_eq!((restored.foam, restored.foam_liquid), (0.0, 0.0));
     assert_eq!(restored.save(), s);
     let cash = restored.cash;
     assert!(!restored.begin_pour());
     assert!(!restored.serve());
     restored.end_pour();
+    advance(&mut restored, 2.0, 60);
+    assert_eq!(restored.save(), s);
     assert_eq!(restored.cash, cash);
     restored.next_order();
     assert_eq!(restored.order, 2);

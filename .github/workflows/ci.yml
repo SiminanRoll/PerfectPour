@@ -29,6 +29,9 @@ jobs:
       - name: Test business and one-pour acceptance
         run: node tests/browser/v101-business-acceptance.mjs
 
+      - name: Test music scheduling and mute lifecycle
+        run: node tests/audio/music-lifecycle.mjs
+
       - name: Test offline verifier regressions
         run: node tests/browser/verify-offline-selftest.mjs
 

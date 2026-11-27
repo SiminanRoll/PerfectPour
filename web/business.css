@@ -334,6 +334,10 @@
 .auto-serve-note span{display:block;font-size:11px;margin-top:5px;color:#617f75}
 .auto-serve-note[hidden]{display:none}
 .main-controls{align-items:center}
+.main-controls>.review-button{min-width:228px;justify-content:center}
+.main-controls>.review-button:disabled{opacity:1;background:#e8eee0;color:#51786b;cursor:wait;box-shadow:none;transform:none}
+body[data-game-mode="finished"] .auto-serve-note strong{color:#98642c;font-size:13px;letter-spacing:.5px}
+@media(max-width:520px){.main-controls>.review-button{min-width:0;flex:1.4}.main-controls>.review-button span{font-size:10px}body[data-game-mode="finished"] .auto-serve-note strong{font-size:11px}}
 @media(max-width:800px){.auto-serve-note{flex:1;max-width:230px;padding:10px 12px}.auto-serve-note strong{font-size:11px}.auto-serve-note span{font-size:10px}}
 @media(max-width:520px){.auto-serve-note{min-width:0;max-width:none;flex:1;padding:8px 10px}.auto-serve-note strong{font-size:10px;letter-spacing:.5px}.auto-serve-note span{font-size:10px}.main-controls>button.pour-button{flex:1.2}}
 

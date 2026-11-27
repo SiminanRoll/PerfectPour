@@ -36,7 +36,8 @@ The mode is locked once a cup has been started. Changing modes between customers
 | Action | Mouse / touch | Keyboard |
 | --- | --- | --- |
 | Pour | Hold the yellow Pour button | Hold Space |
-| Release in Hardcore | Release to stop and serve immediately | Release Space |
+| Release in Hardcore | Release to commit the drink and watch it settle | Release Space |
+| View the finished cup’s review | See customer review, after foam settles | Enter |
 | Release in Easy | Release to stop; another hold can top up | Release Space |
 | Serve in Easy | Serve Drink | Enter |
 | Change mode before pouring | Hardcore / Easy above the counter | Tab to the mode button, then Enter |
@@ -57,7 +58,17 @@ The ticket's side meter now stacks two separate quantities:
 - **Liquid** is the free soda currently in the cup.
 - **Foam** is the volume occupied by bubbles and the small amount of beverage trapped in them. It has a cream-colored hatch pattern and a separate percentage.
 
-The target marker remains visible on the meter. Foam takes up real space and can spill before the liquid alone reaches the rim. At serving, the engine settles remaining foam and counts its trapped beverage; gas does not count toward the customer's requested fill. Overflow still reduces the score. In Hardcore, release timing matters because there is no top-up after that settling calculation.
+The target marker remains visible on the meter. Foam takes up real space and can spill before the liquid alone reaches the rim. Both modes use the same foaming, settling, and overflow physics. The final fill counts soda trapped in the foam; gas does not count toward the customer's requested fill.
+
+In Hardcore, release commits and automatically serves your one pour. The cup and meter remain visible until the foam settles out of view. The finished cup then stays on screen until you choose **See customer review** or press **Enter**. A five-star pour gets a golden rim, gentle glass glint, and small sparkles; reduced-motion settings use a static highlight. Foam keeps settling naturally instead of disappearing on release, and the receipt reports **Settled fill**. The pour is already locked and paid: waiting cannot change its score or award another payment.
+
+Every existing target from 45% to 80% can appear with any soda or cup. Requests are no longer filtered to guarantee a spill-free uninterrupted pour. High-fill, high-fizz orders can force a tradeoff between underfilling and overflowing; tap upgrades reduce the foam pressure. Easy retains the option to pause, settle, and top up.
+
+## Music and sound
+
+A quiet original instrumental loop plays while the shop is open: warm chords, soft bass, and a lightly swung melody. It starts after you open the shop, pauses with the game or when you leave the window, and uses no external audio files or network connection.
+
+The **music-note button** toggles background music. The **speaker button** controls pouring and review sounds separately. Both settings are remembered on this device, so you can keep either one on independently.
 
 Four sodas have distinct carbonation: **Sunset Orange, Cherry Pop, Lime Lift, and Midnight Cola**. Four illustrated cup shapes hold **280, 360, 460, and 330 mL**. The game chooses target levels that its one-pour physics can reach without requiring an overflow.
 
@@ -181,7 +192,7 @@ python3 scripts/build.py
 
 The engine helper runs native Cargo tests, builds the optimized `wasm32-unknown-unknown` release, and copies it to `engine/perfect_pour_engine.wasm`. It uses Cargo from `PATH`, or the isolated `engine/.toolchain` development installation when that fallback exists. The compiler and build directory are not needed to play or distribute the HTML.
 
-The crate uses Rust edition 2021 and no third-party Rust crates. V1.01's exported API, 64-number live snapshot, 80-number save buffer, units, and upgrade definitions are documented in **`engine/contract.json`**, with explanatory material in `engine/README.md`.
+The crate uses Rust edition 2021 and no third-party Rust crates. V1.01's exported API, 65-number live snapshot, 80-number save buffer, units, and upgrade definitions are documented in **`engine/contract.json`**, with explanatory material in `engine/README.md`. Snapshot index 64 reports the final beverage volume; existing snapshot indices and version 101 saves remain compatible.
 
 ### Run the included checks
 
@@ -190,6 +201,8 @@ From the project root, with Node and Rust installed as applicable:
 ```sh
 cargo test --manifest-path engine/Cargo.toml
 node tests/engine/wasm-smoke.mjs
+node tests/browser/v101-business-acceptance.mjs
+node tests/audio/music-lifecycle.mjs
 node tests/browser/verify_offline.mjs dist/index.html
 node tests/browser/verify-offline-selftest.mjs
 ```

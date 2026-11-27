@@ -1,7 +1,7 @@
 //! Perfect Pour V1.01: deterministic, dependency-free gameplay and business rules.
-//! The browser renders a 64-float snapshot; this module owns every scored action.
+//! The browser renders a 65-float snapshot; this module owns every scored action.
 
-const SNAPSHOT_LEN: usize = 64;
+const SNAPSHOT_LEN: usize = 65;
 const SAVE_LEN: usize = 80;
 const SAVE_VERSION: f64 = 101.0;
 const MAX_CENTS: u32 = 1_000_000_000;
@@ -88,12 +88,13 @@ impl Game {
 
     /// A bounded, fixed substep keeps physics stable across render frame rates.
     /// Pouring is owned by begin_pour/end_pour, never by the browser's frame flag.
+    /// A paid review can only settle its existing foam; its result is final.
     pub fn step(&mut self, dt: f32) {
-        if self.phase != 0 || !dt.is_finite() || dt <= 0.0 { return; }
+        if self.phase > 1 || !dt.is_finite() || dt <= 0.0 { return; }
         let mut remaining = (dt as f64).min(0.25);
         while remaining > 0.00000001 {
             let h = remaining.min(1.0 / 240.0);
-            self.tick(h, self.holding);
+            self.tick(h, self.phase == 0 && self.holding);
             remaining -= h;
         }
         self.refresh();
@@ -101,8 +102,10 @@ impl Game {
 
     fn foam_multiplier(&self) -> f64 { 1.0 - 0.2 * self.upgrades[3] as f64 }
 
+    fn beverage_ml(&self) -> f64 { (self.liquid + self.foam_liquid).min(self.capacity) }
+
     fn tick(&mut self, dt: f64, pouring: bool) {
-        self.elapsed += dt;
+        if self.phase == 0 { self.elapsed += dt; }
         if pouring {
             let incoming = RATES[self.soda] * dt;
             let trapped = incoming * ENTRAINED[self.soda];
@@ -135,23 +138,6 @@ impl Game {
         }
     }
 
-    /// Use the play physics to keep every request reachable in one hold. The
-    /// 1.5 percentage point margin leaves room for input timing near overflow.
-    fn safe_target_limit(&self) -> f64 {
-        let mut probe = Self::empty();
-        probe.soda = self.soda;
-        probe.cup = self.cup;
-        probe.capacity = self.capacity;
-        probe.upgrades[3] = self.upgrades[3];
-        let mut previous = 0.0;
-        for _ in 0..2400 {
-            probe.tick(1.0 / 240.0, true);
-            if probe.spill > 0.0 { return previous - 0.015; }
-            previous = (probe.liquid + probe.foam_liquid) / probe.capacity;
-        }
-        previous - 0.015
-    }
-
     pub fn serve(&mut self) -> bool {
         if self.phase != 0 || self.hardcore || !self.attempted { return false; }
         self.holding = false;
@@ -173,14 +159,9 @@ impl Game {
 
     fn score(&mut self) {
         if self.phase != 0 { return; }
-        self.liquid += self.foam_liquid;
-        self.foam_liquid = 0.0;
-        self.foam = 0.0;
-        if self.liquid > self.capacity {
-            self.spill += self.liquid - self.capacity;
-            self.liquid = self.capacity;
-        }
-        let error = (self.liquid / self.capacity - self.target).abs();
+        // Count the soda trapped in foam without erasing the visible foam.
+        // The paid cup may keep settling, but this score and payout are final.
+        let error = (self.beverage_ml() / self.capacity - self.target).abs();
         self.accuracy = (100.0 - 350.0 * error - 200.0 * self.spill / self.capacity).clamp(0.0, 100.0);
         self.stars = if self.accuracy >= 96.0 { 5 } else if self.accuracy >= 88.0 { 4 }
             else if self.accuracy >= 72.0 { 3 } else if self.accuracy >= 50.0 { 2 } else { 1 };
@@ -226,9 +207,7 @@ impl Game {
         self.cup = (self.random() % 4) as usize;
         self.capacity = CAPACITIES[self.cup];
         let targets = [0.45, 0.55, 0.60, 0.65, 0.70, 0.75, 0.80];
-        let limit = self.safe_target_limit();
-        let count = targets.iter().take_while(|&&v| v <= limit).count().max(1);
-        self.target = targets[(self.random() % count as u32) as usize];
+        self.target = targets[(self.random() % targets.len() as u32) as usize];
         self.liquid = 0.0;
         self.foam = 0.0;
         self.foam_liquid = 0.0;
@@ -339,19 +318,21 @@ impl Game {
             self.last_was_good as u32 as f32, self.shift_gross.saturating_sub(self.wages_paid) as f32,
             self.lifetime_perfect as f32, self.best_shift_gross as f32,
             (1 + self.upgrades.iter().sum::<u32>()) as f32, self.previous_rating as f32,
+            self.beverage_ml() as f32,
         ];
     }
 
     pub fn state(&self) -> &[f32; SNAPSHOT_LEN] { &self.snapshot }
 
     /// Unfinished cups become untouched checkpoints. Paid reviews keep their
-    /// phase and payout, so reloading cannot award the same review twice.
+    /// phase and payout, so reloading cannot award the same review twice. Save
+    /// the paid cup's settled beverage to retain the version 101 checkpoint.
     pub fn save(&self) -> [f64; SAVE_LEN] {
         let active = self.phase == 0;
         let mut s = [0.0; SAVE_LEN];
         let data = [
             SAVE_VERSION, self.phase as f64, self.order as f64, self.soda as f64,
-            self.cup as f64, self.target, if active { 0.0 } else { self.liquid }, 0.0, 0.0,
+            self.cup as f64, self.target, if active { 0.0 } else { self.beverage_ml() }, 0.0, 0.0,
             if active { 0.0 } else { self.spill }, self.rating, self.shift_gross as f64,
             self.accuracy, self.stars as f64, self.payout as f64, self.multiplier,
             if active { 0.0 } else { self.elapsed }, self.completed as f64,

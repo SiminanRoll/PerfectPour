@@ -49,15 +49,42 @@ Restoring selects Hardcore. An unfinished cup restarts empty without awarding a 
 
 - Dependency-free Rust engine compiled to embedded WebAssembly; Rust crate version `1.0.1`, public game version **V1.01**.
 - Engine-owned single-attempt enforcement, mode lock, rewards, upgrades, wage accounting, day closure, and save validation.
-- `engine/contract.json` defines the V1.01 API, 64 `f32` snapshot fields, 80 `f64` save slots, units, and upgrade costs.
+- `engine/contract.json` defines the V1.01 API, 65 `f32` snapshot fields, 80 `f64` save slots, units, and upgrade costs.
 - Canvas cup/foam rendering and self-contained SVG customer/storefront illustrations.
 - Embedded styles, scripts, Wasm, and synthesized audio; no remote assets, external fonts, analytics, or required runtime services.
 - `python3 scripts/build.py` rebuilds `dist/index.html` from the included precompiled engine.
 - `python3 engine/build_engine.py` runs native tests and rebuilds the engine with an installed `wasm32-unknown-unknown` Rust target.
 
-## Verification record
+## Fizz and music correction — November 26, 2026
 
-Results below were recorded against the V1.01 release build. The acceptance matrix is `docs/qa/V101_ACCEPTANCE.md`; its checklist alone is not proof of a pass.
+Hardcore now leaves real foam in the served cup. The committed-pour view shows the same settling physics as Easy in both the cup and meter until the foam falls below the drawing threshold. The finished cup then remains on screen until the player chooses **See customer review**; there is no timed jump to the receipt. Five-star cups receive a golden rim, glass glint, and subtle sparkles, with a static reduced-motion alternative. The release has already locked and paid the cup: further presses cannot top it up, change its result, or pay again. The receipt uses the final beverage amount, including soda trapped in foam while excluding gas.
+
+The target filter has been removed. All seven existing targets from 45% to 80% remain available with every soda, cup, and tap level. High-fill, high-fizz orders can require a tradeoff between underfilling and overflow; a perfect uninterrupted pour is not guaranteed on every order. Easy retains stop/settle/top-up play. Physics and spill penalties are identical between modes, and equipment reduces foam rather than changing the request.
+
+A quiet original 16-bar instrumental loop adds warm chords, soft bass, and a lightly swung melody. A separate music-note button controls it independently from the speaker button for sound effects. Settings survive reload; music stops for pause/help, hidden documents, or window blur. The loop is synthesized locally with no external files or requests.
+
+The live snapshot adds `beverageMl` at index 64. The 80-number version 101 save format is retained. Paid reviews save an already settled cup, preserving cash, upgrades, staff, ratings, and duplicate-payment protection.
+
+### Correction checks
+
+| Check | Result |
+| --- | --- |
+| Native Rust engine | PASS — 32 tests, including complete target availability, mode parity, stop timing, high-fizz overflow, compatible saves, and business rules |
+| Actual compiled Wasm | PASS — both integration scripts; 384 generated orders in the smoke run, all soda/cup pairs, equipment comparisons, Easy top-up advantage, and no duplicate payment |
+| Hardcore interface | PASS — real Space hold/release retained 8% foam on Cherry and 30% foam on Cola after release; a second press during the committed view left cash and served count unchanged |
+| Finished cup and manual review | PASS — an actual Lime pour moved from 42% liquid/19% foam to 45% liquid/0% visible foam; a second Space held for 5.5 seconds did not skip the cup or alter cash/count. Golden five-star cup observed; Enter opened the review; help returned to the same cup |
+| Easy interface | PASS — two holds and explicit Serve produced a 100% review, with visible foam retained at service |
+| Old save compatibility | PASS — prior Day 2 business, $3.32, sign, patio, helper, and 14-customer shift loaded; later paid review restored without paying twice |
+| Audio controls | PASS — music and effects toggled independently; preferences survived reload; narrow-layout music control and pause/resume worked |
+| Music lifecycle regression | PASS — mocked Web Audio checks for no autoplay, one scheduler, fading/cancellation, rapid toggles, context suspension, and bounded looping/cleanup; not an auditory listening check |
+| Responsive layout | PASS — 390 × 844 iframe, music control, foam meter, pause, and pointer hold/release checked |
+| Standalone package | PASS — five embedded scripts, self-contained Wasm with zero imports, and 14 verifier regression cases |
+
+Current artifact sizes and hashes are recorded in `docs/release-manifest.json`. The earlier verification table below is historical and is not the checksum for this corrected build.
+
+## Original V1.01 verification record
+
+Results below were recorded before the fizz and music correction. The former one-hold fairness requirement has been removed because it filtered out the difficult orders the player wanted. The acceptance matrix is `docs/qa/V101_ACCEPTANCE.md`; its checklist alone is not proof of a pass.
 
 | Check | Final result |
 | --- | --- |

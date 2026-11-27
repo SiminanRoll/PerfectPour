@@ -27,13 +27,14 @@ on PATH. It runs native tests, builds an optimized module for
 `wasm32-unknown-unknown`, and copies it to `engine/perfect_pour_engine.wasm`.
 The toolchain and Cargo target directory are development tools, not game assets.
 
-V1.01 passes 28 native tests and the actual-Wasm Node smoke suite. The native
-fairness test plays 4,608 generated one-hold orders across 64 seeds, two days,
-and all three tap levels; each achieves greater than 99.99 accuracy with zero
-overflow. The Node test additionally plays 384 unupgraded orders spanning all
-16 soda/cup pairs. Economy checks spend earned money, activate staff on the
-following day, and verify cash, passive sales, payroll, persistence, and
-protection against repeated payouts.
+The engine has 32 native tests. Generated-order coverage includes all seven
+targets for every soda/cup combination at all three tap levels across 64 seeds
+and two days. Physics checks compare both modes before and after release,
+exercise high-fizz timing and overflow, and verify Easy's wait-and-top-up
+advantage. Paid cups keep settling without changing their result, cash, or
+service time. Economy checks spend earned money, activate staff on the following
+day, and verify cash, passive sales, payroll, persistence, and protection against
+repeated payouts. The actual-Wasm Node suites exercise the browser ABI as well.
 
 ## Browser integration
 
@@ -45,7 +46,7 @@ game.reset(12345); // New career, day one, Hardcore mode.
 // On the first physical press; do not retrigger for key repeat.
 const accepted = game.begin_pour();
 
-// While the game is visible and running:
+// While the active order or paid cup is visible and running:
 game.step(1 / 60, 0);
 
 // On release (including pointer cancellation, lost focus, or page hiding):
@@ -66,20 +67,23 @@ Handle keyboard and pointer input as a single held action. Ignore key repeat,
 release the engine when focus is lost, and avoid leaving a held pour running
 behind a help dialog or hidden tab. Do not advance the simulation while paused.
 A valid frame advances at most 0.25 seconds using substeps of at most 1/240
-second. Invalid, negative, and non-finite time values are ignored.
+second. Invalid, negative, and non-finite time values are ignored. In a paid
+review, frames only settle the existing cup: pouring remains disabled and the
+score, payout, career state, and elapsed service time stay fixed. Closed days
+do not advance physics.
 
 | Export | Behavior |
 |---|---|
 | `reset(seed: u32)` | Creates a new career: cash 0, rating 3.5, day 1, Hardcore. |
 | `begin_pour() -> u32` | Returns 1 if a new hold is accepted, otherwise 0. |
 | `end_pour()` | Ends an active hold. In Hardcore, immediately serves and scores. |
-| `step(dt: f32, ignored: u32)` | Advances physics using the engine's held state. |
+| `step(dt: f32, ignored: u32)` | Advances an active order using the held state, or only settles an existing paid cup. Does nothing after day close. |
 | `serve() -> u32` | Easy only, after at least one press; returns 1 once. |
 | `set_mode(hardcore: u32) -> u32` | Accepts 0 or 1. Allowed on an untouched cup, a review, or a closed day. Returns 0 after a cup has been attempted. A real mode change clears the current streak. |
 | `next_order()` | Advances a paid review to the next order, or closes the day after its final review. Calls outside a review do nothing. |
 | `next_day(seed: u32) -> u32` | Opens the next day only after day close. Preserves the business and current chosen mode. |
 | `buy(item: u32) -> u32` | Purchases an available level once if eligible and affordable; otherwise returns 0. |
-| `state_ptr()`, `state_len()` | Pointer to 64 `f32` snapshot fields and their count. |
+| `state_ptr()`, `state_len()` | Pointer to 65 `f32` snapshot fields and their count. |
 | `save_ptr()`, `save_len()` | Refreshes and returns a writable checkpoint buffer of 80 `f64` values and its count. |
 | `restore_save() -> u32` | Validates the written checkpoint, then replaces the game atomically. Returns 0 without changing the game on failure. |
 | `memory` | Exported WebAssembly memory containing both buffers. |
@@ -97,11 +101,13 @@ between customers or before touching the current cup, and clears the current
 combo to prevent carrying Easy-earned rewards into Hardcore. Best streaks and
 cash remain intact.
 
-## Snapshot: 64 `f32` values
+## Snapshot: 65 `f32` values
 
-The first 20 fields retain the V1 layout. Field 10 is this day's gross receipts;
-field 20 is the persistent, spendable business balance before wage reservation.
-Use field 25 for the day's customer goal; it can be 12, 14, or 16.
+Fields 0–63 retain their existing indexes, including the original V1 layout
+in fields 0–19. Field 10 is this day's gross receipts; field 20 is the persistent,
+spendable business balance before wage reservation. Use field 25 for the day's
+customer goal; it can be 12, 14, or 16. Field 64 reports retained beverage for
+the receipt separately from the visible free liquid and foam.
 
 | Index | Field | Meaning |
 |---:|---|---|
@@ -159,30 +165,36 @@ Use field 25 for the day's customer goal; it can be 12, 14, or 16.
 | 61 | bestShiftGross | Best completed day's gross receipts |
 | 62 | businessLevel | 1 plus all owned upgrade levels |
 | 63 | previousRating | Shop rating immediately before the last review |
+| 64 | beverageMl | Free liquid plus beverage trapped in foam, capped at capacity; the final scored volume on a paid review |
 
 The `f32` snapshot is for display. Read/write the `f64` checkpoint for exact
 money and RNG preservation. Do not persist rounded display values.
 
-## Physics, fair requests, and scoring
+## Physics, requests, and scoring
 
 Each soda traps part of its beverage in foam. Gas makes that foam occupy more
 volume than the trapped beverage alone. Settling returns the beverage to the
-free liquid; overflow can discard foam and its entrained beverage. At scoring,
-remaining foam settles immediately, so the score measures **free liquid plus
-beverage trapped in foam**, never the apparent height of gas bubbles.
+free liquid; overflow can discard foam and its entrained beverage. Both modes
+use the same physics. Scoring measures **free liquid plus beverage trapped in
+foam**, capped at cup capacity, never the apparent height of gas bubbles.
+Serving leaves the visible liquid and foam intact. Subsequent review frames
+can settle the foam, but the paid result is already final and cannot change.
 
 The side meter should show free liquid and foam as distinct stacked portions.
 The target is the final beverage amount. Foam visibly occupies headroom and can
 cause overflow; it is not all liquid. Tap equipment reduces the gas component
 without deleting beverage.
 
-Each generated request is selected from 45%, 55%, 60%, 65%, 70%, 75%, and 80%.
-Before choosing a request, the engine simulates the exact soda/cup/tap combination
-until its first overflow, then keeps only targets at least 1.5 percentage
-points below the last safe settled volume. Both modes use this same selection,
-so switching mode never changes a request and every request is feasible with
-one uninterrupted hold. The first career order remains the gentle 65% orange
-soda tutorial.
+Each generated request is selected from the complete range of 45%, 55%, 60%,
+65%, 70%, 75%, and 80%. Targets are not filtered for foam, cup size, mode, or tap
+equipment. The same seed produces the same requests across both modes and all
+tap levels. The first career order remains the gentle 65% orange soda tutorial.
+
+High targets with fizzy recipes can overflow during a single uninterrupted
+pour. Timing and tap equipment affect the resulting tradeoff between underfill
+and spilled foam; not every combination permits a five-star Hardcore result.
+Easy allows pauses for settling and additional holds. There is no separate
+Hardcore physics model or softened overflow penalty.
 
 Accuracy is clamped to 0–100:
 
@@ -290,7 +302,10 @@ liquid, attempt state, or extra payout is saved. This makes refresh/closing safe
 without leaving a stuck held tap.
 
 **Paid review:** keep the paid phase, completed count, money, and review. The
-engine cannot serve it again. Advancing moves to the next customer once.
+engine cannot serve it again. Advancing moves to the next customer once. The
+live cup may still contain foam, but the checkpoint stores its settled beverage
+in field 6 and leaves reserved fields 7–8 at zero. A restored paid cup is already
+settled; the version 101 checkpoint format remains compatible.
 
 **Closed day:** keep staff sales and wages already processed. Opening the next
 day is the only progress action.

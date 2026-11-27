@@ -13,6 +13,11 @@ This checklist defines release acceptance. Results belong in the release record;
 - Pause, blur, storefront entry, and restart follow one consistent interruption rule without granting another attempt.
 - **Easy** permits repeated hold/release/top-up cycles and requires manual Serve.
 - Enter/Space on focused utility buttons perform their native button action instead of pouring or serving accidentally.
+- Both modes retain identical foaming, settling, and overflow physics. All existing target levels remain available regardless of cup, soda, mode, or tap equipment.
+- A Hardcore release keeps real foam in the cup and meter until the visible foam has settled. A second press during this view cannot pour, top up, or pay again.
+- The finished cup remains on screen until the player opens the review. A held key begun during settling cannot activate that review when it receives focus.
+- Five-star cups show a soft golden finish; reduced motion retains a static highlight.
+- The receipt reports settled beverage, including soda trapped in foam. Review-time settling cannot change the score, cash, served count, or recorded pour time.
 
 ## Meter and rewards
 
@@ -21,6 +26,14 @@ This checklist defines release acceptance. Results belong in the release record;
 - The marker and cup use the same volume mapping for every cup shape.
 - Good pours grow a streak; a poor pour breaks it. The displayed combo and reward match credited cash.
 - Milestone bonuses pay once per qualifying milestone. Reopening a review never pays again.
+
+## Music and sound
+
+- Background music starts after opening the shop and stays quiet underneath the sound effects.
+- Music and sound effects have separate controls; each preference survives reload independently.
+- Pausing, opening help, hiding the document, or leaving the window stops music. Returning to active play can resume it using the existing audio context.
+- Repeated starts and rapid mute/unmute actions do not stack music loops or leave old scheduled notes playing.
+- The music lifecycle regression covers scheduling and cleanup; it is not an auditory listening test.
 
 ## Business progression
 
