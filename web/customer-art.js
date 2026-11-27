@@ -50,10 +50,7 @@
     return `<path d="M24 300c0-29 9-50 29-59l35-13h62l36 14c20 8 30 29 31 58Z" fill="${p.top}"/><path d="M54 270v30m132-30v30" fill="none" stroke-width="3"/>${detail}`;
   }
 
-  function customer(index, mood) {
-    const n = Number.isFinite(Number(index)) ? Math.abs(Math.trunc(Number(index))) % people.length : 0;
-    const p = people[n];
-    const expression = ['happy','disappointed','pouring','settling'].includes(mood) ? mood : 'neutral';
+  function face(p, expression) {
     const smile = expression === 'happy'
       ? `<path d="M101 178c9 6 28 7 38-1-2 16-11 23-21 22-10-1-15-9-17-21Z" fill="#7e4842"/><path d="M104 179c10 4 23 4 32-1l-2 7c-10 4-20 3-28 0Z" fill="#fff4dc" stroke="none"/>`
       : expression === 'disappointed'
@@ -69,6 +66,20 @@
     const eyes = expression === 'happy'
       ? `<path d="M86 142c4-5 9-5 13 0m39 0c4-5 9-5 13 0" stroke-width="3.5" fill="none"/>`
       : `<g class="pp-cast-eyes"><ellipse cx="${expression==='pouring'?95:93}" cy="${expression==='settling'?143:141}" rx="3.5" ry="5" fill="${ink}" stroke="none"/><ellipse cx="${expression==='pouring'?147:145}" cy="${expression==='settling'?143:141}" rx="3.5" ry="5" fill="${ink}" stroke="none"/></g>`;
+    const reaction = expression === 'happy'
+      ? `<g class="pp-cast-reaction" fill="#f4ca66" stroke="${ink}" stroke-width="2"><path d="m207 73 4 11 12 1-10 8 3 12-10-7-10 7 3-12-9-8 12-1Z"/></g>`
+      : expression === 'settling'
+        ? `<g class="pp-cast-bubbles" fill="#fff4dc" stroke="#7aa49a" stroke-width="2"><circle cx="205" cy="91" r="6"/><circle cx="215" cy="75" r="4"/><circle cx="204" cy="62" r="2.5"/></g>`
+        : expression === 'disappointed'
+          ? `<g class="pp-cast-reaction" fill="none" stroke="#b57568" stroke-width="3" stroke-linecap="round"><path d="M200 87c4-4 8-4 12 0m-14 8c5-4 11-4 16 0"/></g>` : '';
+    return {smile,brows,eyes,reaction};
+  }
+
+  function customer(index, mood) {
+    const n = Number.isFinite(Number(index)) ? Math.abs(Math.trunc(Number(index))) % people.length : 0;
+    const p = people[n];
+    const expression = ['happy','disappointed','pouring','settling'].includes(mood) ? mood : 'neutral';
+    const {smile,brows,eyes,reaction}=face(p,expression);
     const glasses = p.kind === 'bob'
       ? `<path d="M76 135h30v12c-1 10-28 11-30-1v-11Zm57 0h30v12c-2 10-28 10-30-1v-11Zm-27 4c9-5 18-5 27 0m-57-3-10-3m97 3 10-3" fill="none" stroke="#b47c35" stroke-width="3.5"/>`
       : p.kind === 'silver'
@@ -79,14 +90,9 @@
     const jewelry = p.kind === 'buns' || p.kind === 'bob'
       ? `<path d="M59 157c-8 0-9 13-1 14 6 1 8-7 4-11m118-3c8 0 9 13 1 14-6 1-8-7-4-11" fill="none" stroke="#e3b752" stroke-width="3.5"/>` : '';
 
-    const reaction = expression === 'happy'
-      ? `<g class="pp-cast-reaction" fill="#f4ca66" stroke="${ink}" stroke-width="2"><path d="m207 73 4 11 12 1-10 8 3 12-10-7-10 7 3-12-9-8 12-1Z"/></g>`
-      : expression === 'settling'
-        ? `<g class="pp-cast-bubbles" fill="#fff4dc" stroke="#7aa49a" stroke-width="2"><circle cx="205" cy="91" r="6"/><circle cx="215" cy="75" r="4"/><circle cx="204" cy="62" r="2.5"/></g>`
-        : expression === 'disappointed'
-          ? `<g class="pp-cast-reaction" fill="none" stroke="#b57568" stroke-width="3" stroke-linecap="round"><path d="M200 87c4-4 8-4 12 0m-14 8c5-4 11-4 16 0"/></g>` : '';
     const motion = `<style>
-      .pp-cast-body{transform-origin:120px 300px;animation:pp-cast-arrive .36s ease-out both}
+      .pp-cast-arrival{animation:pp-cast-arrive .36s ease-out both}
+      .pp-cast-body{transform-origin:120px 300px;opacity:1}
       .pp-cast-body.pp-cast-pouring{animation:pp-cast-watch 2.6s ease-in-out infinite}
       .pp-cast-body.pp-cast-happy{animation:pp-cast-cheer .52s ease-out both}
       .pp-cast-eyes{transform-origin:119px 141px;animation:pp-cast-blink 8.6s ease-in-out infinite}
@@ -98,10 +104,33 @@
       @keyframes pp-cast-blink{0%,96%,100%{transform:scaleY(1)}98%{transform:scaleY(.1)}}
       @keyframes pp-cast-pop{from{opacity:0;transform:scale(.65)}to{opacity:1;transform:scale(1)}}
       @keyframes pp-cast-float{0%,100%{transform:translateY(0);opacity:.75}50%{transform:translateY(-3px);opacity:1}}
-      @media(prefers-reduced-motion:reduce){.pp-cast-body,.pp-cast-body.pp-cast-pouring,.pp-cast-body.pp-cast-happy,.pp-cast-eyes,.pp-cast-reaction,.pp-cast-bubbles{animation:none}}
+      @media(prefers-reduced-motion:reduce){.pp-cast-arrival,.pp-cast-body,.pp-cast-body.pp-cast-pouring,.pp-cast-body.pp-cast-happy,.pp-cast-eyes,.pp-cast-reaction,.pp-cast-bubbles{animation:none}}
     </style>`;
-    return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 300" aria-hidden="true" focusable="false">${motion}<g class="pp-cast-body pp-cast-${expression}" stroke="${ink}" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round">${backHair(p)}${clothes(p)}<path d="M94 197v35c6 14 40 17 50 0v-37Z" fill="${p.skin}"/><path d="M97 204c15 12 30 12 44 2v15c-15 10-31 8-44-3Z" fill="${p.shade}" stroke="none"/><path d="M67 130c-15-12-22 0-17 15 2 10 10 17 18 13m103-28c15-12 22 0 17 15-2 10-10 17-18 13" fill="${p.skin}"/><path d="M56 138c5-3 8 3 7 10m118-10c-5-3-8 3-7 10" fill="none" stroke="${p.shade}" stroke-width="3"/><path d="M68 103c1-31 23-47 51-47 31 0 52 19 53 48l-3 59c-1 28-22 51-49 53-28-2-49-24-51-52Z" fill="${p.skin}"/><path d="M156 104c9 49 8 78-16 102 18-7 28-23 29-43l3-59-5-21Z" fill="${p.shade}" stroke="none"/>${brows}${eyes}<path d="m118 143-5 20c3 4 8 5 13 2" fill="none" stroke="${p.shade}" stroke-width="3.5"/><ellipse cx="84" cy="165" rx="10" ry="5.5" fill="#e8957b" opacity=".28" stroke="none"/><ellipse cx="151" cy="165" rx="10" ry="5.5" fill="#e8957b" opacity=".28" stroke="none"/>${freckles}${smile}${frontHair(p)}${glasses}${jewelry}</g>${reaction}</svg>`;
+    return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 300" data-customer-index="${n}" data-mood="${expression}" aria-hidden="true" focusable="false">${motion}<g class="pp-cast-arrival"><g class="pp-cast-body pp-cast-${expression}" stroke="${ink}" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round">${backHair(p)}${clothes(p)}<path d="M94 197v35c6 14 40 17 50 0v-37Z" fill="${p.skin}"/><path d="M97 204c15 12 30 12 44 2v15c-15 10-31 8-44-3Z" fill="${p.shade}" stroke="none"/><path d="M67 130c-15-12-22 0-17 15 2 10 10 17 18 13m103-28c15-12 22 0 17 15-2 10-10 17-18 13" fill="${p.skin}"/><path d="M56 138c5-3 8 3 7 10m118-10c-5-3-8 3-7 10" fill="none" stroke="${p.shade}" stroke-width="3"/><path d="M68 103c1-31 23-47 51-47 31 0 52 19 53 48l-3 59c-1 28-22 51-49 53-28-2-49-24-51-52Z" fill="${p.skin}"/><path d="M156 104c9 49 8 78-16 102 18-7 28-23 29-43l3-59-5-21Z" fill="${p.shade}" stroke="none"/><g data-mood-part="brows">${brows}</g><g data-mood-part="eyes">${eyes}</g><path d="m118 143-5 20c3 4 8 5 13 2" fill="none" stroke="${p.shade}" stroke-width="3.5"/><ellipse cx="84" cy="165" rx="10" ry="5.5" fill="#e8957b" opacity=".28" stroke="none"/><ellipse cx="151" cy="165" rx="10" ry="5.5" fill="#e8957b" opacity=".28" stroke="none"/>${freckles}<g data-mood-part="smile">${smile}</g>${frontHair(p)}${glasses}${jewelry}</g></g><g data-mood-part="reaction">${reaction}</g></svg>`;
   }
 
-  window.PourArt = Object.freeze({ customer });
+  // A customer arrives once. Mood changes touch only the face and reaction;
+  // retaining the outer figure prevents its arrival fade from replaying.
+  function setMood(container, index, mood) {
+    if (!container) return false;
+    const n=Number.isFinite(Number(index))?Math.abs(Math.trunc(Number(index)))%people.length:0;
+    const expression=['happy','disappointed','pouring','settling'].includes(mood)?mood:'neutral';
+    const svg=container.querySelector('svg[data-customer-index]');
+    if (!svg || svg.getAttribute('data-customer-index')!==String(n)) {
+      container.innerHTML=customer(n,expression);
+      return true;
+    }
+    if (svg.getAttribute('data-mood')===expression) return false;
+    const parts=face(people[n],expression);
+    for (const key of ['brows','eyes','smile','reaction']) {
+      const part=svg.querySelector('[data-mood-part="'+key+'"]');
+      if (part) part.innerHTML=parts[key];
+    }
+    const body=svg.querySelector('.pp-cast-body');
+    if (body) body.setAttribute('class','pp-cast-body pp-cast-'+expression);
+    svg.setAttribute('data-mood',expression);
+    return true;
+  }
+
+  window.PourArt = Object.freeze({ customer, setMood });
 }());

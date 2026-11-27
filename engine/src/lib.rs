@@ -1,9 +1,9 @@
-//! Perfect Pour V1.02: deterministic, dependency-free game and business rules.
+//! Perfect Pour V1.03: deterministic, dependency-free game and business rules.
 //! The browser renders the snapshot. Rust owns every scored and paid action.
 
-const SNAPSHOT_LEN: usize = 98;
+const SNAPSHOT_LEN: usize = 124;
 const SAVE_LEN: usize = 120;
-const SAVE_VERSION: f64 = 102.0;
+const SAVE_VERSION: f64 = 103.0;
 const MAX_CENTS: u32 = 1_000_000_000;
 const MAX_COUNT: u32 = 1_000_000;
 const CAPACITIES: [f64; 4] = [280.0, 360.0, 460.0, 330.0];
@@ -13,11 +13,14 @@ const EXPANSION: [f64; 4] = [5.0, 6.0, 7.0, 8.0];
 const SETTLE_RATES: [f64; 4] = [1.8, 1.55, 1.3, 1.1];
 const PRESSURE_FLOW: [f64; 3] = [0.55, 1.0, 1.35];
 const PRESSURE_GAS: [f64; 3] = [0.8, 1.0, 1.15];
-const UPGRADE_MAX: [u32; 9] = [3, 2, 2, 2, 1, 1, 3, 3, 3];
-const COSTS: [[u32; 3]; 9] = [
+const BLEND_GAS: [f64; 3] = [1.08, 1.0, 0.92];
+const BLEND_COST: [f64; 3] = [0.9, 1.0, 1.15];
+const UPGRADE_MAX: [u32; 12] = [3, 2, 2, 2, 1, 1, 3, 3, 3, 1, 1, 1];
+const COSTS: [[u32; 3]; 12] = [
     [1200, 2200, 3600], [1800, 3000, 0], [1400, 2400, 0],
     [1800, 3000, 0], [2800, 0, 0], [4200, 0, 0],
     [10000, 18000, 30000], [14000, 24000, 40000], [5000, 8500, 13000],
+    [1000, 0, 0], [1800, 0, 0], [2600, 0, 0],
 ];
 
 #[derive(Clone, Debug)]
@@ -29,7 +32,7 @@ pub struct Game {
     perfect: u32, rng: u32, cash: u32, hardcore: bool, attempted: bool,
     holding: bool, day: u32, goal: u32, streak: u32, best_streak: u32,
     last_combo: u32, last_milestone: u32, last_perfect_tip: u32,
-    last_service_tip: u32, lifetime_gross: u32, upgrades: [u32; 9],
+    last_service_tip: u32, lifetime_gross: u32, upgrades: [u32; 12],
     active_helper: bool, active_specialist: bool, staff_sales: u32,
     wages_paid: u32, day_closed: bool, lifetime_customers: u32,
     last_base: u32, lifetime_perfect: u32, best_shift_gross: u32,
@@ -42,7 +45,11 @@ pub struct Game {
     queued_demand: u32, missed_customers: u32, hard_best: u32,
     easy_best: u32, cleanup_saved: f64, staff_work: f64,
     active_patio: u32, active_interior: u32, active_catering: u32,
-    active_training: u32, last_hardcore: bool, resume_hardcore: bool, snapshot: [f32; SNAPSHOT_LEN],
+    active_training: u32, last_hardcore: bool, resume_hardcore: bool,
+    ordered_cherries: u32, ordered_lime: u32, ordered_syrup: u32, ordered_blend: usize,
+    selected_soda: usize, selected_cherries: u32, selected_lime: u32,
+    selected_syrup: u32, selected_blend: usize, prep_started: bool, prep_allowance: f64,
+    snapshot: [f32; SNAPSHOT_LEN],
 }
 
 impl Game {
@@ -56,7 +63,7 @@ impl Game {
             cash: 0, hardcore: true, attempted: false, holding: false,
             day: 1, goal: 12, streak: 0, best_streak: 0, last_combo: 0,
             last_milestone: 0, last_perfect_tip: 0, last_service_tip: 0,
-            lifetime_gross: 0, upgrades: [0; 9], active_helper: false,
+            lifetime_gross: 0, upgrades: [0; 12], active_helper: false,
             active_specialist: false, staff_sales: 0, wages_paid: 0,
             day_closed: false, lifetime_customers: 0, last_base: 0,
             lifetime_perfect: 0, best_shift_gross: 0, previous_rating: 3.5,
@@ -69,7 +76,11 @@ impl Game {
             queued_demand: 2, missed_customers: 0, hard_best: 0,
             easy_best: 0, cleanup_saved: 0.0, staff_work: 0.0,
             active_patio: 0, active_interior: 0, active_catering: 0,
-            active_training: 0, last_hardcore: true, resume_hardcore: false, snapshot: [0.0; SNAPSHOT_LEN],
+            active_training: 0, last_hardcore: true, resume_hardcore: false,
+            ordered_cherries: 1, ordered_lime: 0, ordered_syrup: 0, ordered_blend: 1,
+            selected_soda: 4, selected_cherries: 0, selected_lime: 0,
+            selected_syrup: 0, selected_blend: 1, prep_started: false, prep_allowance: 3.5,
+            snapshot: [0.0; SNAPSHOT_LEN],
         }
     }
 
@@ -87,8 +98,23 @@ impl Game {
     }
 
     pub fn begin_pour(&mut self) -> bool {
-        if self.phase != 0 || self.holding || (self.hardcore && self.attempted) { return false; }
-        self.attempted = true; self.holding = true; self.refresh(); true
+        if self.phase != 0 || self.holding || self.selected_soda > 3
+            || (self.hardcore && self.attempted) { return false; }
+        self.prep_started = true; self.attempted = true; self.holding = true; self.refresh(); true
+    }
+
+    /// A recipe is freely adjustable before the first hold. Even Easy locks its
+    /// ingredients once liquid is poured; only additional liquid can be added.
+    pub fn set_recipe(&mut self, soda: usize, cherries: u32, lime: u32, syrup: u32, blend: usize) -> bool {
+        if self.phase != 0 || self.attempted || soda > 4 || cherries > 2 || lime > 1 || syrup > 2 || blend > 2
+            || (lime > 0 && self.upgrades[9] == 0) || (syrup > 0 && self.upgrades[10] == 0)
+            || (blend != 1 && self.upgrades[11] == 0) { return false; }
+        let changed = (self.selected_soda, self.selected_cherries, self.selected_lime, self.selected_syrup, self.selected_blend)
+            != (soda, cherries, lime, syrup, blend);
+        self.selected_soda = soda; self.selected_cherries = cherries; self.selected_lime = lime;
+        self.selected_syrup = syrup; self.selected_blend = blend;
+        self.prep_started |= changed;
+        self.refresh(); true
     }
 
     pub fn end_pour(&mut self) {
@@ -115,11 +141,13 @@ impl Game {
         self.refresh();
     }
 
-    fn flow(&self) -> f64 { RATES[self.soda] * PRESSURE_FLOW[self.pressure] }
+    fn actual_soda(&self) -> usize { if self.selected_soda < 4 { self.selected_soda } else { self.soda } }
+    fn flow(&self) -> f64 { RATES[self.actual_soda()] * PRESSURE_FLOW[self.pressure] }
+    fn recipe_fizz(&self) -> f64 { BLEND_GAS[self.selected_blend] }
     fn foam_multiplier(&self) -> f64 { 1.0 - 0.2 * self.upgrades[3] as f64 }
     fn beverage_ml(&self) -> f64 { (self.liquid + self.foam_liquid).min(self.capacity) }
     fn patience_limit(&self) -> f64 {
-        8.0 + 2.0 * self.order_awning as f64 + self.active_patio as f64
+        8.0 + self.prep_allowance + 2.0 * self.order_awning as f64 + self.active_patio as f64
             + if self.active_helper { 1.5 } else { 0.0 }
     }
     fn patience(&self) -> f64 { (1.0 - self.elapsed / self.patience_limit()).clamp(0.0, 1.0) }
@@ -127,23 +155,47 @@ impl Game {
         (65.0 * ((self.patience_limit() - self.elapsed) / (self.patience_limit() - 2.0)).clamp(0.0, 1.0)).round() as u32
     }
     fn menu_price(&self) -> u32 {
-        (110.0 + self.capacity * self.target * [0.65, 0.75, 0.8, 0.9][self.soda]).round() as u32
+        (110.0 + self.capacity * self.target * [0.65, 0.75, 0.8, 0.9][self.soda]).round() as u32 + self.recipe_premium()
+    }
+    fn recipe_premium(&self) -> u32 {
+        self.ordered_cherries * 40 + self.ordered_lime * 35 + self.ordered_syrup * 50
+            + if self.ordered_blend != 1 { 25 } else { 0 }
+    }
+    fn addin_cost(&self) -> u32 { self.selected_cherries * 8 + self.selected_lime * 10 + self.selected_syrup * 12 }
+    fn recipe_accuracy(&self) -> u32 {
+        100u32.saturating_sub(if self.selected_soda == self.soda { 0 } else { 60 })
+            .saturating_sub(15 * self.selected_cherries.abs_diff(self.ordered_cherries))
+            .saturating_sub(20 * self.selected_lime.abs_diff(self.ordered_lime))
+            .saturating_sub(20 * self.selected_syrup.abs_diff(self.ordered_syrup))
+            .saturating_sub(20 * self.selected_blend.abs_diff(self.ordered_blend) as u32)
+    }
+    fn recipe_mistakes(&self) -> u32 {
+        (self.selected_soda != self.soda) as u32
+            | ((self.selected_cherries != self.ordered_cherries) as u32) << 1
+            | ((self.selected_lime != self.ordered_lime) as u32) << 2
+            | ((self.selected_syrup != self.ordered_syrup) as u32) << 3
+            | ((self.selected_blend != self.ordered_blend) as u32) << 4
+    }
+    fn fill_stars(&self) -> u32 {
+        if self.accuracy >= 96.0 { 5 } else if self.accuracy >= 88.0 { 4 }
+            else if self.accuracy >= 72.0 { 3 } else if self.accuracy >= 50.0 { 2 } else { 1 }
     }
     fn sign_multiplier(&self) -> f64 { 1.0 + 0.08 * self.order_sign as f64 }
 
     fn tick(&mut self, dt: f64, pouring: bool) {
-        if self.phase == 0 && self.attempted { self.elapsed = (self.elapsed + dt).min(1_000_000.0); }
+        if self.phase == 0 && (self.attempted || self.prep_started) { self.elapsed = (self.elapsed + dt).min(1_000_000.0); }
+        let soda = self.actual_soda();
         if pouring {
             let incoming = self.flow() * dt;
             self.poured += incoming;
-            let trapped = incoming * ENTRAINED[self.soda];
+            let trapped = incoming * ENTRAINED[soda];
             self.liquid += incoming - trapped;
             self.foam_liquid += trapped;
-            let expansion = 1.0 + (EXPANSION[self.soda] - 1.0)
-                * self.foam_multiplier() * PRESSURE_GAS[self.pressure];
+            let expansion = 1.0 + (EXPANSION[soda] - 1.0)
+                * self.foam_multiplier() * PRESSURE_GAS[self.pressure] * self.recipe_fizz();
             self.foam += trapped * expansion;
         }
-        let decay = (SETTLE_RATES[self.soda] * dt).min(1.0);
+        let decay = (SETTLE_RATES[soda] * dt).min(1.0);
         let recovered = self.foam_liquid * decay;
         self.liquid += recovered;
         self.foam_liquid -= recovered;
@@ -199,8 +251,8 @@ impl Game {
         self.last_hardcore = self.hardcore;
         let error = (self.beverage_ml() / self.capacity - self.target).abs();
         self.accuracy = (100.0 - 350.0 * error).clamp(0.0, 100.0);
-        self.stars = if self.accuracy >= 96.0 { 5 } else if self.accuracy >= 88.0 { 4 }
-            else if self.accuracy >= 72.0 { 3 } else if self.accuracy >= 50.0 { 2 } else { 1 };
+        let recipe_stars = match self.recipe_accuracy() { 100 => 5, 80..=99 => 4, 60..=79 => 3, 40..=59 => 2, _ => 1 };
+        self.stars = self.fill_stars().min(recipe_stars);
         self.last_was_good = self.stars >= 4;
         self.streak = if self.last_was_good { self.streak.saturating_add(1).min(MAX_COUNT) } else { 0 };
         self.best_streak = self.best_streak.max(self.streak);
@@ -220,7 +272,9 @@ impl Game {
         } else { 0 };
         self.payout = self.last_base + self.last_combo + self.last_milestone + self.last_perfect_tip + self.last_service_tip;
         self.credit(self.payout);
-        let ingredients = if self.poured > 0.001 { (15.0 + self.poured * [0.10, 0.12, 0.13, 0.16][self.soda]).ceil() as u32 } else { 0 };
+        let ingredients = self.addin_cost() + if self.poured > 0.001 {
+            (15.0 + self.poured * [0.10, 0.12, 0.13, 0.16][self.actual_soda()] * BLEND_COST[self.selected_blend]).ceil() as u32
+        } else { 0 };
         let work = (self.spill / self.capacity * 5.0).min(2.5);
         self.cleanup_seconds = work * if self.active_helper { 0.5 } else { 1.0 };
         self.cleanup_saved += work - self.cleanup_seconds;
@@ -288,6 +342,34 @@ impl Game {
         self.cleanup_seconds = 0.0; self.attempted = false; self.holding = false;
         self.multiplier = 0.6 + self.rating * 0.2;
         self.order_sign = self.upgrades[0]; self.order_awning = self.upgrades[2]; self.phase = 0;
+        self.prepare_recipe();
+    }
+
+    fn prepare_recipe(&mut self) {
+        self.ordered_cherries = 0; self.ordered_lime = 0; self.ordered_syrup = 0; self.ordered_blend = 1;
+        let serial = (self.day - 1).saturating_mul(12).saturating_add(self.completed);
+        let roll = self.random();
+        // A plain order periodically gives players a breather. Calls consume one
+        // RNG value regardless of unlocks, pressure, or difficulty.
+        if roll % 4 != 0 {
+            let mut choices = [0usize; 3]; let mut len = 1;
+            if serial >= 3 && self.upgrades[9] > 0 { choices[len] = 1; len += 1; }
+            if serial >= 3 && self.upgrades[10] > 0 { choices[len] = 2; len += 1; }
+            let first = ((roll >> 2) as usize) % len;
+            let count = if serial >= 5 && roll & 32 != 0 { 2 } else { 1 };
+            self.order_addin(choices[first], count);
+            if serial >= 8 && len > 1 && roll & 64 != 0 {
+                self.order_addin(choices[(first + 1 + ((roll >> 7) as usize % (len - 1))) % len], 1);
+            }
+            if serial >= 5 && self.upgrades[11] > 0 { self.ordered_blend = ((roll >> 10) % 3) as usize; }
+        }
+        self.selected_soda = 4; self.selected_cherries = 0; self.selected_lime = 0;
+        self.selected_syrup = 0; self.selected_blend = 1; self.prep_started = false;
+        self.prep_allowance = 2.0 + 1.5 * (self.ordered_cherries + self.ordered_lime + self.ordered_syrup
+            + (self.ordered_blend != 1) as u32) as f64;
+    }
+    fn order_addin(&mut self, kind: usize, amount: u32) {
+        match kind { 0 => self.ordered_cherries = amount, 1 => self.ordered_lime = 1, _ => self.ordered_syrup = amount }
     }
 
     pub fn next_order(&mut self) {
@@ -330,7 +412,7 @@ impl Game {
     fn may_buy(&self) -> bool { self.phase != 0 || !self.attempted }
     fn spendable(&self) -> u32 { self.cash.saturating_sub(self.wages_due()) }
     fn cost(&self, item: usize) -> u32 {
-        if item >= 9 || self.upgrades[item] >= UPGRADE_MAX[item] { 0 }
+        if item >= UPGRADE_MAX.len() || self.upgrades[item] >= UPGRADE_MAX[item] { 0 }
         else { COSTS[item][self.upgrades[item] as usize] }
     }
     pub fn buy(&mut self, item: usize) -> bool {
@@ -379,12 +461,22 @@ impl Game {
             self.upgrades[8] as f32, self.cost(8) as f32,
             (1 + self.upgrades[6] + if self.upgrades[7] > 0 { 1 } else { 0 }) as f32,
             (self.phase == 0 && !self.attempted) as u32 as f32, self.speed_tip() as f32,
+            self.ordered_cherries as f32, self.ordered_lime as f32, self.ordered_syrup as f32, self.ordered_blend as f32,
+            self.selected_soda as f32, self.selected_cherries as f32, self.selected_lime as f32,
+            self.selected_syrup as f32, self.selected_blend as f32, self.recipe_accuracy() as f32,
+            (self.phase != 0 || self.attempted) as u32 as f32,
+            (self.phase == 0 && !self.attempted) as u32 as f32,
+            self.upgrades[9] as f32, self.upgrades[10] as f32, self.upgrades[11] as f32,
+            self.cost(9) as f32, self.cost(10) as f32, self.cost(11) as f32,
+            self.recipe_premium() as f32, self.addin_cost() as f32, self.prep_started as u32 as f32,
+            self.recipe_fizz() as f32, self.fill_stars() as f32, self.recipe_mistakes() as f32,
+            self.prep_allowance as f32, (self.recipe_premium() > 0) as u32 as f32,
         ];
     }
     pub fn state(&self) -> &[f32; SNAPSHOT_LEN] { &self.snapshot }
 
-    /// V102 preserves an attempted cup. Restore commits interrupted Hardcore once,
-    /// and leaves an interrupted Easy cup stopped. Paid cups remain exactly paid.
+    /// V103 preserves recipe preparation and attempted cups. Restore commits an
+    /// interrupted Hardcore cup once and leaves Easy stopped. Paid cups stay paid.
     pub fn save(&self) -> [f64; SAVE_LEN] {
         let active = self.phase == 0;
         let mut s = [0.0; SAVE_LEN];
@@ -416,13 +508,19 @@ impl Game {
             self.cleanup_saved, self.staff_work, self.active_patio as f64,
             self.active_interior as f64, self.active_catering as f64, self.active_training as f64,
             self.last_hardcore as u32 as f64, self.resume_hardcore as u32 as f64,
+            self.ordered_cherries as f64, self.ordered_lime as f64, self.ordered_syrup as f64,
+            self.ordered_blend as f64, self.selected_soda as f64, self.selected_cherries as f64,
+            self.selected_lime as f64, self.selected_syrup as f64, self.selected_blend as f64,
+            self.prep_started as u32 as f64, self.upgrades[9] as f64, self.upgrades[10] as f64,
+            self.upgrades[11] as f64, self.prep_allowance,
         ];
         s[..data.len()].copy_from_slice(&data); s
     }
 
     pub fn restore(s: &[f64; SAVE_LEN]) -> Option<Self> {
         let legacy = s[0] == 101.0;
-        if s.iter().any(|v| !v.is_finite()) || (!legacy && s[0] != SAVE_VERSION) { return None; }
+        let v102 = s[0] == 102.0;
+        if s.iter().any(|v| !v.is_finite()) || (!legacy && !v102 && s[0] != SAVE_VERSION) { return None; }
         let integer = |i: usize, min: u32, max: u32| {
             s[i] >= min as f64 && s[i] <= max as f64 && s[i].fract() == 0.0
         };
@@ -450,7 +548,8 @@ impl Game {
             || s[43] > 150.0 * s[40] + 250.0 * s[41] { return None; }
         let phase = s[1] as u32;
         if phase == 0 && (s[17] + 1.0 != s[2] || s[44] != 0.0) { return None; }
-        if phase == 0 && s[23] == 0.0 && (s[6] != 0.0 || s[7] != 0.0 || s[8] != 0.0 || s[9] != 0.0 || s[16] != 0.0) { return None; }
+        if phase == 0 && s[23] == 0.0 && (s[6] != 0.0 || s[7] != 0.0 || s[8] != 0.0 || s[9] != 0.0
+            || (s[16] != 0.0 && (legacy || v102 || s[92] != 1.0))) { return None; }
         if phase == 1 && (s[17] != s[2] || s[23] != 1.0 || s[44] != 0.0) { return None; }
         if phase == 2 && (s[17] != s[26] || s[2] != s[26] || s[44] != 1.0 || s[23] != 1.0) { return None; }
         if phase != 2 && s[43] != 0.0 { return None; }
@@ -463,7 +562,8 @@ impl Game {
             if !integer(53, 0, 2) || !(0.0..=1e9).contains(&s[54]) || !(0.0..=1e9).contains(&s[55])
                 || !(0.0..=2.5).contains(&s[56]) || !(-1e9..=1e9).contains(&s[60]) || s[60].fract() != 0.0
                 || !(0.0..=1e6).contains(&s[75]) || !(0.0..=160.0).contains(&s[76])
-                || !integer(81, 0, 1) || !integer(82, 0, 1) || s[83..].iter().any(|v| *v != 0.0) { return None; }
+                || !integer(81, 0, 1) || !integer(82, 0, 1)
+                || (v102 && s[83..].iter().any(|v| *v != 0.0)) { return None; }
             for i in [57, 58, 59, 61, 62, 63, 64, 65] { if !integer(i, 0, MAX_CENTS) { return None; } }
             for i in [66, 67, 68, 69] { if !integer(i, 0, 64) { return None; } }
             for i in [70, 71, 72, 78, 79, 80] { if !integer(i, 0, 3) { return None; } }
@@ -472,6 +572,17 @@ impl Game {
                 || s[80] > s[72] || s[73] > s[28] || s[74] > s[28]
                 || s[54] > s[55] + 1e-5 || s[6] + s[8] + s[54] > s[55] + 1e-4
                 || (phase == 0 && s[23] == 0.0 && (s[54] != 0.0 || s[55] != 0.0)) { return None; }
+        }
+        if !legacy && !v102 {
+            for i in [83, 85, 86, 88, 90, 91] { if !integer(i, 0, 2) { return None; } }
+            for i in [84, 89, 92, 93, 94, 95] { if !integer(i, 0, 1) { return None; } }
+            if !integer(87, 0, 4) || !(0.0..=11.0).contains(&s[96])
+                || s[97..].iter().any(|v| *v != 0.0)
+                || (s[93] == 0.0 && (s[84] > 0.0 || s[89] > 0.0))
+                || (s[94] == 0.0 && (s[85] > 0.0 || s[90] > 0.0))
+                || (s[95] == 0.0 && (s[86] != 1.0 || s[91] != 1.0))
+                || (s[23] == 1.0 && (s[87] == 4.0 || s[92] != 1.0))
+                || ((s[83] > 0.0) as u32 + (s[84] > 0.0) as u32 + (s[85] > 0.0) as u32 > 2) { return None; }
         }
         let mut g = Self::empty();
         g.phase = phase; g.order = s[2] as u32; g.soda = s[3] as usize; g.cup = s[4] as usize;
@@ -507,6 +618,23 @@ impl Game {
             g.active_interior = s[78] as u32; g.active_catering = s[79] as u32; g.active_training = s[80] as u32;
             g.last_hardcore = s[81] == 1.0; g.resume_hardcore = s[82] == 1.0 || !g.hardcore;
         }
+        if legacy || v102 {
+            // The current old-format order stays exactly as it was. Custom
+            // requests begin with the next customer, without retroactive costs.
+            g.ordered_cherries = 0; g.ordered_lime = 0; g.ordered_syrup = 0; g.ordered_blend = 1;
+            g.selected_soda = g.soda; g.selected_cherries = 0; g.selected_lime = 0;
+            g.selected_syrup = 0; g.selected_blend = 1; g.prep_started = g.attempted; g.prep_allowance = 0.0;
+        } else {
+            g.ordered_cherries = s[83] as u32; g.ordered_lime = s[84] as u32; g.ordered_syrup = s[85] as u32;
+            g.ordered_blend = s[86] as usize; g.selected_soda = s[87] as usize; g.selected_cherries = s[88] as u32;
+            g.selected_lime = s[89] as u32; g.selected_syrup = s[90] as u32; g.selected_blend = s[91] as usize;
+            g.prep_started = s[92] == 1.0; g.upgrades[9] = s[93] as u32; g.upgrades[10] = s[94] as u32;
+            g.upgrades[11] = s[95] as u32; g.prep_allowance = s[96];
+            if phase != 0 {
+                let recipe_stars = match g.recipe_accuracy() { 100 => 5, 80..=99 => 4, 60..=79 => 3, 40..=59 => 2, _ => 1 };
+                if g.stars != g.fill_stars().min(recipe_stars) { return None; }
+            }
+        }
         if !legacy && g.phase == 0 && g.attempted && g.hardcore { g.score(); }
         g.refresh(); Some(g)
     }
@@ -532,6 +660,10 @@ pub extern "C" fn set_mode(hardcore: u32) -> u32 {
 }
 #[no_mangle]
 pub extern "C" fn set_pressure(pressure: u32) -> u32 { unsafe { (*core::ptr::addr_of_mut!(GAME)).set_pressure(pressure as usize) as u32 } }
+#[no_mangle]
+pub extern "C" fn set_recipe(soda: u32, cherries: u32, lime: u32, syrup: u32, blend: u32) -> u32 {
+    unsafe { (*core::ptr::addr_of_mut!(GAME)).set_recipe(soda as usize, cherries, lime, syrup, blend as usize) as u32 }
+}
 #[no_mangle]
 pub extern "C" fn next_order() { unsafe { (*core::ptr::addr_of_mut!(GAME)).next_order(); } }
 #[no_mangle]

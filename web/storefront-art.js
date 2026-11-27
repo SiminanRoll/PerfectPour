@@ -1,4 +1,4 @@
-/* Perfect Pour V1.02 · Original state-driven storefront illustration.
+/* Perfect Pour V1.03 · Original state-driven storefront illustration.
    No images, fonts, network resources, SVG IDs, or external dependencies. */
 (function () {
   'use strict';
@@ -78,6 +78,15 @@
     return `<g stroke="${ink}" stroke-linejoin="round"><rect x="569" y="374" width="78" height="62" rx="5" fill="${body}" stroke-width="2.5"/><rect x="575" y="378" width="66" height="43" rx="3" fill="${face}" stroke-width="1.5"/>${handles}<path d="M573 435h72" stroke="#cedad0" stroke-width="3"/><path d="M584 429h48" stroke="#174b4970" stroke-width="2"/><path d="m586 416 11 0-2 13h-7Z" fill="#fff0d2" stroke-width="1.4"/>${level===2?'<path d="m638 392 4 7 7 1-5 5 1 7-7-4-6 3 2-7-5-5 7-1Z" fill="#fff4bc" stroke-width="1.1"/>':''}</g>`;
   }
 
+  function ingredientShelf(options, x, y, scale) {
+    const o=options||{};
+    const jar='<path d="M0-33h26v31H0Z" fill="#eadbc088" stroke-width="1.7"/><path d="M-2-38h30v7H-2Z" fill="#b5c9a0" stroke-width="1.7"/><g fill="#c66b78" stroke-width="1.1"><circle cx="7" cy="-12" r="5"/><circle cx="18" cy="-11" r="5"/><circle cx="12" cy="-22" r="5"/></g><path d="m7-17 4-4m7 5-3-5m-3-6 4-3" fill="none" stroke="#6f9a65" stroke-width="1.3"/><path d="M4-28v15" stroke="#fff8df" stroke-width="1.6" opacity=".7"/>';
+    const lime=o.hasCitrus?'<g transform="translate(38 0)"><path d="M-2-7h38l-5 7H3Z" fill="#e6c18c" stroke-width="1.5"/><path d="M1-22a15 15 0 0 0 27 13Z" fill="#76a85d" stroke-width="1.5"/><path d="M6-19a10 10 0 0 0 18 9Z" fill="#d8e9a2" stroke-width="1"/><path d="m7-18 15 8m-8-4-2 7" fill="none" stroke="#91b96a" stroke-width="1"/></g>':'';
+    const syrup=o.hasSyrup?'<g transform="translate(87 0)"><path d="M0-30h22v29H0Z" fill="#cf7b88" stroke-width="1.6"/><path d="M4-35h14v7H4Z" fill="#e9c988" stroke-width="1.3"/><path d="M11-35v-9h17v6" fill="none" stroke-width="2.5"/><path d="M4-20h14v13H4Z" fill="#fff0d2" stroke-width="1"/><circle cx="11" cy="-13" r="3" fill="#c96c7f" stroke-width=".8"/></g>':'';
+    const mixer=o.hasMixer?'<g transform="translate(127 0)"><rect x="-1" y="-40" width="37" height="40" rx="4" fill="#82aaa0" stroke-width="1.7"/><rect x="4" y="-34" width="10" height="18" rx="2" fill="#bde2d4" stroke-width="1.2"/><rect x="21" y="-34" width="10" height="18" rx="2" fill="#e5ab83" stroke-width="1.2"/><path d="M9-15v5h17v-5m-9 5v5" fill="none" stroke-width="1.7"/><circle cx="17" cy="-4" r="2" fill="#f1ca76" stroke-width="1"/></g>':'';
+    return `<g class="recipe-station-art" transform="translate(${x} ${y}) scale(${scale})" stroke="${ink}" stroke-linejoin="round" stroke-linecap="round">${jar}${lime}${syrup}${mixer}<path d="M-5 2h174v5H-5Z" fill="#d6b17c" stroke-width="1.6"/></g>`;
+  }
+
   function render(options) {
     const o=options && typeof options==='object'?options:{};
     const sign=level(o.sign,3),seating=level(o.seating,2),a=level(o.awning,2),tap=level(o.tap,2);
@@ -101,7 +110,7 @@
       <path d="M239 346h166v10H239Z" fill="#bc986b" stroke-width="2"/>
       <g stroke-width="1.5"><path d="M247 328h10v17h-10Zm18-5h10v22h-10Zm18 3h10v19h-10Zm18 1h10v18h-10Zm18-5h10v23h-10Zm18 4h10v19h-10Z" fill="#e6b469"/><path d="M265 329h10v12h-10m35-10h10v10h-10" fill="#d78b91" stroke="none"/><path d="M283 330h10v11h-10m35-9h10v9h-10" fill="#a7bb7e" stroke="none"/><path d="M252 328v-5m18 0v-5m18 8v-5m17 6v-5m19 0v-4m18 8v-5" fill="none" stroke-width="3"/></g>
       <path d="M242 380h63v38h-63Z" fill="#f2e7cb" stroke-width="1.7"/><text x="273" y="395" text-anchor="middle" font-family="Trebuchet MS,Arial,sans-serif" font-size="8" font-weight="700" fill="${ink}" stroke="none" letter-spacing="1">FRESH FIZZ</text><path d="M253 403h41m-33 6h26" stroke="#b6b89b" stroke-width="1.3"/>
-      <g class="staff-scene">${helper?'<g class="staff-motion">'+staff(361,389,'helper')+'</g>':''}${specialist?'<g class="staff-motion">'+staff(662,390,'specialist')+'</g>':''}</g>${taps(tap)}
+      ${ingredientShelf(o,245,428,.67)}<g class="staff-scene">${helper?'<g class="staff-motion">'+staff(361,389,'helper')+'</g>':''}${specialist?'<g class="staff-motion">'+staff(662,390,'specialist')+'</g>':''}</g>${taps(tap)}
       <path d="M230 436h187v18H230Zm308 0h152v18H538Z" fill="#b7875e" stroke-width="2"/><path d="M227 435h193v7H227Zm308 0h158v7H535Z" fill="#e6bd85" stroke-width="2"/>
       <path d="M231 331l83-1-77 104h-6Zm63-1h29l-77 104h-18Z" fill="#fff9df" opacity=".16" stroke="none"/><path d="M541 331h30l-30 41Zm73 0h21l-82 105h-15Z" fill="#fff9df" opacity=".16" stroke="none"/>
       <path d="M433 313h89v176h-89Z" fill="#49877a" stroke-width="4"/><path d="M442 324h71v108h-71Z" fill="#c5ddd0" stroke-width="2.5"/><path d="m445 327 28 0-28 48m27-48h16l-44 68" fill="#fff9df" opacity=".22" stroke="none"/><path d="M443 444h69v29h-69Z" fill="#81b09b" stroke-width="2"/><path d="M505 401v18" stroke="#f4d58a" stroke-width="5" stroke-linecap="round"/><path d="M432 486h92l10 9H423Z" fill="#6e9180" stroke-width="2"/>
@@ -130,7 +139,7 @@
     return `<g transform="translate(756 479)" stroke="${ink}" stroke-linejoin="round" stroke-linecap="round"><ellipse cx="49" cy="71" rx="82" ry="9" fill="#174b4918" stroke="none"/><path d="M-10-5h124v60H-10Z" fill="${tier>1?'#e6ba63':'#81b2a0'}" stroke-width="3"/><path d="M-10 14h124v39H-10Z" fill="#f5e6bc" stroke-width="2"/><path d="M-18-12h140v13H-18Z" fill="#edbf71" stroke-width="3"/><path d="M-8-12v-31h121v31" fill="none" stroke-width="3"/><path d="m-20-43 17-23h108l22 23Z" fill="#f6e8c7" stroke-width="3"/><path d="m5-66 11 23h17l-5-23m24 0v23h18l-5-23m27 0 12 23h18l-17-23" fill="#d98669" stroke="none"/><path d="M-20-43h147v8q-8 12-15 0-8 12-15 0-8 12-15 0-8 12-15 0-8 12-15 0-8 12-15 0-8 12-15 0-8 12-15 0-8 12-15 0-8 12-15 0Z" fill="#e29976" stroke-width="2"/><circle class="catering-wheel" cx="9" cy="58" r="13" fill="#4c7161" stroke-width="3"/><circle cx="9" cy="58" r="5" fill="#cfdbba" stroke-width="1.5"/><circle class="catering-wheel" cx="94" cy="58" r="13" fill="#4c7161" stroke-width="3"/><circle cx="94" cy="58" r="5" fill="#cfdbba" stroke-width="1.5"/><text x="52" y="36" font-family="Trebuchet MS,Arial,sans-serif" font-size="13" font-weight="900" fill="${ink}" stroke="none" text-anchor="middle" letter-spacing="1.3">POP PARTY</text><path d="M15-24h16l-2 15H17Z" fill="#db9a67" stroke-width="1.5"/><path d="M40-24h16l-2 15H42Z" fill="#a8be7d" stroke-width="1.5"/><path d="M65-24h16l-2 15H67Z" fill="#d88c94" stroke-width="1.5"/><path d="M24-25v-10h5m20 10v-10h5m20 10v-10h5" fill="none" stroke-width="1.7"/></g>`;
   }
   function upgradeIcon(item, currentLevel) {
-    const n=level(item,8),lv=level(currentLevel,3);
+    const n=level(item,11),lv=level(currentLevel,3);
     const motifs=[
       `<path d="M22 17v65m56-65v65" stroke-width="4"/><rect x="12" y="25" width="76" height="44" rx="7" fill="${lv?'#367b67':'#e6bd73'}"/><path d="M20 36h60M28 47h44M36 57h28" stroke="${lv?'#f9df9b':ink}" stroke-width="4"/><path d="m49 7 3 6 7 1-5 5 1 7-6-3-6 3 1-7-5-5 7-1Z" fill="#f3ce6e" stroke-width="1.5"/>`,
       '<path d="M50 42v42m-18 0h36M12 50v29m18-29v29m40-29v29m18-29v29" stroke-width="4"/><path d="M9 47h25v14H9Zm57 0h25v14H66Z" fill="#85b49b"/><ellipse cx="50" cy="45" rx="32" ry="9" fill="#e7b77b"/><path d="M50 44V16m-31 9 31-15 31 15Z" fill="#e19a77"/><path d="M19 25h62" stroke-width="2"/><path d="M43 30h12l-2 13h-8Z" fill="#f8f1d4" stroke-width="1.5"/>',
@@ -142,6 +151,11 @@
       '<path d="M17 45h67v33H17Z" fill="#84b2a0"/><path d="M17 60h67v18H17Z" fill="#f5e5bd"/><path d="M14 43h74v7H14ZM20 42V25m63 17V25" fill="#e5bc73"/><path d="m12 26 10-14h59l10 14v7q-6 7-13 0-6 7-13 0-6 7-13 0-6 7-13 0-6 7-13 0-6 7-14 0Z" fill="#e59b77"/><path d="m37 12-4 14m26-14 4 14" stroke="#fff0cb" stroke-width="10"/><circle cx="28" cy="81" r="9" fill="#537b68"/><circle cx="73" cy="81" r="9" fill="#537b68"/><path d="M34 63h32" stroke-width="3"/>',
       '<path d="M21 19h58v66H21Z" fill="#e5bb6a"/><path d="M28 26h44v50H28Z" fill="#fff3d4"/><path d="m50 32 5 10 11 2-8 8 2 12-10-6-10 6 2-12-8-8 11-2Z" fill="#e9bd57" stroke-width="2"/><path d="M36 70h28" stroke="#7aa080" stroke-width="3"/><path d="m39 84-3 11 14-5 14 5-3-11" fill="#d89072"/>'
     ];
+    motifs.push(
+      '<path d="M9 69h82l-10 17H20Z" fill="#e4bd86"/><path d="M13 37a27 27 0 0 0 48 23Z" fill="#81ae60"/><path d="M20 42a19 19 0 0 0 33 16Z" fill="#dfecb0" stroke="#a9c97b" stroke-width="1.4"/><path d="m22 43 29 14m-14-7-5 15m5-15 9 16" fill="none" stroke="#91b465" stroke-width="1.6"/><path d="M51 30a24 24 0 0 0 36 30Z" fill="#659d54"/><path d="M56 36a17 17 0 0 0 25 21Z" fill="#d8eaa1" stroke-width="1.3"/><path d="m59 39 20 16m-10-8-6 12" stroke="#94b568" stroke-width="1.6"/>',
+      '<path d="M19 38h24v45H19Zm39-8h24v53H58Z" fill="#cb7c8b"/><path d="M24 32h14v8H24Zm39-8h14v8H63Z" fill="#e5be75"/><path d="M31 32V17h17v7m22 0V10h17v7" fill="none" stroke-width="4"/><path d="M22 51h18v20H22Zm39-9h18v25H61Z" fill="#fff1d3" stroke-width="1.5"/><circle cx="30" cy="62" r="5" fill="#c66b7d" stroke-width="1.3"/><path d="m30 57 5-5" stroke="#769863" stroke-width="2"/><circle cx="69" cy="55" r="5" fill="#c66b7d" stroke-width="1.3"/><path d="m69 50 4-5" stroke="#769863" stroke-width="2"/><path d="M12 87h77" stroke="#b99a6c" stroke-width="5"/>',
+      '<rect x="16" y="17" width="68" height="70" rx="9" fill="#8bb7a5"/><rect x="23" y="25" width="20" height="31" rx="4" fill="#b9ddcf"/><rect x="57" y="25" width="20" height="31" rx="4" fill="#dfa789"/><path d="M33 57v9h34v-9M50 65v11" fill="none" stroke-width="4"/><circle cx="50" cy="77" r="4" fill="#eac478" stroke-width="1.8"/><path d="M28 30v17m34-17v17" stroke="#fff3d68a" stroke-width="3"/><path d="M29 10h12m18 0h12" stroke-width="5"/>'
+    );
     return `<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false"><ellipse cx="50" cy="88" rx="37" ry="5" fill="#174b490d"/><g fill="none" stroke="${ink}" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round">${motifs[n]}</g></svg>`;
   }
   function counter(options) {
@@ -157,7 +171,7 @@
       <path d="M351 0v46m498-46v45" fill="none" stroke="#698c73" stroke-width="3"/><g class="shop-lamp"><path d="m330 47 22-19 21 19v9h-43Z" fill="#e0bd76" stroke-width="3"/><ellipse cx="351" cy="55" rx="16" ry="4" fill="#fff0ba" stroke-width="1.5"/><path d="m828 46 22-19 21 19v9h-43Z" fill="#e0bd76" stroke-width="3"/><ellipse cx="849" cy="54" rx="16" ry="4" fill="#fff0ba" stroke-width="1.5"/></g>
       ${interior?'<path d="M720 235h75v162h-75Z" fill="#c0d7b6" stroke-width="3"/><path d="M729 245h57v141h-57Z" fill="#dce4c8" stroke-width="2"/><path d="M744 277h30m-30 20h30m-30 20h30" stroke="#a9be98" stroke-width="3"/>':''}
       ${training?'<rect x="349" y="223" width="54" height="65" rx="3" fill="#e7c985" stroke-width="2"/><rect x="355" y="230" width="42" height="49" fill="#f8edcb" stroke-width="1.5"/><path d="m376 237 5 10 11 2-8 7 2 11-10-5-10 5 2-11-8-7 11-2Z" fill="#d7ae59" stroke-width="1.2"/>':''}
-      <g class="staff-scene">${helperArt}${specialistArt}</g>
+      ${ingredientShelf(o,391,213,.86)}<g class="staff-scene">${helperArt}${specialistArt}</g>
       ${tap?`<g transform="translate(737 390)"><rect x="-19" y="-34" width="44" height="43" rx="4" fill="${tap>1?'#d7b16b':'#8eac9a'}" stroke-width="2"/><path d="M3-39v17h10v9" fill="none" stroke-width="3"/><path d="M3-46v9" stroke="#db9b71" stroke-width="6"/></g>`:''}
       ${catering?'<g transform="translate(1020 319)"><path d="M0 0h72v66H0Z" fill="#dfc089" stroke-width="2"/><path d="M6 8h60v15H6Z" fill="#f5e8c5" stroke-width="1.5"/><path d="M13 35h12v20H13Zm22 0h12v20H35Zm22 0h9v20H57Z" fill="#8db199" stroke-width="1.5"/></g>':''}
       ${sign>1?'<g class="neon-shine" fill="#f0ca78" stroke="none"><circle cx="337" cy="115" r="3"/><circle cx="337" cy="139" r="3"/><circle cx="337" cy="163" r="3"/><circle cx="337" cy="187" r="3"/></g>':''}

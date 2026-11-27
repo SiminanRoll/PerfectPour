@@ -32,6 +32,12 @@ jobs:
       - name: Test catalog reachability and economy
         run: node tests/engine/v102-balance.mjs
 
+      - name: Test custom recipes and legacy migration
+        run: node tests/engine/v103-recipes.mjs
+
+      - name: Test the primary control flow
+        run: node tests/browser/v103-control-flow.mjs
+
       - name: Test UI and save adapter contracts
         run: node tests/browser/v102-ui-contract.mjs
 

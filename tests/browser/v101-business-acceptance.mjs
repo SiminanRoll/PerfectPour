@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-/** V1.02 public-Wasm business acceptance. This is a simulation, not browser automation. */
+/** V1.03 public-Wasm business acceptance. This is a simulation, not browser automation. */
 import {readFile} from 'node:fs/promises';
 import assert from 'node:assert/strict';
 const bytes=await readFile(process.argv[2]||'engine/perfect_pour_engine.wasm');
@@ -7,7 +7,7 @@ const module=await WebAssembly.compile(bytes);
 const fresh=async()=>{const {exports:e}=await WebAssembly.instantiate(module,{});e.reset(314159);return e;};
 const state=e=>Array.from(new Float32Array(e.memory.buffer,e.state_ptr(),e.state_len()));
 const advance=(e,t)=>{while(t>1e-8){const dt=Math.min(t,1/120);e.step(dt,0);t-=dt;}};
-const perfect=e=>{assert.equal(e.set_pressure(0),1);let s=state(e);assert.equal(e.begin_pour(),1);advance(e,s[4]*s[5]/s[19]);e.end_pour();if(!s[21])e.serve();s=state(e);assert.equal(s[12],5);return s;};
+const perfect=e=>{assert.equal(e.set_pressure(0),1);let s=state(e);assert.equal(e.set_recipe(s[2],s[98],s[99],s[100],s[101]),1);assert.equal(e.begin_pour(),1);advance(e,s[4]*s[5]/s[19]);e.end_pour();if(!s[21])e.serve();s=state(e);assert.equal(s[12],5);return s;};
 const finish=e=>{while(state(e)[0]!==2){if(state(e)[0]===0)perfect(e);e.next_order();}return state(e);};
 const checks=[];
 const e=await fresh();assert.equal(e.buy(0),0);finish(e);e.next_day(77);finish(e);
@@ -30,4 +30,4 @@ for(let n=1;n<=40;n++){
 }
 assert(state(keep)[20]>state(reset)[20]);assert.equal(state(keep)[90],40);
 checks.push('Maintaining40 good pours earns more than repeatedly resetting after8; separate Hardcore best record retained');
-console.log(JSON.stringify({result:'PASS',version:'1.02',wasmBytes:bytes.length,checks},null,2));
+console.log(JSON.stringify({result:'PASS',version:'1.03',wasmBytes:bytes.length,checks},null,2));

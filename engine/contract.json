@@ -1,9 +1,9 @@
 {
-  "version": "1.02",
-  "saveVersion": 102,
+  "version": "1.03",
+  "saveVersion": 103,
   "snapshot": {
     "type": "f32",
-    "length": 98,
+    "length": 124,
     "fields": {
       "phase": 0,
       "order": 1,
@@ -102,15 +102,45 @@
       "trainingCost": 94,
       "businessTier": 95,
       "mayChangePressure": 96,
-      "serviceTipPotential": 97
+      "serviceTipPotential": 97,
+      "orderedCherries": 98,
+      "orderedLime": 99,
+      "orderedSyrup": 100,
+      "orderedBlend": 101,
+      "selectedSoda": 102,
+      "selectedCherries": 103,
+      "selectedLime": 104,
+      "selectedSyrup": 105,
+      "selectedBlend": 106,
+      "recipeAccuracy": 107,
+      "recipeLocked": 108,
+      "mayEditRecipe": 109,
+      "hasCitrus": 110,
+      "hasSyrup": 111,
+      "hasMixer": 112,
+      "citrusCost": 113,
+      "syrupCost": 114,
+      "mixerCost": 115,
+      "recipePremium": 116,
+      "selectedAddinCost": 117,
+      "prepStarted": 118,
+      "recipeFizzMultiplier": 119,
+      "fillStars": 120,
+      "recipeMistakes": 121,
+      "prepAllowance": 122,
+      "orderIsCustom": 123
     },
     "notes": [
-      "Fields0..64 retain indexes. flowRate is selected pressure flow; shiftNet is signed revenue minus operating costs and wages, excluding upgrades.",
+      "Fields0..97 retain indexes. flowRate is selected pressure flow; shiftNet is signed revenue minus operating costs and wages, excluding upgrades.",
       "accuracy is final beverage fill only. Visible foam mess (spill) and actual beverageWasteMl have separate economic consequences.",
-      "Patience runs from first hold only while active service; mandatory paid settling, review and menus do not consume it.",
+      "Patience runs from the first changed recipe selection or first hold while active service; reading an untouched ticket, mandatory paid settling, review and menus do not consume it.",
       "staffSales is actual cumulative secondary-lane gross; staffOrders can increase after each scored player cup. queuedDemand includes demand not yet served or lost.",
       "refund and shiftRefunds show foregone menu sale value, not a second cash deduction. ingredientCost/cleanupCost are actual cash charges capped by spendable cash to keep a recovery path.",
-      "modeMultiplier reflects the committed receipt in review/closed phases, even when the selected next difficulty changes."
+      "modeMultiplier reflects the committed receipt in review/closed phases, even when the selected next difficulty changes.",
+      "Fields98..123 append recipe preparation. selectedSoda4 means unchosen; begin_pour requires0..3. set_recipe may use4 to prepare garnish before selecting a base.",
+      "accuracy and fillStars measure liquid fill only. Overall stars also cap at recipe grade: exact100=5,80+=4,60+=3,40+=2,lower=1. Recipe errors never falsify the displayed fill score.",
+      "recipeMistakes is a bit mask: base1, cherries2, lime4, syrup8, blend16. Blend0=light/extra soda water,1=regular,2=bold. recipeFizzMultiplier is the selected blend gas multiplier, independent of tap pressure.",
+      "hasCitrus/hasSyrup/hasMixer report owned station levels. Buying a station does not change the existing request; future generated requests may use it. selectedAddinCost is the selected garnish/syrup quote in cents, charged only when committed, not on each edit."
     ]
   },
   "save": {
@@ -199,17 +229,32 @@
       "activeCatering": 79,
       "activeTraining": 80,
       "lastScoredHardcore": 81,
-      "resumeHardcoreAfterEasyCup": 82
+      "resumeHardcoreAfterEasyCup": 82,
+      "orderedCherries": 83,
+      "orderedLime": 84,
+      "orderedSyrup": 85,
+      "orderedBlend": 86,
+      "selectedSoda": 87,
+      "selectedCherries": 88,
+      "selectedLime": 89,
+      "selectedSyrup": 90,
+      "selectedBlend": 91,
+      "prepStarted": 92,
+      "citrusOwned": 93,
+      "syrupOwned": 94,
+      "mixerOwned": 95,
+      "prepAllowance": 96
     },
     "reserved": [
-      83,
+      97,
       119
     ],
     "notes": [
-      "Version102 stores120 doubles. For legacy101, fill120-double buffer with zeroes then copy original80 doubles.",
+      "Version103 stores120 doubles. For legacy101 fill120-double buffer with zeroes then copy original80 doubles;102 uses its original120 doubles.",
       "save_ptr refreshes buffer from live state: call once, write all120 doubles, then restore_save.",
-      "Attempted102 Hardcore restores by committing its saved drink exactly once. An unfinished102 Easy cup restores stopped in Easy, then returns to Hardcore after that cup. Legacy101 retains its untouched checkpoint behavior.",
-      "Paid cups remain paid and save their settled beverage; ordinary restored saves default to Hardcore and preserve mode-specific records.",
+      "V101/V102 current orders migrate as plain recipes with their original soda selected and no retroactive garnish charges. The next customer starts the custom recipe system.",
+      "Attempted102/103 Hardcore restores by committing its saved drink exactly once. An unfinished Easy cup restores stopped in Easy, then returns to Hardcore after that cup. Legacy101 retains its untouched checkpoint behavior.",
+      "Unpoured103 preparation restores selections and elapsed prep time without consuming the pour. Paid cups remain paid; ordinary restored saves default to Hardcore and preserve mode-specific records.",
       "lastScoredHardcore locks receipt mode premium even when the next selected mode changes."
     ]
   },
@@ -233,7 +278,8 @@
     "save_ptr": "()->pointer",
     "save_len": "()->u32",
     "restore_save": "()->u32",
-    "set_pressure": "(pressure:u32)->u32"
+    "set_pressure": "(pressure:u32)->u32",
+    "set_recipe": "(soda:u32,cherries:u32,lime:u32,syrup:u32,blend:u32)->u32"
   },
   "upgrades": [
     {
@@ -318,6 +364,30 @@
         13000
       ],
       "effect": "+2 specialist capacity,20% faster service and +6% staff sale value per level; specialist required"
+    },
+    {
+      "item": 9,
+      "name": "Citrus tray",
+      "costsCents": [
+        1000
+      ],
+      "effect": "Unlocks one lime garnish and lime requests on future orders"
+    },
+    {
+      "item": 10,
+      "name": "Cherry syrup rack",
+      "costsCents": [
+        1800
+      ],
+      "effect": "Unlocks up to two syrup pumps and syrup requests on future orders"
+    },
+    {
+      "item": 11,
+      "name": "Mixing dispenser",
+      "costsCents": [
+        2600
+      ],
+      "effect": "Unlocks light/extra-water and bold blend presets, with visible gas and ingredient cost tradeoffs"
     }
   ],
   "moneyUnit": "integer cents",
@@ -331,8 +401,11 @@
     "targetSelection": "All requests from 45, 55, 60, 65, 70, 75, and 80 percent remain available for every soda, cup, mode, and tap level. The first career order remains 65 percent Orange.",
     "scoredVolume": "Final free+trapped beverage, capped by capacity. Fill score=100-350*absolute fill fraction error. Gas does not count as beverage or ingredient waste.",
     "reviewSettling": "Phase 1 step advances only the existing cup physics with pouring disabled. Elapsed service time, score, payout, and career state remain final. Phase 2 step does nothing.",
-    "service": "Patience starts on first hold; slow service reduces speed tip and eventually sale value/demand. No timed automatic serve. Specialist work uses at most10seconds of actual service per nonempty player cup,3.5s per staff order divided by(1+0.2*activeTraining).",
-    "pressure": "Chosen only on an untouched cup. All3 pressure settings and all targets exist in both modes; Gentle makes every ordinary request five-star reachable while retaining visible fizz."
+    "service": "Patience starts on first changed recipe selection or first hold. New orders allow2seconds for base selection plus1.5seconds per requested add-in action or nonregular blend. Reading an untouched ticket and paid settling/review/menu time are free. Slow service reduces tips and eventually sale value/demand. Specialist work retains at most10seconds of actual service per nonempty player cup;3.5s/order divided by(1+0.2*activeTraining).",
+    "pressure": "Chosen only on an untouched cup. All3 pressure settings and all targets exist in both modes; Gentle makes every ordinary request five-star reachable while retaining visible fizz.",
+    "recipe": "Starter cherries0..2. Lime0..1 requires item9, syrup0..2 requires item10, nonregular blend requires item11. Recipe edits are atomic and lock on the first hold in both modes. Requested recipe premium is cherries40c each,lime35c,syrup50c per pump,nonregular blend25c. Selected add-ins cost cherries8c,lime10c,syrup12c. Garnishes do not change fill volume.",
+    "recipeScore": "Recipe accuracy=100-60wrong base-15per cherry difference-20lime difference-20per syrup difference-20per blend step, clamped0..100. Overallstars=min(fillStars,recipeStars). Five stars require the exact recipe and96+fill score.",
+    "recipeGeneration": "Fresh first customer requests Orange and one cherry. Later orders retain a plain break about1in4, request only owned ingredients, ramp to at most two add-in types, and introduce stronger/extra-water blends after the first few customers. Existing requests never change when stations are purchased."
   },
   "pressure": [
     {
@@ -352,6 +425,26 @@
       "name": "Rush",
       "flowMultiplier": 1.35,
       "gasMultiplier": 1.15
+    }
+  ],
+  "blend": [
+    {
+      "value": 0,
+      "name": "Light / extra soda water",
+      "gasMultiplier": 1.08,
+      "liquidIngredientCostMultiplier": 0.9
+    },
+    {
+      "value": 1,
+      "name": "Regular",
+      "gasMultiplier": 1,
+      "liquidIngredientCostMultiplier": 1
+    },
+    {
+      "value": 2,
+      "name": "Bold",
+      "gasMultiplier": 0.92,
+      "liquidIngredientCostMultiplier": 1.15
     }
   ]
 }

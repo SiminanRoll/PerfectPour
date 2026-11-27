@@ -18,15 +18,27 @@
     if (voice.filter) disconnect(voice.filter);
     voices.delete(voice);
   }
+  // Track the loop's ramp explicitly. Reading AudioParam.value immediately
+  // after scheduling an attack is not a safe way to preserve its current
+  // amplitude when the player releases quickly or the foam changes next frame.
+  function rampVoice(voice, nextLevel, duration) {
+    const now = voice.context.currentTime, parameter = voice.gain.gain;
+    const e = voice.envelope;
+    const current = e ? e.from + (e.to - e.from) * clamp((now - e.start) / Math.max(.00001, e.end - e.start), 0, 1) : parameter.value;
+    if (typeof parameter.cancelAndHoldAtTime === 'function') parameter.cancelAndHoldAtTime(now);
+    else {
+      parameter.cancelScheduledValues(now);
+      parameter.setValueAtTime(current, now);
+    }
+    parameter.linearRampToValueAtTime(nextLevel, now + duration);
+    voice.envelope = {from:current, to:nextLevel, start:now, end:now + duration};
+  }
   function stopVoice(voice, fade = .09) {
     if (!voice || voice.stopping || voice.disposed) return;
     voice.stopping = true;
     const now = voice.context.currentTime;
     const duration = voice.context.state === 'running' ? fade : 0;
-    const currentLevel = voice.gain.gain.value;
-    voice.gain.gain.cancelScheduledValues(now);
-    voice.gain.gain.setValueAtTime(currentLevel, now);
-    voice.gain.gain.linearRampToValueAtTime(0, now + duration);
+    rampVoice(voice, 0, duration);
     try { voice.source.stop(now + duration + .01); } catch (_) {}
     // The wall clock also releases nodes if audio was suspended mid-fade.
     if (voice.cleanup) clearTimeout(voice.cleanup);
@@ -65,14 +77,14 @@
     }
     return noise;
   }
-  function loop(type, frequency, level) {
+  function loop(type, frequency, level, attack = .06) {
     const source = context.createBufferSource(), filter = context.createBiquadFilter(), gain = context.createGain();
     const now = context.currentTime;
     source.buffer = noiseBuffer(); source.loop = true;
     filter.type = type; filter.frequency.value = frequency; filter.Q.value = .65;
-    gain.gain.setValueAtTime(0, now); gain.gain.linearRampToValueAtTime(level, now + .045);
+    gain.gain.setValueAtTime(0, now); gain.gain.linearRampToValueAtTime(level, now + attack);
     source.connect(filter); filter.connect(gain); gain.connect(bus);
-    const voice = {context, source, filter, gain, level, stopping:false, disposed:false, cleanup:null};
+    const voice = {context, source, filter, gain, level, envelope:{from:0,to:level,start:now,end:now+attack}, stopping:false, disposed:false, cleanup:null};
     voices.add(voice); source.onended = () => dispose(voice);
     source.start(now);
     return voice;
@@ -86,7 +98,7 @@
   }
   function stopPour() {
     if (!pour) return;
-    stopVoice(pour, .075); pour = null;
+    stopVoice(pour, .13); pour = null;
   }
   function updateFoam(fraction, sodaIndex = 0, isSettling = false) {
     const amount = Number.isFinite(Number(fraction)) ? clamp(Number(fraction), 0, 1) : 0;
@@ -95,14 +107,14 @@
       return;
     }
     const soda = clamp(Math.trunc(Number(sodaIndex) || 0), 0, 3);
-    const level = (.033 + soda * .005) * Math.sqrt(Math.min(1, amount / .32));
-    if (!foam) foam = loop('bandpass', 1800 + soda * 290, level);
-    const now = context.currentTime;
+    const level = (.025 + soda * .0035) * Math.sqrt(Math.min(1, amount / .32));
+    if (!foam) {
+      foam = loop('bandpass', 1450 + soda * 220, level, .16);
+      return;
+    }
     foam.level = level;
-    foam.filter.frequency.value = 1800 + soda * 290;
-    foam.gain.gain.cancelScheduledValues(now);
-    foam.gain.gain.setValueAtTime(foam.gain.gain.value, now);
-    foam.gain.gain.linearRampToValueAtTime(level, now + .07);
+    foam.filter.frequency.value = 1450 + soda * 220;
+    rampVoice(foam, level, .12);
   }
   function note(midi, delay, length, level = .16, type = 'sine') {
     if (!available()) return;
@@ -121,6 +133,8 @@
   function cue(name, options = {}) {
     if (!available()) return false;
     switch (name) {
+      case 'ingredient':
+        note(options.kind==='lime'?76:options.kind==='syrup'?60:67,0,.11,.055,'sine'); break;
       case 'perfect':
         [[72,0],[76,.09],[79,.18],[84,.32]].forEach(([pitch,at]) => note(pitch,at,.38,.14));
         break;

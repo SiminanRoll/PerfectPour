@@ -71,8 +71,11 @@ const firstPour=context.nodes.find(node=>node.kind==='noise');
 const firstFilter=[...firstPour.connections][0],firstGain=[...firstFilter.connections][0];
 assert.equal(firstFilter.frequency.value,950);
 assert.ok(firstPour.buffer.data.every(Number.isFinite));
+const oscillatorsBeforeRelease=context.nodes.filter(node=>node.kind==='oscillator').length;
 sounds.stopPour();assert.ok(firstPour.stopped>context.currentTime,'Release uses a short fade instead of a hard cutoff');
 assert.ok(firstGain.gain.calls.some(call=>call.type==='linear'&&call.value===0));
+assert.equal(firstGain.gain.calls.filter(call=>call.type==='set').at(-1).value,0,'Releasing before the attack advances must not jump to its future peak');
+assert.equal(context.nodes.filter(node=>node.kind==='oscillator').length,oscillatorsBeforeRelease,'Pour release has no discrete result tone');
 sounds.startPour(3);
 const colaFilter=context.nodes.filter(node=>node.kind==='filter').at(-1);
 assert.ok(colaFilter.frequency.value>firstFilter.frequency.value,'Cola has a brighter tap texture than Orange');
@@ -80,12 +83,22 @@ advance(150);assert.equal(firstPour.disconnected,true);
 sounds.stopPour();advance(150);
 check.push('a hold owns one pour bed; recipe changes fizz texture; release fades and releases its graph');
 
+sounds.startPour(1);advance(30);
+const midAttack=context.nodes.filter(node=>node.kind==='noise').at(-1),midFilter=[...midAttack.connections][0],midGain=[...midFilter.connections][0];
+sounds.stopPour();
+assert.ok(Math.abs(midGain.gain.calls.filter(call=>call.type==='set').at(-1).value-.06)<1e-8,'A mid-attack release begins at the interpolated current level, not the queued target');
+advance(200);
+check.push('quick and mid-attack release preserve amplitude continuity and do not emit a result cue');
+
 sounds.updateFoam(.30,3,true);
 const tail=context.nodes.filter(node=>node.kind==='noise').at(-1),tailFilter=[...tail.connections][0],tailGain=[...tailFilter.connections][0];
 const highTailLevel=tailGain.gain.calls.at(-1).value;
 assert.equal(tailFilter.type,'bandpass');
+assert.equal(tailGain.gain.calls.filter(call=>call.type==='set').at(-1).value,0,'Foam starts silently and fades in');
+advance(20);
 sounds.updateFoam(.03,3,true);
 assert.ok(tailGain.gain.calls.at(-1).value<highTailLevel,'The settling sound follows physical foam decay');
+assert.ok(Math.abs(tailGain.gain.calls.filter(call=>call.type==='set').at(-1).value-highTailLevel*.125)<1e-8,'The first foam-frame retarget does not bypass its attack fade');
 assert.equal(context.nodes.filter(node=>node.kind==='noise'&&!node.disconnected).length,1,'Frame updates reuse one settling voice');
 sounds.updateFoam(.001,3,true);advance(180);
 assert.equal(tail.disconnected,true,'No inaudible tail extends the settled state');
@@ -99,6 +112,8 @@ function pitchesFor(cue,options){
 }
 const good=pitchesFor('good'),perfect=pitchesFor('perfect'),bad=pitchesFor('bad'),purchase=pitchesFor('purchase');
 assert.equal(good.length,2);assert.equal(perfect.length,4);assert.equal(bad.length,2);assert.equal(purchase.length,3);
+assert.equal(pitchesFor('ingredient',{kind:'cherry'}).length,1);
+assert.notDeepEqual(pitchesFor('ingredient',{kind:'lime'}),pitchesFor('ingredient',{kind:'syrup'}),'Preparation feedback distinguishes fruit and syrup');
 assert.notDeepEqual(good,bad);assert.ok(Math.max(...perfect)>Math.max(...good));
 const shortStreak=pitchesFor('streak',{streak:3}),longStreak=pitchesFor('streak',{streak:8});
 assert.ok(longStreak[0]>shortStreak[0]);

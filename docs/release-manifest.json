@@ -1,61 +1,70 @@
 {
   "game": "Perfect Pour",
-  "version": "1.02",
+  "version": "1.03",
   "release_date": "2026-11-27",
-  "revision": "visual-soda-bar-and-business-balance",
-  "html_bytes": 248818,
-  "html_sha256": "f9ea56e40d0aef6a4bb39377a68d3bd298071573bce0b0a52a3cc0fa626e60d6",
-  "wasm_bytes": 35410,
-  "wasm_sha256": "cd1c87f18c753019aeccf37a638d12e1eee1f93e1a9ca901e32fdb8db61dbb0f",
-  "native_tests": 31,
+  "revision": "custom-sodas-and-one-primary-control",
+  "html_bytes": 299542,
+  "html_sha256": "d5d3479343e8aa903878f394096aaa7a1f652c4a4b6c33602705c667e8f214e7",
+  "wasm_bytes": 39420,
+  "wasm_sha256": "faace530dcdcf92e4504ef33ace1bd51c8e28a89d9b26d9f84d35637a7e24c4e",
+  "native_tests": 40,
   "wasm_imports": 0,
-  "snapshot_fields": 98,
-  "save_version": 102,
+  "snapshot_fields": 124,
+  "save_version": 103,
   "save_doubles": 120,
-  "inline_scripts": 6,
+  "inline_scripts": 8,
   "repository": "https://github.com/SiminanRoll/PerfectPour",
   "site_project_id": "appgprj_6b0908af5d34819183b47b403fbcb98b",
   "live_url": "https://perfect-pour.pretty-scarf-0591.chatgpt.site",
   "github_ci_url": "https://github.com/SiminanRoll/PerfectPour/actions/workflows/ci.yml",
   "browser_checks": [
-    "Default Hardcore commits the first release and retains physical foam in cup and meter",
-    "A second Space held through settling cannot pour again or skip the finished cup",
-    "Finished five-star cup remains with golden treatment until See review",
-    "Easy accepts two holds followed by explicit Serve",
-    "Severe underfill loses 17 cents, lowers reputation, and breaks the streak",
-    "Legacy business save, paid cup, and day close continue without duplicate rewards",
-    "Two actual tabs protect the newer save and require explicit Load latest save in the stale tab",
-    "Day closing ledger reconciles sales, ingredient costs, and wages",
-    "Specialist serves a real side order with matching sale and ingredient cost; payroll stays reserved",
-    "Training, tap, and awning purchases change storefront artwork and respect next-day activation",
-    "Independent music and effects controls remain available during settling; separate volume controls",
-    "390x844 and 320x844 frame layouts show cup, foam meter, and main controls together",
-    "Final 320px layout uses 14px difficulty labels; desktop header and navigation remain visible during shop scrolling"
+    "Existing V102 business restores its paid cup and upgrades without duplicate payment",
+    "New custom requests start with an unchosen base and require Ready before pouring",
+    "Hardcore first release commits once; customer remains fully visible while expressions change",
+    "Easy native pointer holds top up; a short tap of the same button serves",
+    "Space held across settling in both modes leaves the finished cup awaiting explicit review",
+    "Reviews separately show recipe and pour accuracy while reusing the primary button",
+    "Citrus and syrup station purchases deduct their prices, preserve payroll and current ticket, and enable future requests",
+    "Hardcore Lime retains visible foam; severe overfill reduces reputation and cash",
+    "390x844 and 320x844 layouts keep the customer, cup, foam gauge, and main control together",
+    "320px preparation and finished views have no horizontal overflow",
+    "Help and settings downloads an actual 512x512 PNG app icon",
+    "Final cup shows only the pictorial logo with visible cherries beside it and no lettering"
   ],
   "balance_checks": {
-    "catalog_cases": 2016,
-    "gentle_five_star": 336,
-    "gentle_cases": 336,
+    "catalog_cases": 6048,
+    "gentle_five_star": 1008,
+    "gentle_cases": 1008,
     "seeded_careers": 48,
-    "full_catalog_cost_dollars": 1899,
+    "full_catalog_cost_dollars": 1953,
     "perfect_timing_completion_pours": [
-      97,
-      101
+      89,
+      93
     ],
     "timing_sd_70ms_completion_pours": [
-      103,
-      109
+      92,
+      101
     ],
     "timing_sd_150ms_completion_pours": [
-      139,
-      155
+      127,
+      148
     ],
     "empty_cup_revenue_120_attempts": 0,
+    "recipe_preparation_model": "Correct recipes selected instantly; no simulated reading or ingredient-selection delay.",
     "report": "engine/balance-report.json"
   },
   "verification_limit": "Same bundled HTML tested through managed HTTP preview. Direct file launch was unavailable in the browser. Narrow iframe layouts are not physical-device certification; seeded economy simulations are not a human playtest.",
   "audio_verification": "Web Audio lifecycle and cue regression tests plus browser controls; no human auditory mix assessment.",
   "music": "Original quiet synthesized loop; independent persisted music and effects volume.",
   "finish_effect": "Golden rim, glass glint, and bounded sparkles for five-star cups; static reduced-motion treatment.",
-  "save_migration": "V102 writes a separate key and reads genuine V101 saves; the legacy backing key remains untouched."
+  "save_migration": "V103 writes a separate key and reads genuine V101/V102 saves. Legacy keys remain untouched; current legacy cups remain plain without new costs.",
+  "app_icon": {
+    "download_name": "Perfect_Pour_App_Icon.png",
+    "format": "PNG",
+    "width": 512,
+    "height": 512,
+    "verified_bytes": 21676,
+    "location": "Help & settings"
+  },
+  "acceptance_report": "docs/qa/V103_ACCEPTANCE.md"
 }
