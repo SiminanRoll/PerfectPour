@@ -721,7 +721,7 @@
     if(event.button!==0||event.isPrimary===false)return;
     if(inputOwner!==null){primaryPress=null;suppressPrimaryClick=true;event.preventDefault();return;}
     suppressPrimaryClick=false;
-    primaryPress={id:event.pointerId,action:$('pour-button').dataset.action,mode};
+    primaryPress={id:event.pointerId,action:$('pour-button').dataset.action,mode,released:false};
     if($('pour-button').disabled||mode==='settling'){suppressPrimaryClick=true;event.preventDefault();return;}
     if(!['preparing','playing'].includes(mode))return;
     const action=$('pour-button').dataset.action;
@@ -731,7 +731,14 @@
     if(beginInput('pointer'))activePointer=event.pointerId;
   }
   function releasePointer(event){
+    if(primaryPress&&primaryPress.id===event.pointerId)primaryPress.released=true;
     if(inputOwner==='pointer'&&(activePointer===null||event.pointerId===activePointer))releaseInput('pointer');
+  }
+  function releasePrimaryCapture(event){
+    // Touch and pen release their implicit capture after pointerup, before click.
+    // Keep that completed tap; capture lost before release still cancels it.
+    if(primaryPress&&primaryPress.id===event.pointerId&&primaryPress.released)return;
+    cancelPrimaryPointer(event);
   }
   function cancelPrimaryPointer(event){
     if(easyPress&&easyPress.id===event.pointerId)easyPress=null;
@@ -758,7 +765,7 @@
   }
   $('pour-button').addEventListener('pointerdown',primaryPointerDown);
   window.addEventListener('pointerup',releasePointer);window.addEventListener('pointercancel',cancelPrimaryPointer);
-  $('pour-button').addEventListener('lostpointercapture',cancelPrimaryPointer);
+  $('pour-button').addEventListener('lostpointercapture',releasePrimaryCapture);
   $('pour-button').addEventListener('contextmenu',event=>event.preventDefault());
   $('pour-button').addEventListener('click',primaryClick);
   $('easy-action').addEventListener('pointerdown',easyPointerDown);$('easy-action').addEventListener('click',easyAction);

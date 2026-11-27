@@ -1,8 +1,10 @@
-# Perfect Pour — V1.04.1
+# Perfect Pour — V1.04.2
 
 **[Play Perfect Pour online](https://perfect-pour.pretty-scarf-0591.chatgpt.site/)** · [Source repository](https://github.com/SiminanRoll/PerfectPour)
 
 Craft a custom soda, make the pour, earn a review, and grow a neighborhood soda bar. V1.04.1 starts pouring with the first hold, brings the review to the finished cup, and gives Easy a separate serving action. Illustrated ingredients, brief selection feedback, and controls that follow the current phase keep the counter focused on the drink. Occasional two-soda orders, the animated intro, and the New Game / Continue / Settings menu remain. The cup carries a pictorial brand stamp without lettering.
+
+V1.04.2 fixes touch activation of **Next customer**, **Close the day**, and **Open next day**. Normal pointer-capture release after a completed tap no longer cancels that tap. Interrupted gestures and clicks carried over from pouring or settling remain blocked. Existing saved businesses resume normally; no reset is needed. See the [touch-input acceptance record](docs/qa/V1042_ACCEPTANCE.md).
 
 **`dist/index.html` is the complete game:** a self-contained HTML file with the Rust/WebAssembly engine, interface, graphics, and synthesized music and effects. It is designed for offline play without an account, frontend server, or runtime downloads. Rust, Python, and Node are development tools; players do not need them.
 
