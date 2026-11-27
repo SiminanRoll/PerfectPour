@@ -71,7 +71,7 @@ Results below were recorded against the V1.01 release build. The acceptance matr
 | Purchases, employee activation, wages, and next day | PASS — browser bought sign, patio, helper; Day 2 had 14 customers and $1.50 wage reserve. All 11 upgrade levels bought through UI in an engine-earned fixture |
 | Save/export/import, reload, and malformed-data behavior | PASS — browser export/import round trip restored Day 2, $3.32, upgrades and helper; reloaded paid review did not pay again; malformed data covered by engine tests |
 | Desktop and narrow-layout actual interface checks | PASS — desktop and 390×844 wrapper; tallest rim clears foam meter; storefront and controls remain usable |
-| Final HTML byte count and SHA-256 | 174,297 bytes · `affff15983eae6675fcdcf5c3f6c704491eb3021f1b930cb7bde5a0003c61092` |
+| Final HTML byte count and SHA-256 | 174,133 bytes · `247c37e97c35e2b00d519765d474757aeaa8f3b7be75c98ecbb7abb907dac6d1` |
 
 ### Test-environment limit
 
@@ -86,3 +86,5 @@ There is no time limit, rent system, debt, stock purchasing, or additional branc
 ## Online publication
 
 The user subsequently authorized online publication and supplied `SiminanRoll/PerfectPour`, then made that repository public. The same self-contained build is published with Sites. Source pushes and live publishing are separate operations; the optional GitHub Pages guide explains a future Pages deployment.
+
+The live game was verified at https://perfect-pour.pretty-scarf-0591.chatgpt.site/ with a real Hardcore hold/release: 99% accuracy, five stars, and one $3.97 payment. GitHub CI passed for the release upload.

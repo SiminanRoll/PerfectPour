@@ -1,5 +1,8 @@
 # Perfect Pour — V1.01
 
+**[Play Perfect Pour online](https://perfect-pour.pretty-scarf-0591.chatgpt.site/)** · [Source repository](https://github.com/SiminanRoll/PerfectPour)
+
+
 One good pour can make someone's day. A whole streak can build your soda bar.
 
 **Perfect Pour** is a standalone browser game about filling customers' cups to the right level, earning better reviews, and investing the proceeds in a neighborhood soda business. V1.01 adds a default one-attempt Hardcore mode, a visible foam meter, combo rewards, a growing storefront, upgrades, employees, and a business that continues across days.
@@ -208,6 +211,6 @@ dist/index.html          Ready-to-play self-contained build
 
 ## Repository and online publishing
 
-The source repository is [SiminanRoll/PerfectPour](https://github.com/SiminanRoll/PerfectPour). The repository is public. Its CI validates Rust, the compiled Wasm, and the bundled HTML on each push. The public game is published with Sites; the exact Site identity is in `.openai/hosting.json`. The standalone HTML is the same build used online. Use **Your soda bar → Download game** to save it.
+The source repository is [SiminanRoll/PerfectPour](https://github.com/SiminanRoll/PerfectPour). The repository is public. Its CI validates Rust, the compiled Wasm, and the bundled HTML on each push. The public game is published with Sites; the exact Site identity is in `.openai/hosting.json`. The standalone HTML at `dist/index.html` is the same build used online. Download that file from GitHub for offline play.
 
 For an optional future move to GitHub Pages, see [the setup guide](docs/GITHUB_PAGES.md). Publishing to GitHub source does not by itself trigger a Sites deployment.

@@ -412,7 +412,6 @@
     }
   });
   document.addEventListener('keyup',event=>{if(event.code==='Space'){if(keyHeld)event.preventDefault();keyHeld=false;releaseInput('key');}});
-  $('download-game').href=window.location.href.split('#')[0];
   updateSoundButton();document.querySelector('.game-shell').inert=true;$('start-button').disabled=true;$('start-button').textContent='WARMING UP THE FIZZ…';requestAnimationFrame(frame);
   (async()=>{
     try{
