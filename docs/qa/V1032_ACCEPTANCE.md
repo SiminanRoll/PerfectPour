@@ -4,7 +4,7 @@
 
 V1.03.2 adds the animated intro, illustrated main menu, New Game / Continue / Settings flow, startup save guards, held-key protection across menu transitions, and mobile zoom controls. Starting screens no longer offer difficulty selection. New games default to Hardcore; the in-game switch and existing restore rules remain available.
 
-**The available local automated checks and actual browser checks below passed.** Native Rust tests could not run locally because `cargo` is unavailable. The complete release gate is GitHub CI on the exact source commit; its final status and the publication receipt are recorded on the PR. This is an acceptance record, not a deployment receipt. The [release manifest](../release-manifest.json), PR checks, and Sites deployment identify the final artifact and publication separately.
+**The available local automated checks and actual browser checks below passed.** Native Rust tests were not run locally for V1.03.2 because `cargo` was unavailable on PATH during that pass. The complete release gate is GitHub CI on the exact source commit; its final status and the publication receipt are recorded on the PR. This is an acceptance record, not a deployment receipt. The [release manifest](../release-manifest.json), PR checks, and Sites deployment identify the final artifact and publication separately.
 
 The engine source, compiled Wasm, save format, balance, prices, and upgrade effects are outside this update's change scope. [V1.03.1 acceptance](V1031_ACCEPTANCE.md) and [V1.03 acceptance](V103_ACCEPTANCE.md) remain historical evidence, not new runs of every prior check.
 
@@ -66,7 +66,7 @@ Checks used the actual bundled Wasm in the managed browser. They establish obser
 
 ## Release gate and publication boundary
 
-The local environment reported `cargo: command not found`, so this record does not claim a local native Rust pass. The complete release gate is **GitHub CI on the exact source commit**, including native Rust tests and the committed-bundle/source consistency check. Its final status and the publication receipt are recorded on the PR.
+The V1.03.2 local pass reported `cargo: command not found` on PATH, so this record does not claim a local native Rust pass. V1.04 later located the pre-existing isolated project toolchain; that does not retroactively change these checks. The complete release gate is **GitHub CI on the exact source commit**, including native Rust tests and the committed-bundle/source consistency check. Its final status and the publication receipt are recorded on the PR.
 
 PR checks and the Sites deployment record establish integration and publication separately. A saved source commit or a local test result alone does not establish which version is live.
 

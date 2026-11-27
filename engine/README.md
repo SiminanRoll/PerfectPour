@@ -1,6 +1,6 @@
-# Perfect Pour engine — V1.03
+# Perfect Pour engine — V1.04
 
-The dependency-free Rust crate owns recipe preparation, physics, input attempts, scoring, money, staff, progression, and save validation. The compiled Wasm has zero imports. JavaScript supplies input, rendering, audio, and persistence. [contract.json](contract.json) is the authoritative index/export mapping; [the game README](../README.md) describes the player-facing controls.
+The dependency-free Rust crate owns recipe preparation, single- and two-soda physics, input attempts, scoring, money, staff, progression, and save validation. The compiled Wasm has zero imports. JavaScript supplies input, rendering, audio, and persistence. [contract.json](contract.json) is the authoritative index/export mapping; [the game README](../README.md) describes the player-facing controls.
 
 ## Build and tests
 
@@ -11,17 +11,18 @@ rustup target add wasm32-unknown-unknown
 python3 engine/build_engine.py
 node tests/engine/wasm-smoke.mjs
 node tests/engine/v103-recipes.mjs
+node tests/engine/v104-mixtures.mjs
 node tests/browser/v101-business-acceptance.mjs
 node tests/engine/v102-balance.mjs
 ```
 
-The build helper runs native Cargo tests, compiles an optimized `wasm32-unknown-unknown` module, and copies it to `engine/perfect_pour_engine.wasm`. It uses Cargo from PATH or the isolated project toolchain when available. `python3 scripts/build.py` embeds that module in `dist/index.html`.
+The build helper runs native Cargo tests, compiles an optimized `wasm32-unknown-unknown` module, and copies it to `engine/perfect_pour_engine.wasm`. It uses Cargo from PATH or the isolated project toolchain at `engine/.toolchain` when available, configuring that toolchain's Cargo/Rustup directories itself. A missing `cargo` command on PATH does not imply that this fallback is unavailable. The current workspace's existing isolated Rust 1.100.0 toolchain includes the Wasm target; V1.04 was built with it and all **52 native tests passed**. `python3 scripts/build.py` embeds the compiled module in `dist/index.html`.
 
-The retained `v101-business-acceptance.mjs` and `v102-balance.mjs` filenames now check the current V1.03 engine. Balance `--write` refreshes [balance-report.json](balance-report.json), including the engine hash and method. The 6,048 catalog fixtures exercise four bases, four cups, seven targets, three tap levels, three pressures, three blends, and two modes. Career simulations choose correct recipes instantly, then apply seeded timing errors. They are sensitivity scenarios, not measured player performance. These checks do not simulate browser focus, rendering, mobile hardware, or audio.
+The retained `v101-business-acceptance.mjs`, `v102-balance.mjs`, and `v103-recipes.mjs` filenames check the current engine. Balance `--write` refreshes [balance-report.json](balance-report.json), including the engine hash and method. The existing 6,048 single-soda catalog/mode fixtures exercise four bases, four cups, seven targets, three tap levels, three pressures, three blends, and two modes. Native mixture coverage adds **3,024 Gentle cases**: twelve ordered base pairs, three proportions, four cups, seven targets, and three tap levels. Each retains a five-star fill and mix solution with visible foam. Career simulations use synthetic timing errors; they are sensitivity scenarios, not measured player performance. These checks do not simulate browser focus, rendering, mobile hardware, or audio.
 
 ## Recipe preparation
 
-`reset(seed)` creates a Hardcore career with Classic pressure. The first order is Orange with one cherry. The selected base starts at `4`, meaning unchosen; `begin_pour()` refuses until the player chooses a base from `0..3`.
+`reset(seed)` creates a Hardcore career with Classic pressure. The first order is Orange with one cherry. A single-soda order starts with selected base `4`, meaning unchosen; `begin_pour()` refuses until the player chooses a base from `0..3`. A generated mixed order preselects its first requested base without starting preparation time, and routes the second soda automatically after the first part.
 
 Call `set_recipe(soda, cherries, lime, syrup, blend)` before the first hold. Changes are atomic and validated:
 
@@ -35,25 +36,46 @@ Call `set_recipe(soda, cherries, lime, syrup, blend)` before the first hold. Cha
 
 The setter accepts base `4` so garnish can be prepared before base selection. The first actual change starts preparation time. Repeating the unchanged selection does not start the clock. Recipe edits lock on the first accepted hold in both modes. Easy can subsequently add liquid, but cannot replace a poured recipe.
 
-Each later order consumes one deterministic recipe RNG value regardless of pressure or mode. Roughly one in four is plain. Requests use only owned ingredients, ramp from one simple addition to at most two add-in types, and introduce blends after the first few customers. Buying a station never rewrites the current request. Selected extras can exceed the requested types; they still cost money and lower recipe accuracy.
+Each later order consumes one deterministic recipe RNG value regardless of pressure or mode. Single-soda requests retain plain breaks, use only owned ingredients, ramp from one simple addition to at most two add-in types, and introduce water blends after the first few customers. Buying a station never rewrites the current request. Selected extras can exceed the requested types; they still cost money and lower recipe accuracy.
 
-The ordered recipe sets the quoted premium: 40 cents per cherry, 35 cents for lime, 50 cents per syrup pump, and 25 cents for a nonregular blend. Selected add-ins cost 8, 10, and 12 cents respectively, charged at commitment rather than per edit. The selected base controls physical flow and liquid ingredient cost. Blend gas multipliers are 1.08 / 1 / 0.92 and liquid ingredient cost multipliers are 0.9 / 1 / 1.15. These are game tuning values. Garnishes do not displace liquid or secretly change the fill target.
+Customer **six** is the first mixed order and requests half of each soda. Subsequent orders mix roughly one time in three. After twelve completed manual customers, mixtures may request first shares of **one quarter, one half, or three quarters**. The ordered bases are distinct. Mixed requests contain at most one simple garnish/syrup addition and request the regular water blend. They require no new station or upgrade.
+
+The ordered recipe sets the quoted premium: 40 cents per cherry, 35 cents for lime, 50 cents per syrup pump, 25 cents for a nonregular water blend, and **60 cents for a two-soda mix**. A mix's base price weights the two requested soda prices by their requested shares. Selected add-ins cost 8, 10, and 12 cents respectively, charged once at final service. Each soda's actual poured volume sets its liquid ingredient cost, including wasted beverage; the 15-cent cup/supply charge also occurs only once. Water-blend gas multipliers remain 1.08 / 1 / 0.92 and liquid cost multipliers remain 0.9 / 1 / 1.15. These are game tuning values. Garnishes do not displace liquid or secretly change the fill target.
 
 ## Input and simulation
 
-`set_pressure(0|1|2)` selects Gentle, Classic, or Rush before the first hold. `begin_pour()` returns 1 only when input is accepted. `end_pour()` releases and scores immediately in Hardcore. Easy uses `serve()` after releasing or topping up. `set_mode(0|1)` changes difficulty between attempts and clears the current streak.
+`set_pressure(0|1|2)` selects Gentle, Classic, or Rush before the first hold. `begin_pour()` returns 1 only when input is accepted. Single-soda `end_pour()` still releases and scores immediately in Hardcore. Easy uses `serve()` after releasing or topping up. `set_mode(0|1)` changes difficulty between cups and clears the current streak; mode changes remain allowed before a cup's first attempt.
+
+Mixed drinks use the same exports. Hardcore permits **one hold per soda**: the first `end_pour()` moves to part 1 without scoring, charging, or paying; the final release serves. Easy can top up the current part and uses `serve()` to advance it explicitly, with final `serve()` committing the customer. Every part needs an attempted hold, even if that hold is zero duration. A repeated release or serve cannot skip an untouched second part. `attempted` locks ingredients, pressure, difficulty, and purchases for the entire cup; `partAttempted` independently tracks the active soda's hold budget.
+
+`activeTarget` is cumulative cup fill: `target * firstShare` for the first soda and `target` for the second. `selectedSoda` remains the first chosen base; `activeSoda` identifies the flowing tap. Each soda keeps its own foam and entrained-beverage pool and its own settling rate. Overflow removes proportional shares from those pools, then from liquid. The mix score therefore uses the first soda actually retained in the glass, rather than its volume at the instant of switching taps. Single-soda physics retain their original calculation path.
 
 Advance with `step(dt, 0)`. The legacy second argument is ignored. Invalid time is ignored, each call is capped at 0.25 seconds, and substeps are no larger than 1/240 second. Do not advance active service behind menus. End held input on cancellation or lost focus.
 
 Phase 0 includes preparation and active service; phase 1 is a committed cup; phase 2 is a closed day. Phase-1 steps only settle existing liquid and foam. They cannot alter payment, reviews, patience, or staff work. `next_order()` advances phase 1 or closes the day; `next_day(seed)` requires phase 2. `buy(item)` validates items 0–11, affordability, prerequisites, and cup eligibility.
 
-Patience starts at the first changed recipe selection or first hold. New requests allow two seconds for base selection plus 1.5 seconds per requested garnish/syrup action or nonregular blend. Reading an untouched ticket is free; the adapter also excludes menus and paid settling. Staff work still uses at most ten seconds per nonempty committed player cup, bounded by queue demand and capacity.
+Patience starts at the first changed recipe selection or first hold. New requests allow two seconds for base selection plus 1.5 seconds per requested garnish/syrup action or nonregular blend. Mixed orders add two seconds for their extra part. Reading an untouched ticket is free, including its preselected mixed base; the adapter also excludes menus and paid settling. Staff work still uses at most ten seconds per nonempty committed player cup, bounded by queue demand and capacity. The first part alone grants no staff work or income.
 
 ## Scores and accounting
 
-Read **124 `f32` values** from `state_ptr()`. Indices 0–97 retain their locations. The contract names recipe fields 98–123, including both ordered and selected recipes, station ownership/costs, preparation status, grade, and mistake mask.
+Read **134 `f32` values** from `state_ptr()`. Indices 0–123 retain their locations and meanings. The appended fields describe the two-part pour:
 
-`accuracy` is still fill accuracy only. Recipe accuracy starts at 100 and deducts 60 for a wrong base, 15 per cherry difference, 20 for lime, 20 per syrup difference, and 20 per blend step, clamped to zero. Overall stars are the lower of the fill grade and recipe grade: exact recipe = 5, 80+ = 4, 60+ = 3, 40+ = 2, lower = 1. Therefore a perfect fill cannot hide the wrong drink. `fillStars` lets the UI format fill accuracy independently of the customer’s overall review.
+| Index | Field | Meaning |
+| --- | --- | --- |
+| 124 | `orderedSecondSoda` | `0..3` for a mix; `4` for a single soda |
+| 125 | `firstShare` | `0.25`, `0.5`, or `0.75`; `1` for a single soda |
+| 126 | `pourPart` | `0` first; `1` second |
+| 127 | `partAttempted` | The active part has consumed its first hold |
+| 128 | `activeSoda` | Base for the current tap and physics |
+| 129 | `activeTarget` | Current cumulative target as a fraction of cup capacity |
+| 130 | `firstBeverageMl` | First soda retained, including beverage inside foam; frozen after scoring |
+| 131 | `mixAccuracy` | Proportion score; `100` for a single soda |
+| 132 | `mixStars` | Mix grade using the fill-grade thresholds |
+| 133 | `isMix` | Whether this order has two sodas |
+
+`accuracy` is still fill accuracy only. Recipe accuracy starts at 100 and deducts 60 for a wrong first base, 15 per cherry difference, 20 for lime, 20 per syrup difference, and 20 per water-blend step, clamped to zero. Recipe grade is exact recipe = 5, 80+ = 4, 60+ = 3, 40+ = 2, lower = 1.
+
+For a mixed drink, `mixAccuracy = clamp(100 - 200 * abs(firstBeverageMl / beverageMl - firstShare), 0, 100)`. Empty mixed cups receive zero mix accuracy. Mix grade uses the existing fill thresholds: 96, 88, 72, and 50. Overall stars are the minimum of **fill, recipe, and mix** grades, so a perfect final fill cannot conceal an incorrect proportion. Single-soda mix grade is always five and leaves its original scoring unchanged. `fillStars` and `mixStars` let the UI display the separate measurements truthfully.
 
 `recipeMistakes` uses bits: base 1, cherries 2, lime 4, syrup 8, blend 16. These provide specific visual feedback after commitment.
 
@@ -61,7 +83,7 @@ Operating costs never create debt or spend reserved payroll. Current and cumulat
 
 ## Save compatibility
 
-The writable save buffer contains **120 `f64` values**, version **103**. Version 101 uses its original 80 values, zero-padded to 120. Version 102 uses 120 values. Call `save_ptr()` once before writing, since each call refreshes the buffer from the live game.
+The writable save buffer contains **120 `f64` values**, version **104**. Version 101 uses its original 80 values, zero-padded to 120. Versions 102 and 103 use their original 120 values. Call `save_ptr()` once before writing, since each call refreshes the buffer from the live game.
 
 ```js
 const pointer = game.save_ptr();
@@ -71,8 +93,23 @@ destination.set(validatedValues);
 const accepted = game.restore_save() === 1;
 ```
 
-Restoration validates atomically. V101/V102 current orders become plain recipes with the original base selected and no retroactive garnish costs. Their existing scores and payments survive; custom requests begin with the next customer. Genuine V102 fixtures include an exact restore snapshot captured from the shipped old engine, allowing all original 98 display fields to be checked independently.
+Restoration validates atomically. V101/V102 current orders become plain single-soda recipes with the original base selected and no retroactive garnish costs. V103 current recipes remain single-soda. Existing scores and payments survive, and new request generation begins with the next customer. Genuine V102 fixtures preserve independently captured original 98-field restore snapshots. Five genuine V103 fixtures were exported from the released Wasm before rebuilding: preparation, interrupted Hardcore, unfinished Easy, paid, and staffed closed day. All **124 original snapshot fields** match the released engine's restore results.
 
-Unpoured V103 preparation preserves its selections and elapsed time without consuming a pour. Interrupted Hardcore attempts commit once on restore. Interrupted Easy attempts resume stopped and may finish their existing cup before returning to Hardcore. Paid saves never replay sales. Ordinary restored saves default to Hardcore; separate records survive. Recipe data uses indices 83–96; reserved 97–119 must remain zero.
+Unpoured preparation preserves its selections and elapsed time without consuming a pour. Interrupted single-soda Hardcore commits once on restore. For mixed Hardcore, an interrupted first part advances to the untouched second part without payment; saving and restoring that waiting state does not consume the second hold. An interrupted second part commits once. Easy restores stopped on its current part, can finish the whole cup, and then returns to Hardcore. Paid saves never replay sales. Ordinary restored saves default to Hardcore; separate records survive.
+
+V104 keeps recipe data at indices 83–96 and uses eight formerly reserved values:
+
+| Save index | Field |
+| --- | --- |
+| 97 | `secondSoda` |
+| 98 | `firstShare` |
+| 99 | `pourPart` |
+| 100 | `partAttempted` |
+| 101 | `firstLiquid` |
+| 102 | `firstFoam` |
+| 103 | `firstFoamBeverage` |
+| 104 | `firstPouredMl` |
+
+Reserved **105–119** must remain zero. Legacy versions retain their original reserved-range validation. Current-part state, total/first-component consistency, volume bounds, owned ingredients, and paid grades are checked before any live state changes. Paid mixed saves canonicalize first and total beverage to their committed settled amounts, keeping ratio, fill, and receipts fixed during the final foam animation. The browser writes V104 to a distinct storage key so older tabs cannot replace new-format progress.
 
 This local save format prevents accidental duplicate payments and malformed imports. It is not server authentication or anti-cheat protection.

@@ -41,11 +41,31 @@ const bootSource=source.slice(bootStart,bootEnd+'  })();'.length);
 const leaveWindow=source.match(/const leaveWindow=\(\)=>\{[^\n]+?\};/)?.[0];
 assert.ok(leaveWindow,'Exercise the actual blur/pagehide checkpoint boundary');
 
-function capture(engine){return{format:'perfect-pour-business',version:103,engine:Array.from(new Float64Array(engine.memory.buffer,engine.save_ptr(),engine.save_len()))};}
+function capture(engine){return{format:'perfect-pour-business',version:104,engine:Array.from(new Float64Array(engine.memory.buffer,engine.save_ptr(),engine.save_len()))};}
 function snapshot(engine){return new Float32Array(engine.memory.buffer,engine.state_ptr(),engine.state_len());}
 function savedCareer(kind,seed=910){
   const engine=new WebAssembly.Instance(module,{}).exports;engine.reset(seed);
   const prepare=()=>{const s=snapshot(engine);assert.equal(engine.set_recipe(s[2],s[F.orderedCherries],s[F.orderedLime],s[F.orderedSyrup],s[F.orderedBlend]),1);};
+  const complete=()=>{
+    prepare();const parts=snapshot(engine)[F.isMix]?2:1;
+    for(let part=0;part<parts;part++){assert.equal(engine.begin_pour(),1);engine.step(.25,0);engine.end_pour();if(!snapshot(engine)[F.hardcore])assert.equal(engine.serve(),1);}
+    assert.equal(snapshot(engine)[0],1);
+  };
+  if(kind.startsWith('mix-')){
+    for(let order=0;order<5;order++){complete();engine.next_order();}
+    assert.equal(snapshot(engine)[F.isMix],1);
+    const easy=kind.startsWith('mix-easy');if(easy)engine.set_mode(0);
+    if(kind!=='mix-untouched'){
+      prepare();assert.equal(engine.begin_pour(),1);engine.step(.25,0);
+      if(kind!=='mix-first-held')engine.end_pour();
+      if(easy&&!['mix-easy-first'].includes(kind))assert.equal(engine.serve(),1);
+      if(['mix-second-held','mix-paid','mix-easy-second'].includes(kind)){
+        assert.equal(snapshot(engine)[F.pourPart],1);assert.equal(engine.begin_pour(),1);engine.step(.25,0);
+        if(kind!=='mix-second-held')engine.end_pour();
+      }
+    }
+    return JSON.stringify(capture(engine));
+  }
   if(kind!=='untouched')prepare();
   if(kind==='preparing')engine.step(.25,0);
   if(kind==='easy')engine.set_mode(0);
@@ -59,7 +79,7 @@ function savedCareer(kind,seed=910){
   }
   if(kind==='closed'){
     const goal=snapshot(engine)[F.goal];
-    for(let i=0;i<goal;i++){prepare();engine.begin_pour();engine.step(.25,0);engine.end_pour();engine.next_order();}
+    for(let i=0;i<goal;i++){complete();engine.next_order();}
     assert.equal(snapshot(engine)[0],2);
   }
   return JSON.stringify(capture(engine));
@@ -130,7 +150,7 @@ checks.push('actual boot, settings, and blur/pagehide never create a save; New G
 
 // The engine serializes an already-paid cup as settled. A hold interrupted
 // before payment restores through score() and still has visible foam.
-for(const [kind,expected] of [['untouched','preparing'],['preparing','preparing'],['easy','playing'],['interrupted','settling'],['settling','finished'],['finished','finished'],['closed','summary']]){
+for(const [kind,expected] of [['untouched','preparing'],['preparing','preparing'],['easy','playing'],['interrupted','settling'],['settling','finished'],['finished','finished'],['closed','summary'],['mix-untouched','preparing'],['mix-first-held','playing'],['mix-between','playing'],['mix-second-held','settling'],['mix-paid','finished'],['mix-easy-first','playing'],['mix-easy-between','playing'],['mix-easy-second','playing']]){
   const raw=savedCareer(kind),loaded=await fixture({raw});
   assert.equal(loaded.scope.loadedCareer,true);assert.equal(loaded.scope.careerActive,false);
   assert.equal(loaded.element('start-button').disabled,false);assert.equal(loaded.writes(),0);
@@ -144,20 +164,27 @@ for(const [kind,expected] of [['untouched','preparing'],['preparing','preparing'
   assert.equal(loaded.scope.careerActive,true);assert.ok(loaded.writes()>0);
   assert.equal(loaded.save(),restored,`${kind} Continue does not change the restored engine state`);
   assert.equal(loaded.scope.state[F.cash],cash);assert.equal(loaded.scope.state[16],completed);
-  if(kind==='easy')assert.equal(loaded.scope.state[F.hardcore],0,'Continue retains an unfinished Easy cup');
+  if(kind==='easy'||kind.startsWith('mix-easy'))assert.equal(loaded.scope.state[F.hardcore],0,'Continue retains an unfinished Easy cup');
   if(kind==='interrupted')assert.equal(completed,1,'The restored interrupted Hardcore hold has already committed exactly once');
-  if(['settling','finished','closed'].includes(kind))assert.equal(loaded.effects.find(effect=>effect.route)?.celebrate,false,'Returning to a finished result does not replay its award');
+  if(['mix-first-held','mix-between','mix-easy-first','mix-easy-between','mix-easy-second'].includes(kind))assert.equal(completed,5,'An unfinished mixture does not pay its customer on Continue');
+  if(['mix-first-held','mix-between','mix-easy-between'].includes(kind)){
+    assert.equal(loaded.scope.state[F.pourPart],1);assert.equal(loaded.scope.state[F.partAttempted],0,'Continue retains the unspent second hold');
+  }
+  if(kind==='mix-second-held')assert.equal(completed,6,'Interrupted final component commits exactly once');
+  if(['settling','finished','closed','mix-paid'].includes(kind))assert.equal(loaded.effects.find(effect=>effect.route)?.celebrate,false,'Returning to a finished result does not replay its award');
   const writes=loaded.writes();loaded.api.openShop();
   assert.equal(loaded.writes(),writes);assert.equal(loaded.save(),restored,'Duplicate Continue callbacks cannot advance or repay an order');
 }
-const legacyRaw=await readFile(new URL('engine/fixtures/v102-partial-easy.json',root),'utf8');
-const migrated=await fixture({raw:legacyRaw,key:keys.LEGACY_SAVE_KEYS[0]});
-migrated.api.showMainMenu();migrated.api.leaveWindow();assert.equal(migrated.writes(),0);
-assert.equal(migrated.stored.has(keys.SAVE_KEY),false,'A legacy career is not migrated into storage just by visiting the menu');
-migrated.api.openShop();assert.equal(migrated.scope.mode,'playing');
-assert.equal(migrated.scope.state[F.hardcore],0);assert.equal(JSON.parse(migrated.stored.get(keys.SAVE_KEY)).version,103);
-assert.equal(migrated.stored.get(keys.LEGACY_SAVE_KEYS[0]),legacyRaw);
-checks.push('Continue restores preparing, unfinished Easy, interrupted/settling Hardcore, finished, and closed-day saves without paying twice; legacy migration writes only on explicit Continue');
+for(const version of [102,103]){
+  const legacyRaw=await readFile(new URL(`engine/fixtures/v${version}-partial-easy.json`,root),'utf8'),key=`perfect-pour-business-v${version}`;
+  const migrated=await fixture({raw:legacyRaw,key});
+  migrated.api.showMainMenu();migrated.api.leaveWindow();assert.equal(migrated.writes(),0);
+  assert.equal(migrated.stored.has(keys.SAVE_KEY),false,'A legacy career is not migrated into storage just by visiting the menu');
+  migrated.api.openShop();assert.equal(migrated.scope.mode,'playing');
+  assert.equal(migrated.scope.state[F.hardcore],0);assert.equal(JSON.parse(migrated.stored.get(keys.SAVE_KEY)).version,104);
+  assert.equal(migrated.scope.state[F.isMix],0);assert.equal(migrated.stored.get(key),legacyRaw);
+}
+checks.push('Continue restores ordinary and mixed cups at preparation, either interrupted component, between components, paid, and closed-day boundaries without paying twice;103/102 migration writes only on explicit Continue');
 
 const replacing=await fixture({raw:savedCareer('easy')});replacing.api.showMainMenu();
 const existing=replacing.save(),existingRaw=replacing.stored.get(keys.SAVE_KEY);

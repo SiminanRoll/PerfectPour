@@ -1,8 +1,8 @@
-# Perfect Pour — V1.03.2
+# Perfect Pour — V1.04
 
 **[Play Perfect Pour online](https://perfect-pour.pretty-scarf-0591.chatgpt.site/)** · [Source repository](https://github.com/SiminanRoll/PerfectPour)
 
-Craft a custom soda, make the pour, earn a review, and grow a neighborhood soda bar. V1.03.2 opens with an animated, illustrated soda and a simple New Game / Continue / Settings menu. The compact counter, custom recipes, cherries, lime, syrup, blend choices, and single primary action remain. The cup carries a pictorial brand stamp without lettering.
+Craft a custom soda, make the pour, earn a review, and grow a neighborhood soda bar. V1.04 adds occasional two-soda orders: follow the numbered bottles, pour the requested proportions, and hit the final fill. The animated intro, New Game / Continue / Settings menu, compact counter, custom garnishes, and single primary action remain. The cup carries a pictorial brand stamp without lettering.
 
 **`dist/index.html` is the complete game:** a self-contained HTML file with the Rust/WebAssembly engine, interface, graphics, and synthesized music and effects. It is designed for offline play without an account, frontend server, or runtime downloads. Rust, Python, and Node are development tools; players do not need them.
 
@@ -16,15 +16,16 @@ The intro and menu adapt to portrait, landscape, and desktop screens. Reduced-mo
 
 ## Play a customer
 
-Read the illustrated ticket, select a soda base, and tap ingredient jars to cycle their quantities. Choose pressure and any requested blend. The starter cherry jar is available immediately; other recipe stations are purchased in Build.
+Read the illustrated ticket, select a soda base, and tap ingredient jars to cycle their quantities. Two-soda orders select their first requested base automatically and show the pouring sequence in the same preparation row. Choose pressure and any requested blend. The starter cherry jar is available immediately; other recipe stations are purchased in Build.
 
 The **same primary button** changes with the current phase:
 
 | Phase | Primary action |
 | --- | --- |
-| Preparation | Choose a base, then **Ready to pour** |
-| Ready | **Hold to pour**, using the button or Space |
-| Holding | **Release to serve** in Hardcore; **Release to pause** in Easy |
+| Preparation | Match the recipe, then **Ready to pour** |
+| Ready | **Hold to pour**, using the button or Space; a mix identifies the active soda and part |
+| Holding | Hardcore releases to switch after the first mixed part, or to serve after the last; Easy releases to pause |
+| Easy, paused | Tap **Next soda** or **Serve drink**; hold the same button to top up the current soda |
 | Committed | **Settling…**, disabled while the foam falls |
 | Finished cup | **See review** |
 | Customer review | **Next customer**, or **Close the day** for the last guest |
@@ -32,9 +33,9 @@ The **same primary button** changes with the current phase:
 
 Ready to pour clears the preparation and pressure controls **before aiming starts**. The layout remains stable during the hold. Edit recipe is available before the first pour. Ingredients and pressure lock once pouring begins.
 
-**Hardcore is the default:** one continuous hold, then release automatically commits and serves it. A quick tap still consumes that attempt. Pausing or leaving the window during a hold ends it.
+**Hardcore is the default:** one continuous hold per soda. A single-soda release serves the drink. For a two-soda order, the first release switches taps and the final release serves. A quick tap still consumes that part's attempt. Pausing or leaving the window during a hold ends it; the next soda still requires its own new hold.
 
-**Easy:** release to pause. The primary button then says Serve drink: a short tap serves, while holding it for 160 ms begins a top-up. Space starts a top-up directly; Enter serves. The same recipe stays locked, and both modes retain the same fizz physics.
+**Easy:** release to pause. A short tap on the primary button advances from the first soda or serves the final drink; holding it for 160 ms begins a top-up of the current soda. Space starts a top-up directly; Enter advances or serves. After switching sodas, the first part cannot be topped up again. The same recipe stays locked, and both modes retain the same fizz physics.
 
 The cup visibly settles and then stays until you choose See review. Five-star drinks receive a golden finish; reduced motion keeps a static treatment. Waiting cannot change the score or pay twice. Enter activates the current primary action, except that pouring requires a hold of Space or the button. P, Escape, or Pause controls breaks; Build opens the shop.
 
@@ -48,13 +49,23 @@ The cup visibly settles and then stays until you choose See review. Five-star dr
 | Cherry syrup | 0–2 pumps | $18 syrup rack |
 | Blend | Light / extra soda water, Regular, Bold | $26 mixing dispenser unlocks custom blends |
 
-The first new-business order requests Orange with one cherry. Later requests gradually add combinations, with plain orders between them and at most two add-in types. Customers only request owned ingredients. Buying a station preserves the current ticket; future orders can use it.
+The first new-business order requests Orange with one cherry. Later single-soda requests gradually add combinations, with plain orders between them and at most two add-in types. Customers only request owned ingredients. Buying a station preserves the current ticket; future orders can use it.
 
 The recipe determines flavor and ingredient cost; pressure determines pouring speed. Light, Regular, and Bold use gas multipliers of 1.08, 1, and 0.92. These are game tuning values. Garnishes do not secretly displace liquid or move the target.
 
-Requested cherries add $0.40 each to the menu price, lime $0.35, syrup $0.50 per pump, and a custom blend $0.25. Selected add-ins cost $0.08 per cherry, $0.10 for lime, and $0.12 per pump. Costs apply when the drink commits. Unrequested extras cost money without raising the quote.
+Requested cherries add $0.40 each to the menu price, lime $0.35, syrup $0.50 per pump, and a custom blend $0.25. A two-soda order adds $0.60 and weights its base price by the requested soda shares. Selected add-ins cost $0.08 per cherry, $0.10 for lime, and $0.12 per pump. Liquid costs reflect the amount actually poured of each soda, including waste. Costs apply once when the complete drink commits. Unrequested extras cost money without raising the quote.
 
 Patience starts on the first changed recipe selection or first hold. Reading an untouched ticket is free. Complex requests allow additional preparation time; menus, required settling, and reviews do not consume it.
+
+## Two-soda orders
+
+Customer **six** introduces a 50/50 mix. Later mixed requests appear roughly one time in three; after twelve completed manual customers, they can also ask for 25/75 or 75/25. Each uses two distinct sodas, the Regular water blend, and at most one simple garnish or syrup addition. No new purchase is required. Automatic first-base selection does not start the patience clock, and mixed orders allow extra time for the second part.
+
+The two bottle chips show the requested shares and highlight the current part. Both colored, numbered fill lines stay visible on the cup and meter. The first line is a fraction of the **requested drink**, not the whole cup: a 50/50 mix filled to 70% uses a first line at **35%** and a final line at **70%**. Only the active line gets the large cup label. Releasing the first Hardcore pour changes the active bottle and target without moving the cup or main button.
+
+Each soda retains its own flow, foam, and settling rate. The stream changes with the tap, while the drink's color blends as the second soda enters. Liquid trapped in foam counts toward its soda's retained proportion. Spills affect the actual mix. Part one does not pay, charge ingredients, advance the customer, or grant staff income; the complete drink commits once after its final part.
+
+The review keeps the existing three metrics. For a mixed order, **Recipe + Mix** displays the lower of recipe accuracy and proportion accuracy, with the actual and requested proportions shown in the details. Fill accuracy stays separate. The [engine contract](engine/contract.json) defines the volume accounting, scoring, and save fields.
 
 ## Pressure, foam, and reviews
 
@@ -68,7 +79,7 @@ Gentle retains visible fizz and a five-star solution for every tested base, cup,
 
 Four cups hold **280, 360, 460, and 330 mL**. Targets are **45%, 55%, 60%, 65%, 70%, 75%, and 80%**. The meter separates liquid and foam. Beverage trapped in foam counts toward the final fill; gas does not.
 
-Fill accuracy is `clamp(100 − 350 × abs(final_fraction − target_fraction), 0, 100)`. Fill thresholds for five through two stars are 96, 88, 72, and 50. Recipe accuracy separately deducts for incorrect base, quantities, or blend. Overall stars use the lower grade: **five stars require the exact recipe and an excellent fill**. A wrong base cannot exceed two stars. Reviews show recipe and pour scores separately, with specific recipe corrections.
+Fill accuracy is `clamp(100 − 350 × abs(final_fraction − target_fraction), 0, 100)`. Fill thresholds for five through two stars are 96, 88, 72, and 50. Recipe accuracy separately deducts for incorrect base, quantities, or blend. Mixed drinks also score `clamp(100 − 200 × abs(retained_first_share − requested_first_share), 0, 100)` using the fill-grade thresholds. Overall stars use the lowest applicable grade: **five stars require the exact recipe, an excellent fill, and accurate proportions when mixed**. A wrong base cannot exceed two stars. A perfect total fill cannot hide an incorrect mix, and correct proportions cannot hide underfill.
 
 Poor pours can lose money through ingredients and cleanup. Severe failures earn no sale; lesser errors and slow service reduce earnings. Costs cannot create debt or consume reserved wages. Four- and five-star reviews extend streaks, with increasing multipliers and recurring milestones. Difficulty changes reset the current streak while preserving separate records. Hardcore retains its 15% base-pay premium.
 
@@ -101,18 +112,19 @@ Customers keep the same SVG while expressions change, avoiding the disappearance
 
 **Help & settings → Download app icon** exports a **512 × 512 PNG** suitable for a shortcut. It is included in the standalone game; downloading an icon does not install an app automatically.
 
-V1.03 exports version **103** and imports **101, 102, and 103**. Existing cash, upgrades, reputation, and paid cups survive. Earlier current orders stay plain without retroactive recipe costs; custom requests begin with the next customer. Legacy longer days finish their existing goal before returning to 12 customers.
+V1.04 exports version **104** and imports **101, 102, 103, and 104**. Existing cash, upgrades, reputation, and paid cups survive. V101/V102 current orders stay plain without retroactive recipe costs. V103 current recipes remain single-soda; new mixed requests can begin with later customers. Legacy longer days finish their existing goal before returning to 12 customers. The save buffer remains 120 values; the runtime snapshot expands to 134 fields.
 
-Autosave preserves preparation and active pours. Interrupted Hardcore commits once on restoration; unfinished Easy resumes stopped. Paid cups cannot pay again. A stale second tab pauses rather than overwriting a newer save. Use **Build → Export save** for a portable backup. Browser storage availability may vary, especially for directly opened files.
+Autosave preserves preparation and active pours. Restoring an interrupted first Hardcore mixed part advances to the untouched second part without payment; restoring an interrupted final part commits once. An interrupted single-soda Hardcore pour retains its one-time commit behavior. Unfinished Easy resumes stopped on its current part. Paid cups cannot pay again. V104 uses a separate browser storage key, and a stale second tab pauses rather than overwriting a newer save. Use **Build → Export save** for a portable backup. Browser storage availability may vary, especially for directly opened files.
 
 ## Build and verify
 
-Rebundle with `python3 scripts/build.py`. To rebuild Rust, install the `wasm32-unknown-unknown` target and run `python3 engine/build_engine.py` first. The build helper runs native tests and produces the dependency-free Wasm.
+Rebundle with `python3 scripts/build.py`. To rebuild Rust, install the `wasm32-unknown-unknown` target and run `python3 engine/build_engine.py` first. The build helper runs native tests and produces the dependency-free Wasm. It can use the existing isolated toolchain at `engine/.toolchain` when Cargo is not on PATH.
 
 ```sh
 cargo test --manifest-path engine/Cargo.toml
 node tests/engine/wasm-smoke.mjs
 node tests/engine/v103-recipes.mjs
+node tests/engine/v104-mixtures.mjs
 node tests/engine/v102-balance.mjs
 node tests/browser/v101-business-acceptance.mjs
 node tests/browser/v102-ui-contract.mjs
@@ -125,6 +137,6 @@ python3 scripts/build.py
 node tests/browser/verify_offline.mjs dist/index.html
 ```
 
-Historical filenames also exercise the current game. The suites cover 40 native tests, 6,048 catalog/mode fixtures, 48 synthetic careers, 94 UI aliases, production pointer/keyboard handlers, and startup/save/menu behavior against the shipped Wasm. UI harnesses are not browser playtests, and simulated careers are not measured player performance. Direct-file portability is packaging-verified; narrow browser layouts do not certify physical phones, and audio lifecycle tests are not a subjective listening pass.
+Historical filenames also exercise the current game. The suites cover **52 native tests**, 6,048 single-soda catalog/mode fixtures, 3,024 native Gentle mixture cases, 216 compiled-Wasm mixture mode-parity pours, 48 synthetic careers, **104 UI aliases**, production pointer/keyboard handlers, and startup/save/menu behavior against the shipped Wasm. Five genuine V103 fixtures preserve all 124 original snapshot fields when restored by the new engine. UI harnesses are not browser playtests, and simulated careers are not measured player performance. Direct-file portability is packaging-verified; narrow browser layouts do not certify physical phones, and audio lifecycle tests are not a subjective listening pass.
 
-See [V1.03.2 notes](docs/V1032_RELEASE.md), [V1.03.2 acceptance evidence](docs/qa/V1032_ACCEPTANCE.md), [engine integration](engine/README.md), and [release identity](docs/release-manifest.json). [V1.03.1 notes](docs/V1031_RELEASE.md), [V1.03 notes](docs/V103_RELEASE.md), [V1.02 notes](docs/V102_RELEASE.md), and their acceptance records are retained. These documents describe source and prepublication checks; GitHub CI and deployment records establish subsequent release status.
+See [V1.04 notes](docs/V104_RELEASE.md), [V1.04 acceptance evidence](docs/qa/V104_ACCEPTANCE.md), [engine integration](engine/README.md), and [release identity](docs/release-manifest.json). [V1.03.2 notes](docs/V1032_RELEASE.md), [V1.03.1 notes](docs/V1031_RELEASE.md), [V1.03 notes](docs/V103_RELEASE.md), [V1.02 notes](docs/V102_RELEASE.md), and their acceptance records are retained. These documents describe source and prepublication checks; GitHub CI and deployment records establish subsequent release status.

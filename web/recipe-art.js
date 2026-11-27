@@ -1,4 +1,4 @@
-/* Original, dependency-free ingredients for Perfect Pour V1.03. */
+/* Original, dependency-free ingredients for Perfect Pour V1.04. */
 (() => {
   'use strict';
   const ink='#174b49', cream='#fff4d9';
@@ -49,6 +49,39 @@
     if(b===2)mix([102,57,43],.16);
     if(s)mix([195,65,92],s*.14);
     return '#'+rgb.map(v=>v.toString(16).padStart(2,'0')).join('');
+  }
+
+  // Keep the stream's current soda separate from the drink already in the cup.
+  // A fraction of 1 is entirely the first soda; 0 is entirely the second.
+  function mixColor(firstColor, secondColor, firstFraction=.5) {
+    const parse=value=>{
+      let raw=String(value??'').replace(/^#/,'');
+      if(/^[a-f\d]{3}$/i.test(raw))raw=raw.split('').map(n=>n+n).join('');
+      if(!/^[a-f\d]{6}$/i.test(raw))return null;
+      return [0,2,4].map(p=>parseInt(raw.slice(p,p+2),16));
+    };
+    const first=parse(firstColor),second=parse(secondColor);
+    if(!first)return second?String(secondColor):String(firstColor??cream);
+    if(!second)return String(firstColor);
+    const fraction=Number.isFinite(Number(firstFraction))?clamp(firstFraction,0,1):.5;
+    return '#'+first.map((value,i)=>Math.round(value*fraction+second[i]*(1-fraction)).toString(16).padStart(2,'0')).join('');
+  }
+
+  // The same tiny sequence fits the request, the preparation tray, and the
+  // prepared recipe. Completion records a spent pour, not its quality.
+  function renderRatioOrder({first=0,second=4,share=.5,part=0,complete=false}={}) {
+    const firstId=Number(first),secondId=Number(second);
+    if(!Number.isInteger(firstId)||!Number.isInteger(secondId)||firstId<0||firstId>3||secondId<0||secondId>3)return '';
+    const names=['Orange','Cherry','Lime','Cola'];
+    const firstPercent=Math.round(clamp(share,.01,.99)*100),shares=[firstPercent,100-firstPercent];
+    const current=count(part,1),finished=Boolean(complete);
+    const chips=[firstId,secondId].map((soda,index)=>{
+      const done=finished||index<current,active=!done&&index===current;
+      const status=done?'complete':active?'current':'next';
+      const label=`Part ${index+1}: ${names[soda]}, ${shares[index]} percent, ${status}.`;
+      return `<span class="ratio-chip${active?' is-active':''}${done?' is-complete':''}" data-ratio-part="${index+1}" role="img" aria-label="${label}" title="${label}"${active?' aria-current="step"':''} style="--ratio-color:${colors[soda]};--ratio-wash:${mixColor(colors[soda],cream,.16)}"><i class="ratio-step" aria-hidden="true">${done?'✓':index+1}</i>${icon('base',{soda})}<span class="ratio-measure" aria-hidden="true"><span class="ratio-name">${names[soda]}</span><b>${shares[index]}<small>%</small></b></span></span>`;
+    });
+    return `<span class="ratio-order" role="group" aria-label="Two-soda mix: ${shares[0]} percent ${names[firstId]}, then ${shares[1]} percent ${names[secondId]}.">${chips[0]}<span class="ratio-arrow" aria-hidden="true">→</span>${chips[1]}</span>`;
   }
 
   function drawCherry(ctx,x,y,r,turn) {
@@ -103,5 +136,5 @@
     ctx.restore();
   }
 
-  window.PourRecipeArt=Object.freeze({icon,tint,drawInside,drawRim});
+  window.PourRecipeArt=Object.freeze({icon,tint,mixColor,renderRatioOrder,drawInside,drawRim});
 })();

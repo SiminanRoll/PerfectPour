@@ -10,10 +10,18 @@ const save=()=>Array.from(new Float64Array(e.memory.buffer,e.save_ptr(),e.save_l
 const restore=a=>{const p=e.save_ptr(),b=new Float64Array(e.memory.buffer,p,e.save_len());b.fill(0);b.set(a);return e.restore_save();};
 const step=t=>{while(t>1e-8){const d=Math.min(t,1/120);e.step(d,0);t-=d;}};
 const recipe=()=>{const a=s();assert.equal(e.set_recipe(a[2],a[98],a[99],a[100],a[101]),1);};
-const perfect=()=>{recipe();e.set_pressure(0);const a=s();assert.equal(e.begin_pour(),1);step(a[4]*a[5]/a[19]);e.end_pour();if(!a[21])e.serve();assert.equal(v('stars'),5);};
+const perfect=()=>{
+ recipe();e.set_pressure(0);const parts=v('isMix')?2:1;
+ for(let part=0;part<parts;part++){
+  const a=s();assert.equal(e.begin_pour(),1);step(Math.max(0,a[I.activeTarget]*a[5]-a[64])/a[19]);
+  e.end_pour();if(!a[21])assert.equal(e.serve(),1);
+  assert.equal(v('phase'),part===parts-1?1:0);
+ }
+ assert.equal(v('stars'),5);
+};
 const next=()=>{e.next_order();if(v('phase')===2)assert.equal(e.next_day(v('day')+7109),1);};
 const checks=[];
-assert.equal(e.state_len(),124);assert.equal(e.save_len(),120);e.reset(1);
+assert.equal(e.state_len(),134);assert.equal(e.save_len(),120);e.reset(1);
 assert.equal(v('selectedSoda'),4);assert.equal(v('orderedCherries'),1);assert.equal(e.begin_pour(),0);assert.equal(v('attempted'),0);
 const fresh=save();for(const args of [[5,0,0,0,1],[0,3,0,0,1],[0,0,1,0,1],[0,0,0,1,1],[0,0,0,0,0]]){assert.equal(e.set_recipe(...args),0);assert.deepEqual(save(),fresh);}
 e.set_recipe(4,0,0,0,1);step(3);assert.equal(v('elapsed'),0);
@@ -34,7 +42,8 @@ let baselineNet=0,baselineIngredients=0,baselineQuote=0;
 for(const extras of [0,2]){
  assert.equal(restore(available),1);const a=s();e.set_pressure(0);e.set_recipe(a[2],extras,a[99],a[100],a[101]);
  const quote=v('menuPrice');assert.equal(v('selectedAddinCost'),extras*8+a[99]*10+a[100]*12);
- const before=s();e.begin_pour();step(before[4]*before[5]/before[19]);e.end_pour();
+ const parts=v('isMix')?2:1;
+ for(let part=0;part<parts;part++){const before=s();e.begin_pour();step(Math.max(0,before[I.activeTarget]*before[5]-before[64])/before[19]);e.end_pour();}
  if(extras===0){baselineIngredients=v('ingredientCost');baselineQuote=quote;baselineNet=v('lastNet');}
  else{assert.equal(quote,baselineQuote);assert.equal(v('ingredientCost'),baselineIngredients+16);}
 }
@@ -53,12 +62,12 @@ for(const name of ['untouched','paid','partial-hardcore','partial-easy']){
  const old=JSON.parse(await readFile(new URL(`../../engine/fixtures/v102-${name}.json`,import.meta.url),'utf8'));
  assert.equal(restore(old.engine),1,name);assert.deepEqual(s().slice(0,98),old.expectedRestoreSnapshot,`${name}: original102 simulation result`);
  assert.deepEqual(s().slice(98,102),[0,0,0,1]);assert.equal(v('selectedSoda'),old.engine[3]);assert.equal(v('selectedAddinCost'),0);
- const migrated=save();assert.equal(migrated[0],103);const cash=v('cash'),completed=v('completed');assert.equal(restore(migrated),1);assert.equal(v('cash'),cash);assert.equal(v('completed'),completed);
+ const migrated=save();assert.equal(migrated[0],104);const cash=v('cash'),completed=v('completed');assert.equal(restore(migrated),1);assert.equal(v('cash'),cash);assert.equal(v('completed'),completed);
  if(name==='paid'||name==='partial-hardcore'){e.end_pour();e.serve();assert.equal(v('cash'),cash);assert.equal(e.begin_pour(),0);}
  if(name==='partial-easy'){assert.equal(v('hardcore'),0);assert.equal(v('holding'),0);assert.equal(e.set_recipe(0,1,0,0,1),0);assert.equal(e.begin_pour(),1);step(.2);e.end_pour();assert.equal(e.serve(),1);}
 }
 checks.push('Four genuine102 fixtures match every original98 snapshot field on restore; migration adds no retroactive recipe costs or duplicate payments');
 
-e.reset(99);perfect();const committed=save();for(const [index,badValue]of [[83,3],[84,1],[85,1],[87,5],[92,2],[96,12],[97,1],[88,0]]){const bad=[...committed];bad[index]=badValue;const before=s();assert.equal(restore(bad),0,`invalid recipe field${index}`);assert.deepEqual(s(),before);}
+e.reset(99);perfect();const committed=save();for(const [index,badValue]of [[83,3],[84,1],[85,1],[87,5],[92,2],[96,12],[105,1],[88,0]]){const bad=[...committed];bad[index]=badValue;const before=s();assert.equal(restore(bad),0,`invalid recipe field${index}`);assert.deepEqual(s(),before);}
 checks.push('Malformed recipe/import data rejects atomically, including inconsistent paid recipe grades');
-console.log(JSON.stringify({result:'PASS',version:contract.version,snapshotFields:124,saveFields:120,checks},null,2));
+console.log(JSON.stringify({result:'PASS',version:contract.version,snapshotFields:134,saveFields:120,checks},null,2));

@@ -318,3 +318,71 @@ html,body{touch-action:pan-y}
  .result-modal .receipt-details{grid-column:1/-1;grid-row:5;margin:0}
  .result-modal .receipt-details>summary{min-height:32px;padding:7px 0;font-size:14px;line-height:1.2}
 }
+
+/* V1.04 · Two numbered sodas occupy the existing request and preparation row. */
+.ratio-order{display:inline-flex;align-items:center;gap:3px;max-width:100%;min-width:0;vertical-align:middle;line-height:1;white-space:nowrap}
+.ratio-chip{--ratio-color:#174b49;--ratio-wash:#f6efd9;position:relative;display:inline-flex;align-items:center;justify-content:center;gap:2px;min-height:28px;min-width:0;padding:2px 4px;border:1px solid #c2cdb5;border-radius:8px;background:#fff8e7;color:#174b49;transition:border-color .16s,background .16s,box-shadow .16s}
+.ratio-chip>svg{width:21px;height:23px;flex:0 0 21px}
+.ratio-step{display:grid;place-items:center;flex:0 0 12px;width:12px;height:12px;border:1px solid #879d86;border-radius:50%;background:#f5f2dd;font-size:9px;font-style:normal;font-weight:800;line-height:1;color:#45655a}
+.ratio-measure{display:flex;flex-direction:column;align-items:center;gap:1px;min-width:0;line-height:1}
+.ratio-measure>b{font-size:13px;line-height:1.05;font-variant-numeric:tabular-nums;letter-spacing:-.3px;white-space:nowrap}
+.ratio-measure>b>small{font-size:10px;line-height:1;margin-left:1px}
+.ratio-name{display:none;font-size:12px;font-weight:700;line-height:1.05;letter-spacing:0}
+.ratio-arrow{flex:0 0 9px;width:9px;text-align:center;color:#6e8370;font-size:12px;font-weight:800;line-height:1}
+.ratio-chip.is-active{border-color:var(--ratio-color);background:var(--ratio-wash);box-shadow:inset 0 0 0 1px var(--ratio-color)}
+.ratio-chip.is-active .ratio-step{border-color:#174b49;background:#174b49;color:#fff8e7}
+.ratio-chip.is-complete{border-color:#a3b49c;background:#edf0e3}
+.ratio-chip.is-complete .ratio-step{background:#e1e8d6;color:#45655a;border-color:#879d86}
+#order-line.has-ratio{display:flex;align-items:center;flex-wrap:wrap;gap:3px 5px;line-height:1}
+#order-line.has-ratio>.ratio-order{flex:0 1 auto}
+#order-line.has-ratio>strong{margin:0;white-space:nowrap;line-height:1.1}
+.mix-prep-sequence{display:flex;align-items:center;min-height:44px;width:100%;max-width:100%}
+.mix-prep-sequence>.ratio-order{display:flex;width:100%;gap:7px}
+.mix-prep-sequence .ratio-chip{flex:1 1 0;min-height:44px;padding:3px 5px;gap:4px;border-radius:10px}
+.mix-prep-sequence .ratio-chip>svg{width:31px;height:34px;flex-basis:31px}
+.mix-prep-sequence .ratio-step{flex-basis:14px;width:14px;height:14px;font-size:10px}
+.mix-prep-sequence .ratio-name{display:block}
+.mix-prep-sequence .ratio-measure>b{font-size:14px}
+.mix-prep-sequence .ratio-arrow{flex-basis:12px;width:12px;font-size:15px}
+.mixed-recipe>.ratio-order{max-width:100%}
+
+/* Keep both cumulative targets fixed; only their emphasis changes with the pour. */
+.level-track #mix-target-track,.level-track #mix-target-track:not([hidden])+#target-track{--target-color:#174b49;top:-2px;bottom:-2px;width:2px;border-radius:1px;background:var(--target-color);opacity:.72}
+.level-track #mix-target-track:before,.level-track #mix-target-track:not([hidden])+#target-track:before{content:attr(data-step);display:grid;place-items:center;position:absolute;top:50%;left:50%;width:13px;height:13px;transform:translate(-50%,-50%);border:1px solid var(--target-color);border-radius:50%;background:#fff8e7;color:#174b49;font-size:9px;font-style:normal;font-weight:800;line-height:1}
+.level-track #mix-target-track.is-active,.level-track #mix-target-track:not([hidden])+#target-track.is-active{width:3px;opacity:1;z-index:3}
+.level-track #mix-target-track.is-active:before,.level-track #mix-target-track:not([hidden])+#target-track.is-active:before{border-width:2px;box-shadow:0 0 0 1px #174b49}
+
+@media(max-width:800px){
+ #order-line.has-ratio{gap:3px 4px}
+ #order-line .ratio-chip{padding:1px 3px;min-height:27px}
+ #order-line .ratio-measure>b{font-size:12px}
+ #order-line .ratio-measure>b>small{font-size:10px}
+}
+@media(max-width:370px){
+ #order-line .ratio-order{gap:2px}
+ #order-line .ratio-chip{padding-left:2px;padding-right:2px;gap:1px}
+ #order-line .ratio-chip>svg{width:20px;flex-basis:20px}
+ .mix-prep-sequence>.ratio-order{gap:5px}
+ .mix-prep-sequence .ratio-chip{gap:3px;padding-left:3px;padding-right:3px}
+}
+@media(min-width:520px) and (max-width:1000px) and (max-height:520px){
+ #order-line.has-ratio{row-gap:4px}
+ #order-line .ratio-order{flex:0 1 100%;width:100%;gap:2px}
+ #order-line .ratio-chip{flex:1 1 0;min-height:28px;padding:2px 3px;gap:1px}
+ #order-line .ratio-step{position:absolute;top:-3px;left:0;width:11px;height:11px;font-size:8px}
+ #order-line .ratio-chip>svg{width:19px;height:22px;flex-basis:19px}
+ #order-line .ratio-measure>b{font-size:12px}
+ #order-line .ratio-measure>b>small{font-size:9px}
+ #order-line .ratio-arrow{flex-basis:7px;width:7px;font-size:11px}
+ .mix-prep-sequence{min-height:40px}
+ .mix-prep-sequence>.ratio-order{gap:4px}
+ .mix-prep-sequence .ratio-chip{min-height:40px;padding:3px;gap:2px}
+ .mix-prep-sequence .ratio-chip>svg{width:26px;height:30px;flex-basis:26px}
+ .mix-prep-sequence .ratio-step{flex-basis:12px;width:12px;height:12px;font-size:9px}
+ .mix-prep-sequence .ratio-name{display:none}
+ .mix-prep-sequence .ratio-measure>b{font-size:13px}
+ .mix-prep-sequence .ratio-arrow{flex-basis:8px;width:8px;font-size:12px}
+ .mixed-recipe>.ratio-order{gap:2px}
+ .mixed-recipe .ratio-chip{padding:2px 3px;gap:1px}
+}
+@media(prefers-reduced-motion:reduce){.ratio-chip{transition:none}}

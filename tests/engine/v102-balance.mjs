@@ -9,7 +9,18 @@ const s=()=>Array.from(new Float32Array(e.memory.buffer,e.state_ptr(),e.state_le
 const save=()=>Array.from(new Float64Array(e.memory.buffer,e.save_ptr(),e.save_len()));
 const restore=data=>{const p=e.save_ptr();new Float64Array(e.memory.buffer,p,e.save_len()).set(data);assert.equal(e.restore_save(),1);};
 const advance=t=>{while(t>1e-8){let dt=Math.min(t,1/120);e.step(dt,0);t-=dt;}};
-const pour=t=>{const a=s();if(a[109]===1)assert.equal(e.set_recipe(a[2],a[98],a[99],a[100],a[101]),1);assert.equal(e.begin_pour(),1);advance(t);e.end_pour();if(!s()[21])assert.equal(e.serve(),1);return s();};
+const pour=t=>{const a=s();assert.equal(a[133],0,'The fixed catalog remains a single-soda physics experiment');if(a[109]===1)assert.equal(e.set_recipe(a[2],a[98],a[99],a[100],a[101]),1);assert.equal(e.begin_pour(),1);advance(t);e.end_pour();if(!s()[21])assert.equal(e.serve(),1);return s();};
+const pourGenerated=({empty=false,error=()=>0}={})=>{
+ const request=s();assert.equal(e.set_recipe(request[2],request[98],request[99],request[100],request[101]),1);
+ const parts=request[133]?2:1;
+ for(let part=0;part<parts;part++){
+  const a=s();assert.equal(e.begin_pour(),1);
+  advance(empty?0:Math.max(0,(a[129]*a[5]-a[64])/a[19]+error()));
+  e.end_pour();if(!a[21])assert.equal(e.serve(),1);
+  assert.equal(s()[0],part===parts-1?1:0);
+ }
+ return s();
+};
 const targets=[.45,.55,.60,.65,.70,.75,.8];
 const stats=Array.from({length:3},()=>({cases:0,fiveStars:0,fourOrBetter:0,spillCases:0,minAccuracy:100,minFoamMl:Infinity,maxFoamMl:0,maxBeverageWasteMl:0}));
 let parityCases=0;
@@ -45,9 +56,8 @@ for(const timingSd of [0,.07,.15]){
  for(let seed=1;seed<=16;seed++){
   e.reset(seed*7919);const rand=random(seed*104729);let pours=0,accuracies=[],firstPurchase=0,previousOwned=0;
   while(!full()&&s()[24]<=60){
-   const before=s();e.set_pressure(0);const request=s();
-   const noise=timingSd*Math.sqrt(-2*Math.log(rand()))*Math.cos(2*Math.PI*rand());
-   const result=pour(Math.max(0,request[4]*request[5]/request[19]+noise));
+   e.set_pressure(0);
+   const result=pourGenerated({error:()=>timingSd*Math.sqrt(-2*Math.log(rand()))*Math.cos(2*Math.PI*rand())});
    pours++;accuracies.push(result[11]);buyAffordable();
    const owned=ownedFields.reduce((sum,i)=>sum+s()[i],0);
    if(owned>previousOwned&&!firstPurchase)firstPurchase=pours;previousOwned=owned;
@@ -61,9 +71,9 @@ for(const timingSd of [0,.07,.15]){
 }
 e.reset(31);
 for(let day=1;day<=10;day++){
- while(s()[0]!==2){pour(0);e.next_order();}
+ while(s()[0]!==2){pourGenerated({empty:true});e.next_order();}
  assert.equal(s()[20],0);assert.equal(s()[33],0);if(day<10)e.next_day(day+31);
 }
-const evidence={version:'1.03',engineSha256:createHash('sha256').update(bytes).digest('hex'),method:'Actual compiled Rust/Wasm.6048 nominal-hold fixtures=4bases×4cups×7targets×3tap levels×3pressures×3blends×2modes. Correct requested recipes are selected before each hold; add-ins do not displace drink volume. Gentle catalog tested at exact nominal hold; Classic/Rush results are nominal-hold diagnostics, not searched optimal ceilings. Career profiles use seeded Gaussian timing errors around Gentle nominal hold; they are sensitivity scenarios, not measured players. Recipes are selected without simulated prep delay. Menu/review time excluded. All12 upgrade types total195300cents.',catalog:stats.map((row,pressure)=>({pressure:['Gentle','Classic','Rush'][pressure],...Object.fromEntries(Object.entries(row).map(([k,v])=>[k,Number.isInteger(v)?v:round(v)]))})),modeParityCases:parityCases,emptyCareer:{days:10,pours:120,gross:0,cash:0},progression};
+const evidence={version:'1.04',engineSha256:createHash('sha256').update(bytes).digest('hex'),method:'Actual compiled Rust/Wasm.6048 single-soda nominal-hold fixtures=4bases×4cups×7targets×3tap levels×3pressures×3blends×2modes. Correct requested recipes are selected before each drink; add-ins do not displace drink volume. Gentle catalog tested at exact nominal hold; Classic/Rush results are nominal-hold diagnostics, not searched optimal ceilings. Generated career profiles include both single and two-soda orders, with an independent seeded Gaussian timing error around the current target for each Gentle component; they are sensitivity scenarios, not measured players. Recipes are selected without simulated prep delay. Menu/review time excluded. All12 upgrade types total195300cents.',catalog:stats.map((row,pressure)=>({pressure:['Gentle','Classic','Rush'][pressure],...Object.fromEntries(Object.entries(row).map(([k,v])=>[k,Number.isInteger(v)?v:round(v)]))})),modeParityCases:parityCases,emptyCareer:{days:10,pours:120,gross:0,cash:0},progression};
 if(process.argv.includes('--write'))await writeFile(new URL('../../engine/balance-report.json',import.meta.url),JSON.stringify(evidence,null,2)+'\n');
 console.log(JSON.stringify({result:'PASS',engineSha256:evidence.engineSha256,catalog:evidence.catalog,modeParityCases:parityCases,emptyCareer:evidence.emptyCareer,progression:progression.map(({runs,...row})=>row)},null,2));

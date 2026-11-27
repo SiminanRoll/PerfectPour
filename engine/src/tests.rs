@@ -4,7 +4,7 @@ use super::*;
 // first hold. Recipe-specific tests below call the public input methods directly.
 impl Game {
     fn begin_ready(&mut self) -> bool {
-        if self.phase == 0 && !self.attempted && self.selected_soda == 4 {
+        if self.phase == 0 && !self.attempted {
             assert!(self.set_recipe(self.soda, self.ordered_cherries, self.ordered_lime, self.ordered_syrup, self.ordered_blend));
         }
         self.begin_pour()
@@ -18,10 +18,18 @@ fn advance(g: &mut Game, seconds: f64, fps: u32) {
 }
 fn perfect(g: &mut Game) {
     assert!(g.set_pressure(0));
-    let time = g.target * g.capacity / g.flow();
-    assert!(g.begin_ready()); advance(g, time, 120); g.end_pour();
-    if !g.hardcore { assert!(g.serve()); }
+    for _ in 0..if g.is_mix() { 2 } else { 1 } {
+        let time = (g.active_target() * g.capacity - g.beverage_ml()) / g.flow();
+        assert!(g.begin_ready()); advance(g, time, 120); g.end_pour();
+        if !g.hardcore { assert!(g.serve()); }
+    }
     assert_eq!(g.stars, 5, "soda={} cup={} target={} score={}", g.soda, g.cup, g.target, g.accuracy);
+}
+fn empty_pour(g: &mut Game) {
+    for _ in 0..if g.is_mix() { 2 } else { 1 } {
+        assert!(g.begin_ready()); g.end_pour(); if !g.hardcore { assert!(g.serve()); }
+    }
+    assert_eq!(g.phase, 1);
 }
 fn finish(g: &mut Game) {
     while g.phase != 2 { if g.phase == 0 { perfect(g); } g.next_order(); }
@@ -165,7 +173,7 @@ fn every_target_remains_generated_and_equipment_never_filters_requests() {
             while g.phase != 2 {
                 let t = targets.iter().position(|v| *v == g.target).unwrap();
                 seen[tap as usize][g.soda][g.cup][t] = true;
-                g.begin_ready(); g.end_pour(); g.next_order();
+                empty_pour(&mut g); g.next_order();
             }
             if day == 1 { g.next_day(seed + 7919); }
         }
@@ -179,7 +187,7 @@ fn every_target_remains_generated_and_equipment_never_filters_requests() {
         let expected = (games[0].soda, games[0].cup, games[0].target);
         for g in &mut games {
             assert_eq!((g.soda, g.cup, g.target), expected);
-            g.begin_ready(); g.end_pour(); if !g.hardcore { g.serve(); } next(g);
+            empty_pour(g); next(g);
         }
     }
 }
@@ -195,7 +203,7 @@ fn long_streak_rewards_dominate_repeated_mode_resets() {
     }
     assert!(keep.cash > reset.cash, "long={} reset={}", keep.cash, reset.cash);
     assert_eq!(keep.combo(), 1.9); assert_eq!(keep.best_streak, 40); assert_eq!(keep.hard_best, 40);
-    keep.begin_ready(); keep.end_pour(); assert_eq!(keep.streak, 0); assert_eq!(keep.combo(), 1.0);
+    empty_pour(&mut keep); assert_eq!(keep.streak, 0); assert_eq!(keep.combo(), 1.0);
 }
 
 #[test]
@@ -284,7 +292,7 @@ fn empty_orders_cannot_farm_staff_and_menus_cannot_advance_staff_work() {
     let mut g = Game::new(1); g.active_specialist = true; g.upgrades[5] = 1; g.staff_capacity = 3;
     for _ in 0..12 {
         advance(&mut g, 30.0, 60); assert_eq!(g.elapsed, 0.0);
-        g.begin_ready(); g.end_pour(); g.next_order();
+        empty_pour(&mut g); g.next_order();
     }
     assert_eq!((g.staff_sales, g.staff_orders, g.cash), (0, 0, 0));
 }
@@ -317,8 +325,8 @@ fn late_service_loses_speed_tip_and_demand_without_changing_fill_score() {
 }
 
 #[test]
-fn v103_paid_save_is_exact_and_cannot_replay_payout() {
-    let mut g = Game::new(1); perfect(&mut g); let s = g.save(); assert_eq!(s[0], 103.0);
+fn v104_paid_save_is_exact_and_cannot_replay_payout() {
+    let mut g = Game::new(1); perfect(&mut g); let s = g.save(); assert_eq!(s[0], 104.0);
     let mut restored = Game::restore(&s).unwrap(); assert_eq!(restored.save(), s); assert_eq!(restored.foam, 0.0);
     let cash = restored.cash; restored.end_pour(); assert!(!restored.serve()); assert!(!restored.begin_ready());
     advance(&mut restored, 8.0, 60); assert_eq!(restored.cash, cash); assert_eq!(restored.save(), s);
@@ -506,4 +514,208 @@ fn malformed_recipe_saves_are_rejected_including_unowned_ingredients() {
     }
     let mut g = Game::new(1); perfect(&mut g); let mut bad = g.save(); bad[88] = 0.0;
     assert!(Game::restore(&bad).is_none(), "paid grade must agree with locked recipe");
+}
+
+fn mixed(first: usize, second: usize, share: f64) -> Game {
+    let mut g = Game::new(104);
+    g.soda = first; g.second_soda = second; g.first_share = share;
+    g.selected_soda = first; g.ordered_cherries = 0; g.prep_allowance = 4.0;
+    g.refresh(); g
+}
+
+fn pour_part_ml(g: &mut Game, amount: f64) {
+    assert!(g.begin_ready()); let time = amount / g.flow(); advance(g, time, 120);
+    g.end_pour(); if !g.hardcore { assert!(g.serve()); }
+}
+
+#[test]
+fn mixed_hardcore_uses_one_hold_per_soda_and_only_final_release_pays() {
+    let mut g = mixed(0, 3, 0.5); wealthy(&mut g, 10000); g.set_pressure(0);
+    let target = g.target * g.capacity;
+    assert_eq!(g.active_target(), g.target * 0.5); assert!(g.begin_ready());
+    assert!(!g.begin_pour()); advance(&mut g, target * 0.5 / (RATES[0] * 0.55), 120); g.end_pour();
+    assert_eq!((g.phase, g.pour_part, g.attempted, g.part_attempted), (0, 1, true, false));
+    assert_eq!((g.cash, g.completed, g.last_ingredient, g.staff_sales), (10000, 0, 0, 0));
+    assert_eq!(g.actual_soda(), 3); assert_eq!(g.selected_soda, 0); assert_eq!(g.active_target(), g.target);
+    let waiting = g.save(); g.end_pour(); assert_eq!(g.save(), waiting); assert!(!g.serve());
+    assert!(!g.set_mode(false)); assert!(!g.set_pressure(2)); assert!(!g.set_recipe(3, 0, 0, 0, 1)); assert!(!g.buy(0));
+    pour_part_ml(&mut g, target * 0.5);
+    assert_eq!((g.phase, g.completed, g.stars), (1, 1, 5)); assert!(g.cash > 10000);
+    let paid = g.save(); g.end_pour(); assert!(!g.begin_pour()); assert!(!g.serve()); assert_eq!(g.save(), paid);
+}
+
+#[test]
+fn easy_mixed_parts_allow_topups_but_need_an_explicit_advance() {
+    let mut g = mixed(1, 2, 0.5); g.set_mode(false); g.set_pressure(0);
+    let quarter = g.target * g.capacity * 0.25;
+    for _ in 0..2 {
+        assert!(g.begin_ready()); let time = quarter / g.flow(); advance(&mut g, time, 120); g.end_pour();
+        assert_eq!(g.pour_part, 0); assert_eq!(g.completed, 0); assert_eq!(g.cash, 0);
+    }
+    assert!(g.serve()); assert_eq!(g.pour_part, 1); assert!(!g.part_attempted); assert!(!g.serve());
+    for _ in 0..2 {
+        assert!(g.begin_pour()); let time = quarter / g.flow(); advance(&mut g, time, 120); g.end_pour();
+        assert_eq!(g.phase, 0); assert_eq!(g.completed, 0);
+    }
+    assert!(g.serve()); assert_eq!((g.completed, g.stars), (1, 5)); assert!(!g.serve());
+}
+
+#[test]
+fn all_gentle_two_soda_catalog_ratios_are_reachable_without_removing_fizz() {
+    let mut cases = 0;
+    for first in 0..4 { for second in 0..4 { if first == second { continue; }
+        for share in [0.25, 0.5, 0.75] { for cup in 0..4 { for tap in 0..3 {
+            for target in [0.45, 0.55, 0.60, 0.65, 0.70, 0.75, 0.80] {
+                let mut g = mixed(first, second, share); g.cup = cup; g.capacity = CAPACITIES[cup];
+                g.target = target; g.upgrades[3] = tap; perfect(&mut g);
+                assert!(g.accuracy > 99.99 && g.mix_accuracy() > 99.99);
+                assert_eq!(g.beverage_waste, 0.0); assert!(g.foam > 1.0); cases += 1;
+            }
+        }}}
+    }}
+    assert_eq!(cases, 3024);
+}
+
+#[test]
+fn mix_ratio_and_final_fill_are_separate_grades() {
+    let mut g = mixed(0, 3, 0.5); g.set_pressure(0); let target = g.target * g.capacity;
+    pour_part_ml(&mut g, target * 0.25); pour_part_ml(&mut g, target * 0.75);
+    assert!(g.accuracy > 99.99); assert_eq!(g.fill_stars(), 5);
+    assert!((g.mix_accuracy() - 50.0).abs() < 0.001); assert!(g.stars <= 2);
+    for share in [0.25, 0.5, 0.75] {
+        let mut empty = mixed(0, 1, share); empty_pour(&mut empty);
+        assert_eq!(empty.mix_accuracy(), 0.0); assert_eq!(empty.payout, 0);
+        let mut only_first = mixed(0, 1, share); only_first.set_pressure(0);
+        let amount = only_first.target * only_first.capacity;
+        pour_part_ml(&mut only_first, amount); pour_part_ml(&mut only_first, 0.0);
+        assert!(only_first.accuracy > 99.99); assert!(only_first.mix_accuracy() <= 50.00001);
+        assert!(only_first.stars < 5);
+    }
+}
+
+#[test]
+fn mixed_modes_share_physics_and_spills_remove_real_component_beverage() {
+    for pressure in 0..3 {
+        let mut hard = mixed(0, 3, 0.5); hard.set_pressure(pressure);
+        let mut easy = hard.clone(); easy.set_mode(false);
+        for seconds in [1.4, 4.0] {
+            for g in [&mut hard, &mut easy] {
+                assert!(g.begin_ready()); advance(g, seconds, 120); g.end_pour(); if !g.hardcore { assert!(g.serve()); }
+            }
+            assert_eq!((hard.liquid, hard.foam, hard.foam_liquid, hard.first_liquid, hard.first_foam, hard.first_foam_liquid),
+                (easy.liquid, easy.foam, easy.foam_liquid, easy.first_liquid, easy.first_foam, easy.first_foam_liquid));
+        }
+        assert!(hard.spill > 0.0 && hard.beverage_waste > 0.0);
+        assert!(hard.first_beverage_ml() < hard.first_poured);
+        assert!((hard.poured - hard.beverage_ml() - hard.beverage_waste).abs() < 1e-6);
+        assert!(hard.liquid + hard.foam <= hard.capacity + 1e-6);
+        assert_eq!(hard.accuracy, easy.accuracy); assert_eq!(hard.mix_accuracy(), easy.mix_accuracy());
+    }
+}
+
+#[test]
+fn first_soda_keeps_its_own_settling_rate_after_tap_switch() {
+    let mut g = mixed(0, 3, 0.5); g.begin_ready(); advance(&mut g, 0.5, 120); g.end_pour();
+    assert_eq!(g.actual_soda(), 3); let foam = g.first_foam;
+    let dt = 1.0 / 240.0; g.tick(dt, false);
+    assert!((g.first_foam - foam * (1.0 - SETTLE_RATES[0] * dt)).abs() < 1e-10);
+    assert!(g.first_foam > 0.0);
+}
+
+#[test]
+fn mixed_receipt_costs_both_actual_sodas_once_and_freezes_after_payment() {
+    let mut g = mixed(0, 3, 0.25); wealthy(&mut g, 10000); g.set_pressure(0);
+    g.ordered_cherries = 1; let target = g.target * g.capacity;
+    assert_eq!(g.menu_price(), (110.0 + target * (0.65 * 0.25 + 0.9 * 0.75)).round() as u32 + 60 + 40);
+    pour_part_ml(&mut g, target * 0.25); assert_eq!(g.cash, 10000); assert_eq!(g.last_ingredient, 0);
+    pour_part_ml(&mut g, target * 0.75);
+    let expected = 8 + (15.0 + g.first_poured * 0.10 + (g.poured - g.first_poured) * 0.16).ceil() as u32;
+    assert_eq!(g.last_ingredient, expected); assert_eq!(g.cash as i64, 10000 + g.last_net);
+    let paid = g.save(); let grade = (g.mix_accuracy(), g.first_beverage_ml(), g.beverage_ml());
+    advance(&mut g, 20.0, 120); assert_eq!(g.foam, 0.0);
+    assert_eq!((g.mix_accuracy(), g.first_beverage_ml(), g.beverage_ml()), grade);
+    assert_eq!(g.save(), paid); assert_eq!(Game::restore(&paid).unwrap().save(), paid);
+}
+
+#[test]
+fn mixed_hardcore_restore_consumes_only_the_interrupted_part() {
+    let mut g = mixed(0, 3, 0.5); g.set_pressure(0);
+    let fresh = g.save(); assert_eq!(Game::restore(&fresh).unwrap().save(), fresh);
+    assert!(g.begin_ready()); advance(&mut g, 0.5, 120);
+    let mut r = Game::restore(&g.save()).unwrap();
+    assert_eq!((r.phase, r.pour_part, r.part_attempted, r.completed, r.cash), (0, 1, false, 0, 0));
+    let waiting = r.save();
+    for _ in 0..3 { r = Game::restore(&r.save()).unwrap(); assert_eq!(r.save(), waiting); }
+    assert!(r.begin_pour()); advance(&mut r, 0.5, 120);
+    let mut paid = Game::restore(&r.save()).unwrap(); assert_eq!((paid.phase, paid.completed), (1, 1));
+    let checkpoint = paid.save(); paid.end_pour(); assert!(!paid.begin_pour()); assert!(!paid.serve());
+    assert_eq!(paid.save(), checkpoint); assert_eq!(Game::restore(&checkpoint).unwrap().save(), checkpoint);
+    let mut empty = mixed(0, 1, 0.5); empty.begin_ready(); empty.end_pour();
+    let mut second = Game::restore(&empty.save()).unwrap(); assert_eq!(second.pour_part, 1); assert!(!second.part_attempted);
+    second.begin_pour(); second.end_pour(); assert_eq!((second.completed, second.payout), (1, 0));
+}
+
+#[test]
+fn easy_mix_restore_keeps_its_part_and_returns_to_hardcore_after_whole_cup() {
+    let mut g = mixed(1, 2, 0.5); g.set_mode(false); g.begin_ready(); advance(&mut g, 0.5, 120);
+    let mut r = Game::restore(&g.save()).unwrap();
+    assert!(!r.hardcore && !r.holding && r.part_attempted); assert_eq!(r.pour_part, 0);
+    r.begin_pour(); advance(&mut r, 0.1, 120); r.end_pour(); assert!(r.serve());
+    let mut second = Game::restore(&r.save()).unwrap();
+    assert_eq!(second.pour_part, 1); assert!(!second.hardcore && !second.part_attempted); assert!(!second.serve());
+    second.begin_pour(); advance(&mut second, 0.6, 120); second.end_pour(); assert!(second.serve());
+    assert_eq!(second.completed, 1); second.next_order(); assert!(second.hardcore);
+}
+
+#[test]
+fn malformed_mix_states_and_paid_ratio_grades_are_rejected() {
+    let mut g = mixed(0, 3, 0.5); g.set_pressure(0); let amount = g.target * g.capacity * 0.5;
+    pour_part_ml(&mut g, amount); let waiting = g.save();
+    for (index, value) in [(97, 0.0), (97, 5.0), (98, 1.0), (98, 0.4), (99, 0.0), (99, 2.0),
+        (100, 2.0), (101, -1.0), (101, waiting[6] + 1.0), (102, waiting[7] + 1.0),
+        (103, waiting[8] + 1.0), (104, waiting[55] + 1.0), (104, 0.0), (105, 1.0), (83, 2.0), (86, 0.0)] {
+        let mut bad = waiting; bad[index] = value; assert!(Game::restore(&bad).is_none(), "mix field {index}");
+    }
+    pour_part_ml(&mut g, amount); let paid = g.save(); assert_eq!(g.stars, 5);
+    let mut bad = paid; bad[98] = 0.25; assert!(Game::restore(&bad).is_none(), "paid mix grade must agree with retained proportions");
+    let mut bad = paid; bad[100] = 0.0; assert!(Game::restore(&bad).is_none(), "a paid final part must have an attempt");
+}
+
+#[test]
+fn mixed_orders_introduce_half_then_quarters_without_prep_or_purchase_surprises() {
+    let mut kinds = [false; 4]; let mut mixed_count = 0;
+    for seed in 1..=12 {
+        let mut g = Game::new(seed); wealthy(&mut g, 100000);
+        for i in 9..12 { assert!(g.buy(i)); }
+        for serial in 0..120 {
+            if serial < 5 { assert!(!g.is_mix()); }
+            if serial == 5 { assert!(g.is_mix()); assert_eq!(g.first_share, 0.5); }
+            if g.is_mix() {
+                mixed_count += 1; assert_ne!(g.soda, g.second_soda); assert_eq!(g.selected_soda, g.soda);
+                assert!(!g.prep_started); assert_eq!(g.elapsed, 0.0); advance(&mut g, 1.0, 60); assert_eq!(g.elapsed, 0.0);
+                assert!(g.ordered_cherries + g.ordered_lime + g.ordered_syrup <= 1); assert_eq!(g.ordered_blend, 1);
+                if serial < 12 { assert_eq!(g.first_share, 0.5); }
+                kinds[if g.first_share == 0.25 { 1 } else if g.first_share == 0.5 { 2 } else { 3 }] = true;
+            } else { kinds[0] = true; }
+            perfect(&mut g); next(&mut g);
+        }
+    }
+    assert!(kinds.into_iter().all(|seen| seen)); assert!((350..550).contains(&mixed_count));
+}
+
+#[test]
+fn genuine_v103_fixtures_preserve_every_released_snapshot_field() {
+    fn array(source: &str, name: &str) -> Vec<f64> {
+        let label = format!("\"{name}\":");
+        let rest = source.split_once(&label).unwrap().1.split_once('[').unwrap().1.split_once(']').unwrap().0;
+        rest.split(',').filter(|s| !s.trim().is_empty()).map(|s| s.trim().parse().unwrap()).collect()
+    }
+    for source in [include_str!("../fixtures/v103-preparing.json"), include_str!("../fixtures/v103-partial-hardcore.json"),
+        include_str!("../fixtures/v103-partial-easy.json"), include_str!("../fixtures/v103-paid.json"), include_str!("../fixtures/v103-staffed-closed.json")] {
+        let saved: [f64; SAVE_LEN] = array(source, "engine").try_into().unwrap(); assert_eq!(saved[0], 103.0);
+        let expected: Vec<f32> = array(source, "expectedRestoreSnapshot").into_iter().map(|v| v as f32).collect();
+        let restored = Game::restore(&saved).unwrap();
+        assert_eq!(&restored.state()[..124], expected.as_slice()); assert!(!restored.is_mix());
+        assert_eq!(restored.save()[0], 104.0);
+    }
 }

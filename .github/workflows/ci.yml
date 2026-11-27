@@ -35,6 +35,9 @@ jobs:
       - name: Test custom recipes and legacy migration
         run: node tests/engine/v103-recipes.mjs
 
+      - name: Test two-soda portions and interrupted saves
+        run: node tests/engine/v104-mixtures.mjs
+
       - name: Test the primary control flow
         run: node tests/browser/v103-control-flow.mjs
 

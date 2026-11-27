@@ -1,9 +1,9 @@
-//! Perfect Pour V1.03: deterministic, dependency-free game and business rules.
+//! Perfect Pour V1.04: deterministic, dependency-free game and business rules.
 //! The browser renders the snapshot. Rust owns every scored and paid action.
 
-const SNAPSHOT_LEN: usize = 124;
+const SNAPSHOT_LEN: usize = 134;
 const SAVE_LEN: usize = 120;
-const SAVE_VERSION: f64 = 103.0;
+const SAVE_VERSION: f64 = 104.0;
 const MAX_CENTS: u32 = 1_000_000_000;
 const MAX_COUNT: u32 = 1_000_000;
 const CAPACITIES: [f64; 4] = [280.0, 360.0, 460.0, 330.0];
@@ -49,6 +49,9 @@ pub struct Game {
     ordered_cherries: u32, ordered_lime: u32, ordered_syrup: u32, ordered_blend: usize,
     selected_soda: usize, selected_cherries: u32, selected_lime: u32,
     selected_syrup: u32, selected_blend: usize, prep_started: bool, prep_allowance: f64,
+    second_soda: usize, first_share: f64, pour_part: u32, part_attempted: bool,
+    first_liquid: f64, first_foam: f64, first_foam_liquid: f64, first_poured: f64,
+    scored_beverage: f64, scored_first_beverage: f64,
     snapshot: [f32; SNAPSHOT_LEN],
 }
 
@@ -80,6 +83,9 @@ impl Game {
             ordered_cherries: 1, ordered_lime: 0, ordered_syrup: 0, ordered_blend: 1,
             selected_soda: 4, selected_cherries: 0, selected_lime: 0,
             selected_syrup: 0, selected_blend: 1, prep_started: false, prep_allowance: 3.5,
+            second_soda: 4, first_share: 1.0, pour_part: 0, part_attempted: false,
+            first_liquid: 0.0, first_foam: 0.0, first_foam_liquid: 0.0, first_poured: 0.0,
+            scored_beverage: 0.0, scored_first_beverage: 0.0,
             snapshot: [0.0; SNAPSHOT_LEN],
         }
     }
@@ -99,8 +105,9 @@ impl Game {
 
     pub fn begin_pour(&mut self) -> bool {
         if self.phase != 0 || self.holding || self.selected_soda > 3
-            || (self.hardcore && self.attempted) { return false; }
-        self.prep_started = true; self.attempted = true; self.holding = true; self.refresh(); true
+            || (self.hardcore && self.part_attempted) { return false; }
+        self.prep_started = true; self.attempted = true; self.part_attempted = true;
+        self.holding = true; self.refresh(); true
     }
 
     /// A recipe is freely adjustable before the first hold. Even Easy locks its
@@ -120,7 +127,15 @@ impl Game {
     pub fn end_pour(&mut self) {
         if self.phase != 0 || !self.holding { return; }
         self.holding = false;
-        if self.hardcore { self.score(); } else { self.refresh(); }
+        if self.hardcore { self.complete_part(); } else { self.refresh(); }
+    }
+
+    fn complete_part(&mut self) {
+        if self.phase != 0 || !self.part_attempted { return; }
+        self.holding = false;
+        if self.is_mix() && self.pour_part == 0 {
+            self.pour_part = 1; self.part_attempted = false; self.refresh();
+        } else { self.score(); }
     }
 
     pub fn set_pressure(&mut self, pressure: usize) -> bool {
@@ -141,11 +156,33 @@ impl Game {
         self.refresh();
     }
 
-    fn actual_soda(&self) -> usize { if self.selected_soda < 4 { self.selected_soda } else { self.soda } }
+    fn is_mix(&self) -> bool { self.second_soda < 4 }
+    fn first_soda(&self) -> usize { if self.selected_soda < 4 { self.selected_soda } else { self.soda } }
+    fn actual_soda(&self) -> usize { if self.is_mix() && self.pour_part == 1 { self.second_soda } else { self.first_soda() } }
+    fn active_target(&self) -> f64 { self.target * if self.is_mix() && self.pour_part == 0 { self.first_share } else { 1.0 } }
     fn flow(&self) -> f64 { RATES[self.actual_soda()] * PRESSURE_FLOW[self.pressure] }
     fn recipe_fizz(&self) -> f64 { BLEND_GAS[self.selected_blend] }
     fn foam_multiplier(&self) -> f64 { 1.0 - 0.2 * self.upgrades[3] as f64 }
-    fn beverage_ml(&self) -> f64 { (self.liquid + self.foam_liquid).min(self.capacity) }
+    fn beverage_ml(&self) -> f64 {
+        if self.is_mix() && self.phase != 0 { self.scored_beverage }
+        else { (self.liquid + self.foam_liquid).min(self.capacity) }
+    }
+    fn first_beverage_ml(&self) -> f64 {
+        if !self.is_mix() { self.beverage_ml() }
+        else if self.phase != 0 { self.scored_first_beverage }
+        else { self.first_liquid + self.first_foam_liquid }
+    }
+    fn mix_accuracy(&self) -> f64 {
+        if !self.is_mix() { return 100.0; }
+        let total = self.beverage_ml();
+        if total <= 0.001 { return 0.0; }
+        (100.0 - 200.0 * (self.first_beverage_ml() / total - self.first_share).abs()).clamp(0.0, 100.0)
+    }
+    fn mix_stars(&self) -> u32 {
+        let score = self.mix_accuracy();
+        if score >= 96.0 { 5 } else if score >= 88.0 { 4 }
+            else if score >= 72.0 { 3 } else if score >= 50.0 { 2 } else { 1 }
+    }
     fn patience_limit(&self) -> f64 {
         8.0 + self.prep_allowance + 2.0 * self.order_awning as f64 + self.active_patio as f64
             + if self.active_helper { 1.5 } else { 0.0 }
@@ -155,11 +192,14 @@ impl Game {
         (65.0 * ((self.patience_limit() - self.elapsed) / (self.patience_limit() - 2.0)).clamp(0.0, 1.0)).round() as u32
     }
     fn menu_price(&self) -> u32 {
-        (110.0 + self.capacity * self.target * [0.65, 0.75, 0.8, 0.9][self.soda]).round() as u32 + self.recipe_premium()
+        let prices = [0.65, 0.75, 0.8, 0.9];
+        let unit = if self.is_mix() { prices[self.soda] * self.first_share + prices[self.second_soda] * (1.0 - self.first_share) } else { prices[self.soda] };
+        (110.0 + self.capacity * self.target * unit).round() as u32 + self.recipe_premium()
     }
     fn recipe_premium(&self) -> u32 {
         self.ordered_cherries * 40 + self.ordered_lime * 35 + self.ordered_syrup * 50
             + if self.ordered_blend != 1 { 25 } else { 0 }
+            + if self.is_mix() { 60 } else { 0 }
     }
     fn addin_cost(&self) -> u32 { self.selected_cherries * 8 + self.selected_lime * 10 + self.selected_syrup * 12 }
     fn recipe_accuracy(&self) -> u32 {
@@ -184,6 +224,7 @@ impl Game {
 
     fn tick(&mut self, dt: f64, pouring: bool) {
         if self.phase == 0 && (self.attempted || self.prep_started) { self.elapsed = (self.elapsed + dt).min(1_000_000.0); }
+        if self.is_mix() { self.tick_mix(dt, pouring); return; }
         let soda = self.actual_soda();
         if pouring {
             let incoming = self.flow() * dt;
@@ -216,9 +257,54 @@ impl Game {
         }
     }
 
+    /// Keep each soda's own foam/recovery pool. Overflow removes proportionate
+    /// shares of foam beverage first, then liquid, so spilling cannot preserve
+    /// a fictitious first-soda amount or turn gas into a scored ingredient.
+    fn tick_mix(&mut self, dt: f64, pouring: bool) {
+        let mut liquids = [self.first_liquid, (self.liquid - self.first_liquid).max(0.0)];
+        let mut foams = [self.first_foam, (self.foam - self.first_foam).max(0.0)];
+        let mut trapped = [self.first_foam_liquid, (self.foam_liquid - self.first_foam_liquid).max(0.0)];
+        let sodas = [self.first_soda(), self.second_soda];
+        if pouring {
+            let part = self.pour_part as usize;
+            let incoming = self.flow() * dt;
+            self.poured += incoming;
+            if part == 0 { self.first_poured += incoming; }
+            let beverage = incoming * ENTRAINED[sodas[part]];
+            liquids[part] += incoming - beverage; trapped[part] += beverage;
+            foams[part] += beverage * (1.0 + (EXPANSION[sodas[part]] - 1.0)
+                * self.foam_multiplier() * PRESSURE_GAS[self.pressure] * self.recipe_fizz());
+        }
+        for part in 0..2 {
+            let decay = (SETTLE_RATES[sodas[part]] * dt).min(1.0);
+            let recovered = trapped[part] * decay;
+            liquids[part] += recovered; trapped[part] -= recovered; foams[part] *= 1.0 - decay;
+            if foams[part] < 0.005 { liquids[part] += trapped[part]; trapped[part] = 0.0; foams[part] = 0.0; }
+        }
+        let total_foam = foams[0] + foams[1];
+        let total_liquid = liquids[0] + liquids[1];
+        let excess = (total_liquid + total_foam - self.capacity).max(0.0);
+        if excess > 0.0 {
+            let foam_spill = excess.min(total_foam);
+            let liquid_spill = (excess - foam_spill).min(total_liquid);
+            let foam_fraction = if total_foam > 0.0 { foam_spill / total_foam } else { 0.0 };
+            let liquid_fraction = if total_liquid > 0.0 { liquid_spill / total_liquid } else { 0.0 };
+            let lost_beverage = (trapped[0] + trapped[1]) * foam_fraction;
+            for part in 0..2 {
+                foams[part] *= 1.0 - foam_fraction; trapped[part] *= 1.0 - foam_fraction;
+                liquids[part] *= 1.0 - liquid_fraction;
+            }
+            self.spill += foam_spill + liquid_spill;
+            self.beverage_waste += lost_beverage + liquid_spill;
+        }
+        self.first_liquid = liquids[0]; self.first_foam = foams[0]; self.first_foam_liquid = trapped[0];
+        self.liquid = liquids[0] + liquids[1]; self.foam = foams[0] + foams[1];
+        self.foam_liquid = trapped[0] + trapped[1];
+    }
+
     pub fn serve(&mut self) -> bool {
-        if self.phase != 0 || self.hardcore || !self.attempted { return false; }
-        self.holding = false; self.score(); true
+        if self.phase != 0 || self.hardcore || !self.part_attempted { return false; }
+        self.holding = false; self.complete_part(); true
     }
 
     fn combo(&self) -> f64 {
@@ -248,11 +334,12 @@ impl Game {
 
     fn score(&mut self) {
         if self.phase != 0 { return; }
+        self.scored_beverage = self.beverage_ml(); self.scored_first_beverage = self.first_beverage_ml();
         self.last_hardcore = self.hardcore;
         let error = (self.beverage_ml() / self.capacity - self.target).abs();
         self.accuracy = (100.0 - 350.0 * error).clamp(0.0, 100.0);
         let recipe_stars = match self.recipe_accuracy() { 100 => 5, 80..=99 => 4, 60..=79 => 3, 40..=59 => 2, _ => 1 };
-        self.stars = self.fill_stars().min(recipe_stars);
+        self.stars = self.fill_stars().min(recipe_stars).min(self.mix_stars());
         self.last_was_good = self.stars >= 4;
         self.streak = if self.last_was_good { self.streak.saturating_add(1).min(MAX_COUNT) } else { 0 };
         self.best_streak = self.best_streak.max(self.streak);
@@ -272,8 +359,12 @@ impl Game {
         } else { 0 };
         self.payout = self.last_base + self.last_combo + self.last_milestone + self.last_perfect_tip + self.last_service_tip;
         self.credit(self.payout);
+        let unit_costs = [0.10, 0.12, 0.13, 0.16];
+        let liquid_cost = if self.is_mix() { self.first_poured * unit_costs[self.first_soda()]
+            + (self.poured - self.first_poured).max(0.0) * unit_costs[self.second_soda] }
+            else { self.poured * unit_costs[self.actual_soda()] };
         let ingredients = self.addin_cost() + if self.poured > 0.001 {
-            (15.0 + self.poured * [0.10, 0.12, 0.13, 0.16][self.actual_soda()] * BLEND_COST[self.selected_blend]).ceil() as u32
+            (15.0 + liquid_cost * BLEND_COST[self.selected_blend]).ceil() as u32
         } else { 0 };
         let work = (self.spill / self.capacity * 5.0).min(2.5);
         self.cleanup_seconds = work * if self.active_helper { 0.5 } else { 1.0 };
@@ -340,6 +431,9 @@ impl Game {
         self.liquid = 0.0; self.foam = 0.0; self.foam_liquid = 0.0; self.spill = 0.0;
         self.beverage_waste = 0.0; self.poured = 0.0; self.elapsed = 0.0;
         self.cleanup_seconds = 0.0; self.attempted = false; self.holding = false;
+        self.second_soda = 4; self.first_share = 1.0; self.pour_part = 0; self.part_attempted = false;
+        self.first_liquid = 0.0; self.first_foam = 0.0; self.first_foam_liquid = 0.0; self.first_poured = 0.0;
+        self.scored_beverage = 0.0; self.scored_first_beverage = 0.0;
         self.multiplier = 0.6 + self.rating * 0.2;
         self.order_sign = self.upgrades[0]; self.order_awning = self.upgrades[2]; self.phase = 0;
         self.prepare_recipe();
@@ -363,10 +457,22 @@ impl Game {
             }
             if serial >= 5 && self.upgrades[11] > 0 { self.ordered_blend = ((roll >> 10) % 3) as usize; }
         }
-        self.selected_soda = 4; self.selected_cherries = 0; self.selected_lime = 0;
+        // Customer six introduces an even mix. Later mixes use the same recipe
+        // RNG draw, keeping cup/target generation independent of mode/equipment.
+        if serial == 5 || (serial > 5 && roll % 3 == 0) {
+            self.second_soda = (self.soda + 1 + ((roll >> 14) % 3) as usize) % 4;
+            self.first_share = if serial >= 12 { [0.25, 0.5, 0.75][((roll >> 12) % 3) as usize] } else { 0.5 };
+            self.ordered_blend = 1;
+            if self.ordered_cherries > 0 {
+                self.ordered_cherries = 1; self.ordered_lime = 0; self.ordered_syrup = 0;
+            } else if self.ordered_lime > 0 { self.ordered_syrup = 0; }
+            else if self.ordered_syrup > 0 { self.ordered_syrup = 1; }
+        }
+        self.selected_soda = if self.is_mix() { self.soda } else { 4 };
+        self.selected_cherries = 0; self.selected_lime = 0;
         self.selected_syrup = 0; self.selected_blend = 1; self.prep_started = false;
         self.prep_allowance = 2.0 + 1.5 * (self.ordered_cherries + self.ordered_lime + self.ordered_syrup
-            + (self.ordered_blend != 1) as u32) as f64;
+            + (self.ordered_blend != 1) as u32) as f64 + if self.is_mix() { 2.0 } else { 0.0 };
     }
     fn order_addin(&mut self, kind: usize, amount: u32) {
         match kind { 0 => self.ordered_cherries = amount, 1 => self.ordered_lime = 1, _ => self.ordered_syrup = amount }
@@ -471,12 +577,16 @@ impl Game {
             self.recipe_premium() as f32, self.addin_cost() as f32, self.prep_started as u32 as f32,
             self.recipe_fizz() as f32, self.fill_stars() as f32, self.recipe_mistakes() as f32,
             self.prep_allowance as f32, (self.recipe_premium() > 0) as u32 as f32,
+            self.second_soda as f32, self.first_share as f32, self.pour_part as f32,
+            self.part_attempted as u32 as f32, self.actual_soda() as f32, self.active_target() as f32,
+            self.first_beverage_ml() as f32, self.mix_accuracy() as f32, self.mix_stars() as f32,
+            self.is_mix() as u32 as f32,
         ];
     }
     pub fn state(&self) -> &[f32; SNAPSHOT_LEN] { &self.snapshot }
 
-    /// V103 preserves recipe preparation and attempted cups. Restore commits an
-    /// interrupted Hardcore cup once and leaves Easy stopped. Paid cups stay paid.
+    /// V104 also preserves each mix part and its first-soda physical pools.
+    /// Restore consumes only the interrupted Hardcore part. Paid cups stay paid.
     pub fn save(&self) -> [f64; SAVE_LEN] {
         let active = self.phase == 0;
         let mut s = [0.0; SAVE_LEN];
@@ -513,6 +623,10 @@ impl Game {
             self.selected_lime as f64, self.selected_syrup as f64, self.selected_blend as f64,
             self.prep_started as u32 as f64, self.upgrades[9] as f64, self.upgrades[10] as f64,
             self.upgrades[11] as f64, self.prep_allowance,
+            self.second_soda as f64, self.first_share, self.pour_part as f64, self.part_attempted as u32 as f64,
+            if self.is_mix() { if active { self.first_liquid } else { self.first_beverage_ml() } } else { 0.0 },
+            if active { self.first_foam } else { 0.0 }, if active { self.first_foam_liquid } else { 0.0 },
+            self.first_poured,
         ];
         s[..data.len()].copy_from_slice(&data); s
     }
@@ -520,7 +634,8 @@ impl Game {
     pub fn restore(s: &[f64; SAVE_LEN]) -> Option<Self> {
         let legacy = s[0] == 101.0;
         let v102 = s[0] == 102.0;
-        if s.iter().any(|v| !v.is_finite()) || (!legacy && !v102 && s[0] != SAVE_VERSION) { return None; }
+        let v103 = s[0] == 103.0;
+        if s.iter().any(|v| !v.is_finite()) || (!legacy && !v102 && !v103 && s[0] != SAVE_VERSION) { return None; }
         let integer = |i: usize, min: u32, max: u32| {
             s[i] >= min as f64 && s[i] <= max as f64 && s[i].fract() == 0.0
         };
@@ -577,12 +692,39 @@ impl Game {
             for i in [83, 85, 86, 88, 90, 91] { if !integer(i, 0, 2) { return None; } }
             for i in [84, 89, 92, 93, 94, 95] { if !integer(i, 0, 1) { return None; } }
             if !integer(87, 0, 4) || !(0.0..=11.0).contains(&s[96])
-                || s[97..].iter().any(|v| *v != 0.0)
+                || (v103 && s[97..].iter().any(|v| *v != 0.0))
+                || (!v103 && s[105..].iter().any(|v| *v != 0.0))
                 || (s[93] == 0.0 && (s[84] > 0.0 || s[89] > 0.0))
                 || (s[94] == 0.0 && (s[85] > 0.0 || s[90] > 0.0))
                 || (s[95] == 0.0 && (s[86] != 1.0 || s[91] != 1.0))
                 || (s[23] == 1.0 && (s[87] == 4.0 || s[92] != 1.0))
                 || ((s[83] > 0.0) as u32 + (s[84] > 0.0) as u32 + (s[85] > 0.0) as u32 > 2) { return None; }
+        }
+        if !legacy && !v102 && !v103 {
+            if !integer(97, 0, 4) || !integer(99, 0, 1) || !integer(100, 0, 1)
+                || !(0.0..=s[6] + 1e-7).contains(&s[101])
+                || !(0.0..=s[7] + 1e-7).contains(&s[102])
+                || !(0.0..=s[8] + 1e-7).contains(&s[103])
+                || !(0.0..=s[55] + 1e-7).contains(&s[104])
+                || s[103] > s[102] + 1e-7 || s[8] - s[103] > s[7] - s[102] + 1e-7
+                || s[101] + s[103] > s[104] + 1e-5
+                || s[6] + s[8] - s[101] - s[103] > s[55] - s[104] + 1e-5 { return None; }
+            if s[97] == 4.0 {
+                if s[98] != 1.0 || s[99] != 0.0 || s[100] != s[23]
+                    || s[101..=104].iter().any(|v| *v != 0.0) { return None; }
+            } else {
+                if s[97] == s[3] || ![0.25, 0.5, 0.75].contains(&s[98])
+                    || s[83] + s[84] + s[85] > 1.0 || s[86] != 1.0
+                    || (s[99] == 0.0 && (phase != 0 || s[100] != s[23]))
+                    || (s[99] == 1.0 && s[23] != 1.0)
+                    || (phase != 0 && (s[99] != 1.0 || s[100] != 1.0)) { return None; }
+                // Before the second attempt, every retained/poured drop must
+                // still belong to the first part. An empty first hold is legal.
+                if s[99] == 0.0 || s[100] == 0.0 {
+                    if (s[101] - s[6]).abs() > 1e-7 || (s[102] - s[7]).abs() > 1e-7
+                        || (s[103] - s[8]).abs() > 1e-7 || (s[104] - s[55]).abs() > 1e-7 { return None; }
+                }
+            }
         }
         let mut g = Self::empty();
         g.phase = phase; g.order = s[2] as u32; g.soda = s[3] as usize; g.cup = s[4] as usize;
@@ -591,6 +733,7 @@ impl Game {
         g.stars = s[13] as u32; g.payout = s[14] as u32; g.multiplier = s[15]; g.elapsed = s[16];
         g.completed = s[17] as u32; g.accuracy_sum = s[18]; g.perfect = s[19] as u32;
         g.rng = s[20] as u32; g.cash = s[21] as u32; g.attempted = s[23] != 0.0; g.day = s[25] as u32;
+        g.part_attempted = g.attempted;
         g.hardcore = !(phase == 0 && g.attempted && s[22] == 0.0);
         g.goal = s[26] as u32; g.streak = if s[22] == 1.0 || !g.hardcore { s[27] as u32 } else { 0 };
         g.best_streak = s[28] as u32; g.last_combo = s[29] as u32; g.last_milestone = s[30] as u32;
@@ -630,12 +773,20 @@ impl Game {
             g.selected_lime = s[89] as u32; g.selected_syrup = s[90] as u32; g.selected_blend = s[91] as usize;
             g.prep_started = s[92] == 1.0; g.upgrades[9] = s[93] as u32; g.upgrades[10] = s[94] as u32;
             g.upgrades[11] = s[95] as u32; g.prep_allowance = s[96];
-            if phase != 0 {
-                let recipe_stars = match g.recipe_accuracy() { 100 => 5, 80..=99 => 4, 60..=79 => 3, 40..=59 => 2, _ => 1 };
-                if g.stars != g.fill_stars().min(recipe_stars) { return None; }
-            }
         }
-        if !legacy && g.phase == 0 && g.attempted && g.hardcore { g.score(); }
+        if !legacy && !v102 && !v103 {
+            g.second_soda = s[97] as usize; g.first_share = s[98]; g.pour_part = s[99] as u32;
+            g.part_attempted = s[100] != 0.0; g.first_liquid = s[101]; g.first_foam = s[102];
+            g.first_foam_liquid = s[103]; g.first_poured = s[104];
+            // Paid saves canonically contain settled beverage. These receipt
+            // amounts remain fixed even while live foam animates after payment.
+            if phase != 0 { g.scored_beverage = s[6]; g.scored_first_beverage = s[101]; }
+        }
+        if !legacy && !v102 && phase != 0 {
+            let recipe_stars = match g.recipe_accuracy() { 100 => 5, 80..=99 => 4, 60..=79 => 3, 40..=59 => 2, _ => 1 };
+            if g.stars != g.fill_stars().min(recipe_stars).min(g.mix_stars()) { return None; }
+        }
+        if !legacy && g.phase == 0 && g.part_attempted && g.hardcore { g.complete_part(); }
         g.refresh(); Some(g)
     }
 }
