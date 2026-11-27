@@ -1,4 +1,4 @@
-/* Perfect Pour V1.03 · Presentation and input. Simulation, business, saves, and rules are Rust/Wasm. */
+/* Perfect Pour V1.03.1 · Presentation and input. Simulation, business, saves, and rules are Rust/Wasm. */
 (() => {
   'use strict';
   const WASM_BASE64 = '__WASM_BASE64__';
@@ -7,6 +7,13 @@
   const ctx = canvas.getContext('2d');
   const clamp = (x, a, b) => Math.max(a, Math.min(b, x));
   const dollars = cents => '$' + (cents / 100).toFixed(2);
+  const compactNumber = value => {
+    const units=['','K','M','B','T'];let unit=0,amount=Math.abs(value);
+    while(amount>=1000&&unit<units.length-1){amount/=1000;unit++;}
+    amount=Math.round(amount*10)/10;
+    if(amount>=1000&&unit<units.length-1){amount/=1000;unit++;}
+    return(value<0?'−':'')+amount+units[unit];
+  };
   const percent = fraction => Math.round(fraction * 100);
   const VISIBLE_FOAM = .001;
   const sodas = [
@@ -57,6 +64,7 @@
   let inputOwner=null,activePointer=null,keyHeld=false,settlingSpaceHeld=false,pouring=false,ready=false,lastSpill=0,spillFlash=0,storageAvailable=true,loadedCareer=false,toastTimer;
   let settlingElapsed=0,finishElapsed=0,lastAutosave=0,sceneDirty=true,lastFeedback='',lastSceneKey='',lastSavedRaw=null,externalSave=false;
   let pendingPointer=null,suppressPrimaryClick=false,recipeUiKey='',iconDownloading=false;
+  let upgradePage=0,upgradePageSize=1;
   const blendNames=['Light','Regular','Bold'];
   const activePlayMode=()=>state[F.attempted]===1?'playing':'preparing';
   let settings={sound:true,music:true,musicVolume:1,soundVolume:1};
@@ -84,7 +92,7 @@
     }
     const primaryHost=$(next==='result'?'result-action-slot':next==='summary'?'summary-action-slot':'counter-action-slot');
     if($('pour-button').parentElement!==primaryHost)primaryHost.prepend($('pour-button'));
-    if(ready)updateHud();
+    if(ready){updateHud();if(next==='store')syncViewportLayout();}
     syncMusic();
     if(focusId)requestAnimationFrame(()=>$(focusId).focus({preventScroll:true}));
   }
@@ -106,7 +114,7 @@
       if(current!==lastSavedRaw){handleExternalSave();return;}
       const raw=JSON.stringify(captureSave());localStorage.setItem(SAVE_KEY,raw);lastSavedRaw=raw;storageAvailable=true;
     }catch(_){storageAvailable=false;}
-    text('save-status',storageAvailable?'Saved on this device · Export a backup anytime.':'Saving unavailable · Export a backup before closing.');
+    text('save-status',storageAvailable?'Autosaved':'Saving unavailable · export a backup');
   }
   function handleExternalSave(){
     if(!ready||externalSave)return;
@@ -128,7 +136,7 @@
       if(file.size>100000)throw new Error('This file is too large to be a game save.');
       const data=JSON.parse(await file.text());
       if(!confirm('Import this business? It will replace the business currently open on this device.'))return;
-      let currentRaw=null;try{currentRaw=localStorage.getItem(SAVE_KEY);}catch(_){}applySave(data);lastSavedRaw=currentRaw;externalSave=false;text('pause-title','On a little break.');text('pause-description','Take your time. The shop is paused.');text('resume-button','BACK TO POURING');$('pause-restart').disabled=false;clearInput();saveCareer();if(externalSave)return;renderOrder();storeReturn=state[0]===2?'summary':state[0]===1?'finished':activePlayMode();renderStore();setMode('store','store-back');toast('Business restored. Your cash, upgrades, and records are ready.');
+      let currentRaw=null;try{currentRaw=localStorage.getItem(SAVE_KEY);}catch(_){}applySave(data);lastSavedRaw=currentRaw;externalSave=false;text('pause-title','Paused');text('pause-description','Your shop can wait.');text('resume-button','RESUME');$('pause-restart').disabled=false;clearInput();saveCareer();if(externalSave)return;renderOrder();storeReturn=state[0]===2?'summary':state[0]===1?'finished':activePlayMode();renderStore();setMode('store','store-back');toast('Business restored. Your cash, upgrades, and records are ready.');
     }catch(error){toast(error instanceof SyntaxError?'That file is not a valid JSON save.':error.message||'The save could not be imported.');}
   }
   function updateModeUi(){
@@ -138,7 +146,7 @@
       button.classList.toggle('active',selected);button.setAttribute('aria-pressed',String(selected));button.disabled=locked;
       button.title=locked?'Finish this customer first.':id.includes('hardcore')?'One hold. Release serves. +15% base pay.':'Pause, top up, then serve.';
     }
-    text('welcome-mode-copy',hard?'Craft it. Ready it. One hold; release serves.':'Craft it. Pour at your pace; top up or serve.');
+    text('welcome-mode-copy',hard?'Hold Space or the button. Release to serve.':'Hold to pour. Pause, top up, or tap to serve.');
     const flow=window.PourFlow.resolve({mode,hardcore:hard,attempted:state[F.attempted]===1,holding:pouring,selectedSoda:state[F.selectedSoda],recipeLocked:state[F.recipeLocked]===1,lastCustomer:state[1]===state[F.goal]});
     const action=$('pour-button');action.dataset.action=flow.action;action.disabled=flow.disabled;
     text('primary-label',flow.label);text('primary-hint',flow.hint);
@@ -149,7 +157,7 @@
     document.querySelector('.mode-switch').hidden=!flow.showMode;
     $('mixed-recipe').hidden=flow.showRecipe||state[F.selectedSoda]>3;
     $('edit-recipe').hidden=mode!=='playing'||state[F.attempted]===1;
-    const tip=mode==='preparing'?'<strong>Make their kind of soda.</strong><span>Match the icons on their order.</span>':mode==='settling'?'<strong>Let the fizz settle.</strong><span>Your cup stays until you’re ready.</span>':mode==='finished'?'<strong>Made by you.</strong><span>Take a look, then open the review.</span>':hard?'<strong>One hold. One pour.</strong><span>Release to serve.</span>':'<strong>Pour at your pace.</strong><span>Tap to serve. Hold to top up.</span>';
+    const tip=mode==='preparing'?'<strong>Match the order.</strong>':mode==='settling'?'<strong>Let it settle.</strong>':mode==='finished'?'<strong>Made by you.</strong>':hard?'<strong>One hold. One pour.</strong>':'<strong>Pour at your pace.</strong>';
     if($('tip-text').innerHTML!==tip)$('tip-text').innerHTML=tip;
     for(let i=0;i<3;i++){
       const button=$(['pressure-gentle','pressure-classic','pressure-rush'][i]);
@@ -210,11 +218,11 @@
       if($('counter-scenery')&&window.PourStoreArt.counter)$('counter-scenery').innerHTML=window.PourStoreArt.counter(shop);
     }
     const levels=levelValues(),built=levels.reduce((a,b)=>a+b,0),total=upgrades.reduce((a,b)=>a+b.max,0);
-    const next=levels[0]===0?'Light up your first sign':levels[5]===0?'Open a second station':levels[6]===0?'Build your soda lounge':levels[7]===0?'Take your bar on the road':built<total?'Grow your neighborhood favorite':'Your soda empire · chase a new record';
+    const next=levels[0]===0?'Your first sign':levels[5]===0?'A second station':levels[6]===0?'Your soda lounge':levels[7]===0?'Take it on the road':built<total?'Keep growing':'Your soda empire';
     text('business-goal',next);if($('business-progress'))$('business-progress').style.width=(built/total*100)+'%';
-    const staff=state[F.specialistActive]?`${state[F.staffOrders]}/${state[F.staffCapacity]} staff orders · ${dollars(state[F.staffSales])}`:levels[5]?'Specialist starts next day':'Your second station is waiting';
+    const staff=state[F.specialistActive]?`${state[F.staffOrders]}/${state[F.staffCapacity]} staff orders · ${dollars(state[F.staffSales])}`:levels[5]?'Specialist starts next day':'Solo counter';
     text('staff-activity',staff);
-    text('staff-strip',state[F.specialistActive]?`${state[F.helperActive]?'½ cleanup · ':''}${state[F.staffOrders]}/${state[F.staffCapacity]} staff orders`:state[F.helperActive]?'Helper on duty · ½ cleanup cost':levels[4]?'Helper starts next day':'One little counter. A big future.');
+    text('staff-strip',state[F.specialistActive]?`${state[F.helperActive]?'½ cleanup · ':''}${state[F.staffOrders]}/${state[F.staffCapacity]} staff orders`:state[F.helperActive]?'Helper on duty · ½ cleanup cost':levels[4]?'Helper starts next day':'Solo counter');
   }
   function recipeTokens(ordered=false){
     const values=ordered?[state[F.orderedCherries],state[F.orderedLime],state[F.orderedSyrup],state[F.orderedBlend]]:[state[F.selectedCherries],state[F.selectedLime],state[F.selectedSyrup],state[F.selectedBlend]];
@@ -236,19 +244,19 @@
     const key=[...Array.from(state.slice(98,107)),state[F.hasCitrus],state[F.hasSyrup],state[F.hasMixer],state[F.recipeLocked],state[0]].join(':');
     if(key===recipeUiKey)return;recipeUiKey=key;
     if(!$('base-options').children.length){
-      $('base-options').innerHTML=['Orange','Cherry','Lime','Cola'].map((name,i)=>`<button id="base-${i}" data-base="${i}" class="base-option" aria-label="${name} soda base" aria-pressed="false">${window.PourRecipeArt.icon('base',{soda:i})}<strong>${name}</strong></button>`).join('');
-      $('ingredient-options').innerHTML=[['cherries','cherry','Cherries'],['lime','lime','Lime'],['syrup','syrup','Syrup']].map(([field,kind,name])=>`<button data-ingredient="${field}" class="ingredient-option"><span class="ingredient-picture">${window.PourRecipeArt.icon(kind)}<b id="${field}-count">0</b></span><strong>${name}</strong><small id="${field}-availability">Tap to add</small></button>`).join('');
+      $('base-options').innerHTML=['Orange','Cherry','Lime','Cola'].map((name,i)=>`<button id="base-${i}" data-base="${i}" class="base-option" aria-label="${name} soda base" title="${name} soda" aria-pressed="false">${window.PourRecipeArt.icon('base',{soda:i})}<strong>${name}</strong></button>`).join('');
+      $('ingredient-options').innerHTML=[['cherries','cherry','Cherries'],['lime','lime','Lime'],['syrup','syrup','Syrup']].map(([field,kind,name])=>`<button data-ingredient="${field}" class="ingredient-option"><span class="ingredient-picture">${window.PourRecipeArt.icon(kind)}<b id="${field}-count">0</b></span><strong>${name}</strong><small id="${field}-availability" class="ingredient-availability"></small></button>`).join('');
       $('blend-options').innerHTML=blendNames.map((name,i)=>`<button data-blend="${i}" aria-pressed="false">${window.PourRecipeArt.icon('water',{blend:i})}<strong>${name}</strong></button>`).join('');
     }
     $('base-options').querySelectorAll('button').forEach((b,i)=>{b.setAttribute('aria-pressed',String(state[F.selectedSoda]===i));b.disabled=state[F.canRecipe]!==1;});
     [['cherries',F.selectedCherries,true,2],['lime',F.selectedLime,state[F.hasCitrus]===1,1],['syrup',F.selectedSyrup,state[F.hasSyrup]===1,2]].forEach(([name,field,available,max])=>{
       const button=$('ingredient-options').querySelector(`[data-ingredient="${name}"]`),n=state[field];
-      text(name+'-count',available?n:'');text(name+'-availability',available?(n?'Tap to change':'Tap to add'):'Build to unlock');
-      button.disabled=!available||state[F.canRecipe]!==1;button.classList.toggle('selected',n>0);button.classList.toggle('locked',!available);button.setAttribute('aria-label',available?`${name}: ${n}. Tap to cycle zero to ${max}.`:`${name} locked. Unlock in Build.`);
+      text(name+'-count',available?n:'');text(name+'-availability',available?'':'Locked');
+      button.disabled=!available||state[F.canRecipe]!==1;button.classList.toggle('selected',n>0);button.classList.toggle('locked',!available);button.setAttribute('aria-label',available?`${name}: ${n}. Tap to cycle zero to ${max}.`:`${name} locked. Unlock in Build.`);button.title=available?`${name}: ${n}. Tap to change.`:'Unlock in Build';
     });
     $('blend-controls').hidden=state[F.hasMixer]!==1;
     $('blend-options').querySelectorAll('button').forEach((button,i)=>{button.setAttribute('aria-pressed',String(state[F.selectedBlend]===i));button.disabled=state[F.canRecipe]!==1;});
-    text('recipe-cost',state[F.selectedAddinCost]?'Add-ins '+dollars(state[F.selectedAddinCost]):'Starter cherry jar');
+    text('recipe-cost',dollars(state[F.selectedAddinCost]));
     $('order-recipe').innerHTML=recipeTokens(true);$('order-recipe').setAttribute('aria-label',recipeDescription());
     $('mixed-recipe').innerHTML='<span class="mixed-label">YOUR MIX</span>'+(state[F.selectedSoda]<4?'<span class="recipe-chip">'+window.PourRecipeArt.icon('base',{soda:state[F.selectedSoda]})+'<b>'+['Orange','Cherry','Lime','Cola'][state[F.selectedSoda]]+'</b></span>':'')+recipeTokens(false);
     const selected=state[F.selectedSoda]<4?state[F.selectedSoda]:state[2],soda=sodas[selected];
@@ -281,7 +289,7 @@
     const soda=sodas[state[2]],cup=cups[state[3]],order=Math.round(state[1]),target=percent(state[4]);
     document.documentElement.style.setProperty('--soda',soda.color);
     text('customer-name',names[personIndex()]);text('customer-number','GUEST '+String(order).padStart(2,'0'));
-    $('order-line').innerHTML=soda.name+'<strong>'+target+'% please!</strong>';
+    $('order-line').innerHTML=soda.name+'<strong>'+target+'%</strong>';
     text('customer-aside',soda.aside);recipeUiKey='';setCustomerMood('neutral');text('customer-status','YOUR NEXT POUR');
     text('tap-name',soda.name.toUpperCase());text('drink-name',soda.name);text('drink-flavor',soda.flavor);
     text('fizz-label',soda.fizz);text('fizz-note',soda.note);$('fizz-meter').setAttribute('aria-label',soda.fizz.toLowerCase()+' fizz');
@@ -291,7 +299,7 @@
     text('payout-multiplier',state[14].toFixed(2)+'×');lastSpill=state[8];spillFlash=0;lastFeedback='';sceneDirty=true;updateHud();
   }
   function comboMessage(){
-    const left=Math.max(1,Math.round(state[F.nextStreak]-state[F.streak]));return`${left} good ${left===1?'pour':'pours'} → +${dollars(state[F.nextReward])}`;
+    const left=Math.max(1,Math.round(state[F.nextStreak]-state[F.streak]));return`${left} to +${dollars(state[F.nextReward])}`;
   }
   function updateMeter(){
     if(!state)return;
@@ -303,16 +311,16 @@
     const fill=state[6]/state[5],foam=state[7]/state[5],hard=state[F.hardcore]===1;
     text('liquid-percent',percent(fill)+'%');text('foam-percent',foam>VISIBLE_FOAM&&foam<.005?'<1%':percent(foam)+'%');
     const remaining=Math.max(0,state[F.patience]*state[F.patienceLimit]);
-    text('patience-label',state[0]===1?'Served':state[F.prepStarted]||state[F.attempted]?remaining.toFixed(1)+'s':state[F.patienceLimit].toFixed(0)+'s service');
+    text('patience-label',state[0]===1?'Served':state[F.prepStarted]||state[F.attempted]?remaining.toFixed(1)+'s':state[F.patienceLimit].toFixed(0)+'s');
     if($('patience-track'))$('patience-track').classList.toggle('low',state[F.patience]<.25);
-    let message=mode==='preparing'?'Build the recipe above':hard?'Hold once · release to serve':'Tap to serve · hold to top up',kind='';
-    if(state[8]>1){message=`Foam spill · ${Math.round(state[F.waste])} mL soda lost`;kind='warning';}
+    let message=mode==='preparing'?'Match their mix':hard?'One hold · one pour':'Top up or serve',kind='';
+    if(state[8]>1){message=`Spill · ${Math.round(state[F.waste])} mL lost`;kind='warning';}
     else if(fill>state[4]+.025){message='Above the line';kind='warning';}
-    else if(Math.abs(fill-state[4])<.025&&fill>.1){message='At the line · foam adds soda';kind='ready';}
-    else if(foam>.12)message='Watch the foam cloud';
+    else if(Math.abs(fill-state[4])<.025&&fill>.1){message='At the line · still fizzy';kind='ready';}
+    else if(foam>.12)message='Leave room for fizz';
     else if(fill>state[4]-.08)message='Almost there…';
-    if((state[F.prepStarted]||state[F.attempted])&&state[F.patience]<.12&&state[0]===0){message=state[F.patience]<=0?'Guest waiting · price falling':'Guest waiting · speed tip fading';kind='warning';}
-    if(state[0]===1){message=mode==='settling'?'Watch the last bubbles':state[12]===5?'✦ Your perfect pour':`${percent(state[F.beverageMl]/state[5])}% poured · ${percent(state[4])}% ordered`;kind=state[12]===5&&mode!=='settling'?'ready':'';}
+    if((state[F.prepStarted]||state[F.attempted])&&state[F.patience]<.12&&state[0]===0){message=state[F.patience]<=0?'Too slow · price falling':'Hurry · tip fading';kind='warning';}
+    if(state[0]===1){message=mode==='settling'?'Settling…':state[12]===5?'✦ Perfect pour':`${percent(state[F.beverageMl]/state[5])}% poured · ${percent(state[4])}% ordered`;kind=state[12]===5&&mode!=='settling'?'ready':'';}
     text('live-message',message);$('live-message').className='live-message'+(kind?' '+kind:'');
     if(kind==='warning'&&lastFeedback!==message&&pouring&&lastFeedback!=='warning')announce(message);
     lastFeedback=kind;
@@ -321,9 +329,13 @@
   function updateHud(){
     if(!state)return;
     const served=Math.round(state[16]),order=Math.round(state[1]),goal=Math.round(state[F.goal]),hard=state[F.hardcore]===1;
-    text('money',dollars(state[F.cash]));text('rating',state[9].toFixed(1));text('day-label','DAY '+String(state[F.day]).padStart(2,'0'));
+    const fullCash=dollars(state[F.cash]),fullDay=Math.round(state[F.day]);
+    text('money',Math.abs(state[F.cash])<100000?fullCash:'$'+compactNumber(state[F.cash]/100));
+    $('money-stat').setAttribute('aria-label','Cash '+fullCash);$('money-stat').title='Cash '+fullCash;
+    text('rating',state[9].toFixed(1));text('day-label','DAY '+(fullDay<1000?String(fullDay).padStart(2,'0'):compactNumber(fullDay)));
+    $('day-label').setAttribute('aria-label','Day '+fullDay);$('day-label').title='Day '+fullDay;
     const count=String(Math.min(order,goal)).padStart(2,'0')+' <small>/ '+goal+'</small>';if($('customer-count').innerHTML!==count)$('customer-count').innerHTML=count;
-    text('progress-label',served+' / '+goal+' served');
+    text('progress-label',served+' / '+goal);
     if($('progress-dots').children.length!==goal)$('progress-dots').innerHTML='<i></i>'.repeat(goal);
     [...$('progress-dots').children].forEach((dot,i)=>{dot.classList.toggle('done',i<served);dot.classList.toggle('current',i===served&&served<goal);});
     $('pause-button').disabled=!['playing','preparing'].includes(mode);
@@ -365,9 +377,9 @@
     const stars=Math.round(state[12]),accuracy=scoreText(state[11],state[F.fillStars]),order=Math.round(state[1]),streak=Math.round(state[F.streak]);
     setCustomerMood(stars>=4?'happy':stars<=2?'disappointed':'neutral');
     $('review-stars').innerHTML='★'.repeat(stars)+'<span class="empty">'+'★'.repeat(5-stars)+'</span>';$('review-stars').setAttribute('aria-label',stars+' out of5 stars');
-    text('result-title',['','A fresh start next cup.','Keep finding your rhythm.','Getting the hang of it.','A lovely pour.','That’s the perfect pour.'][stars]);
+    text('result-title',['','Try the next cup.','Keep practicing.','Getting there.','Lovely pour!','Perfect pour!'][stars]);
     const choices=reviewLines[stars],fillError=state[F.beverageMl]/state[5]-state[4];
-    text('review-quote',state[F.recipeMistakes]?'“The pour is only half the recipe. Check my order!”':stars<=2?(fillError<0?'“I was hoping for a fuller cup.”':'“That’s more soda than I ordered.”'):choices[(order+state[F.day]-2)%choices.length]);
+    text('review-quote',state[F.recipeMistakes]?'“Check my recipe next time!”':stars<=2?(fillError<0?'“I was hoping for a fuller cup.”':'“That’s more soda than I ordered.”'):choices[(order+state[F.day]-2)%choices.length]);
     text('result-eyebrow',state[F.refund]>0&&state[F.basePay]===0?'ORDER REFUNDED':'GUEST REVIEW');
     $('result-recipe').innerHTML=Math.round(state[F.recipeAccuracy])+'<small>%</small>';
     $('result-accuracy').innerHTML=accuracy+'<small>%</small>';text('result-earned',signedMoney(state[F.lastNet]));
@@ -381,7 +393,7 @@
     $('bonus-breakdown').innerHTML=rows.filter((r,i)=>i===0||r[1]!==0).map(([label,value])=>ledgerRow(label,value)).join('')+(state[F.refund]>0?'<p class="ledger-note">'+dollars(state[F.refund])+(state[F.basePay]===0?' sale voided · no charge to the guest.':' quality/service discount · already reflected above.')+'</p>':'');
     text('old-rating',state[F.previousRating].toFixed(1));text('new-rating',state[9].toFixed(1));
     const delta=state[9]-state[F.previousRating];
-    text('next-price-note',order===state[F.goal]?'Last guest. Time to count today’s profit.':delta>.025?'Reputation up · better prices next pour':delta<-.025?'Reputation down · rebuild it one good pour at a time':'A steady reputation · keep the good pours coming');
+    text('next-price-note',order===state[F.goal]?'Day complete':delta>.025?'Better reputation · better prices':delta<-.025?'Reputation down':'Reputation steady');
     saveCareer();if(externalSave)return;setMode('result','pour-button');
     if(celebrate)playCue(stars===5?'perfect':stars>=4?'good':'bad');
     announce(`${stars} ${stars===1?'star':'stars'}. ${accuracy} percent accuracy. Net ${signedMoney(state[F.lastNet])}. ${streak} good ${streak===1?'pour':'pours'} in a row.`);
@@ -393,6 +405,7 @@
   }
   function showSummary(celebrate){
     const rating=state[9],goal=state[F.goal];
+    $('day-ledger').open=false;
     text('summary-money',signedMoney(state[F.net]));text('summary-rating',rating.toFixed(1)+' ★');text('summary-accuracy',scoreText(state[17])+'%');text('summary-perfect',state[18]+' / '+goal);
     text('summary-title',rating>=4.5?'The talk of the block.':rating>=3?'That’s a wrap.':'Tomorrow’s a fresh pour.');
     text('summary-message',`Day ${state[F.day]} · ${goal} guests · ${state[F.staffOrders]} staff orders`);
@@ -404,22 +417,42 @@
     saveCareer();if(externalSave)return;setMode('summary','pour-button');
     if(celebrate){if(rating>=4)confetti();playCue('day');}announce(`Day complete. Profit ${signedMoney(state[F.net])}. Business cash ${dollars(state[F.cash])}.`);
   }
-  function renderStore(){
-    refreshState();const levels=levelValues(),costs=costValues();
-    $('store-art').innerHTML=window.PourStoreArt.render(shopState());
-    $('store-art').setAttribute('aria-label',`Your soda bar: sign level ${levels[0]}, patio ${levels[1]}, awning ${levels[2]}, tap ${levels[3]}, ${levels[4]+levels[5]} employees, lounge ${levels[6]}, catering ${levels[7]}, training ${levels[8]}.`);
-    text('store-spendable',dollars(state[F.spendable]));text('store-reserve',dollars(state[F.reserve]));text('store-lifetime',dollars(state[F.lifetime]));
-    text('store-description',`Day ${state[F.day]} · ${state[9].toFixed(1)} ★ · ${state[F.customers]} happy-hour moments`);
-    text('store-rule',state[F.canBuy]!==1?'Finish this cup to build.':state[F.reserve]>0?`${dollars(state[F.reserve])} protected for wages · seats & new staff start tomorrow`:'Build between pours · seats & new staff start tomorrow');
-    $('upgrade-grid').innerHTML=upgrades.map((item,i)=>{
+  function upgradeCapacity(){
+    return window.innerWidth>=1100&&window.innerHeight>=850?4:window.innerWidth>=900&&window.innerHeight>=680?2:1;
+  }
+  function renderUpgradePage(){
+    const size=upgradeCapacity(),previousFirst=upgradePage*upgradePageSize;
+    upgradePage=Math.min(Math.ceil(upgrades.length/size)-1,Math.floor(previousFirst/size));upgradePageSize=size;
+    const first=upgradePage*size,last=Math.min(upgrades.length,first+size),pages=Math.ceil(upgrades.length/size),levels=levelValues(),costs=costValues();
+    $('upgrade-grid').dataset.pageSize=String(size);
+    $('upgrade-grid').innerHTML=upgrades.slice(first,first+size).map((item,offset)=>{
+      const i=first+offset;
       const level=levels[i],maxed=level>=item.max,cost=costs[i],affordable=state[F.spendable]>=cost;
       const prerequisite=i===7&&(!levels[6]||!levels[5])?'Needs lounge + specialist':i===8&&!levels[5]?'Needs a specialist':'';
       const canBuy=state[F.canBuy]===1&&!maxed&&affordable&&!prerequisite;
-      const status=maxed?(i===4||i===5?(state[i===4?F.helperActive:F.specialistActive]?'ON DUTY':'STARTS TOMORROW'):'FULLY BUILT'):prerequisite||(!affordable?`${dollars(Math.max(0,cost-state[F.spendable]))} to go`:state[F.canBuy]!==1?'Finish your cup first':'READY TO BUILD');
+      const status=maxed?(i===4||i===5?(state[i===4?F.helperActive:F.specialistActive]?'ON DUTY':'STARTS TOMORROW'):'FULLY BUILT'):prerequisite||(!affordable?`${dollars(Math.max(0,cost-state[F.spendable]))} to go`:state[F.canBuy]!==1?'Finish your cup first':'READY');
       const icon=window.PourStoreArt.upgradeIcon?window.PourStoreArt.upgradeIcon(i,level):'✦';
       return `<article class="upgrade-card${maxed?' maxed':''}${prerequisite?' locked':''}"><div class="upgrade-icon" aria-hidden="true">${icon}</div><div class="upgrade-copy"><span class="upgrade-level">${item.unit} · ${level}/${item.max}</span><h3>${item.name}</h3><p>${item.description}</p><div class="upgrade-effect">${maxed?item.owned(level):item.effect(level)}</div><span class="upgrade-current">${level&&!maxed?'Now: '+item.owned(level):''}</span></div><button class="buy-button" data-item="${i}" ${canBuy?'':'disabled'} aria-label="${maxed?item.name+' fully owned':(i===4||i===5?'Hire ':'Build ')+item.name+' for '+dollars(cost)}">${maxed?'✓ OWNED':`${i===4||i===5?'HIRE':'BUILD'} <strong>${dollars(cost)}</strong>`}</button><span class="upgrade-status">${status}</span></article>`;
     }).join('');
-    text('store-back',state[0]===2?'OPEN DAY '+(state[F.day]+1):state[0]===1?'BACK TO YOUR POUR':'BACK TO THE COUNTER');
+    text('upgrade-page',(upgradePage+1)+' / '+pages);
+    $('upgrade-page').setAttribute('aria-label',`Page ${upgradePage+1} of ${pages}. Upgrades ${first+1} to ${last} of ${upgrades.length}.`);
+    $('upgrade-page').title=`Upgrades ${first+1}–${last} of ${upgrades.length}`;
+    $('upgrade-prev').disabled=upgradePage===0;$('upgrade-next').disabled=upgradePage===pages-1;
+  }
+  function changeUpgradePage(direction){
+    if(!ready||mode!=='store')return;
+    upgradePage=clamp(upgradePage+direction,0,Math.ceil(upgrades.length/upgradePageSize)-1);
+    renderUpgradePage();
+  }
+  function renderStore(){
+    refreshState();const levels=levelValues();
+    $('store-art').innerHTML=window.PourStoreArt.render(shopState());
+    $('store-art').setAttribute('aria-label',`Your soda bar: sign level ${levels[0]}, patio ${levels[1]}, awning ${levels[2]}, tap ${levels[3]}, ${levels[4]+levels[5]} employees, lounge ${levels[6]}, catering ${levels[7]}, training ${levels[8]}.`);
+    text('store-spendable',dollars(state[F.spendable]));text('store-reserve',dollars(state[F.reserve]));text('store-lifetime',dollars(state[F.lifetime]));
+    text('store-description',`Day ${state[F.day]} · ${state[9].toFixed(1)} ★ · ${state[F.customers]} guests`);
+    text('store-rule',state[F.canBuy]!==1?'Finish this cup to build':'Staff & seats: next day');
+    renderUpgradePage();
+    text('store-back',state[0]===2?'OPEN DAY '+(state[F.day]+1):'BACK TO POUR');
     updateHud();
   }
   function enterStore(){
@@ -586,8 +619,15 @@
     }else if(sceneDirty&&!document.hidden){draw();sceneDirty=false;}
     requestAnimationFrame(frame);
   }
-  window.addEventListener('resize',()=>{sceneDirty=true;});
-  if(window.ResizeObserver)new ResizeObserver(()=>{sceneDirty=true;}).observe(canvas);
+  function syncViewportLayout(){
+    sceneDirty=true;
+    if(ready&&mode==='store'&&upgradeCapacity()!==upgradePageSize)renderUpgradePage();
+  }
+  window.addEventListener('resize',syncViewportLayout);
+  if(window.ResizeObserver){
+    const viewportObserver=new ResizeObserver(syncViewportLayout);
+    viewportObserver.observe(canvas);viewportObserver.observe(document.documentElement);
+  }
   function cancelPendingPointer(){
     if(pendingPointer){clearTimeout(pendingPointer.timer);pendingPointer=null;}
   }
@@ -660,6 +700,7 @@
   ['pressure-gentle','pressure-classic','pressure-rush'].forEach((id,index)=>$(id)?.addEventListener('click',()=>changePressure(index)));
   for(const [id,key,module] of [['music-volume','musicVolume','PourMusic'],['sound-volume','soundVolume','PerfectPourSounds']]){const slider=$(id);if(slider){slider.value=settings[key]*100;slider.addEventListener('input',()=>{settings[key]=clamp(Number(slider.value)/100,0,1);window[module]?.setVolume(settings[key]);saveSettings();});}}
   $('upgrade-grid').addEventListener('click',event=>{const button=event.target.closest('button[data-item]');if(button&&!button.disabled)buyUpgrade(Number(button.dataset.item));});
+  $('upgrade-prev').addEventListener('click',()=>changeUpgradePage(-1));$('upgrade-next').addEventListener('click',()=>changeUpgradePage(1));
   $('export-save').addEventListener('click',exportSave);$('import-save').addEventListener('click',()=>$('import-file').click());$('import-file').addEventListener('change',importSave);
   $('reset-business').addEventListener('click',requestRestart);$('confirm-restart').addEventListener('click',resetBusiness);$('cancel-restart').addEventListener('click',cancelRestart);
   const leaveWindow=()=>{interruptPour();keyHeld=false;settlingSpaceHeld=false;if(['playing','preparing'].includes(mode))pause();saveCareer();if(externalSave)return;window.PourMusic?.stop();window.PerfectPourSounds?.suspend();};window.addEventListener('blur',leaveWindow);window.addEventListener('focus',syncMusic);document.addEventListener('visibilitychange',()=>{if(document.hidden)leaveWindow();else syncMusic();});
@@ -728,8 +769,8 @@
       const bytes=Uint8Array.from(atob(WASM_BASE64),ch=>ch.charCodeAt(0));const result=await WebAssembly.instantiate(bytes,{});engine=result.instance.exports;engine.reset(randomSeed());refreshState();ready=true;
       try{lastSavedRaw=localStorage.getItem(SAVE_KEY);const saved=lastSavedRaw||LEGACY_SAVE_KEYS.map(key=>localStorage.getItem(key)).find(Boolean);if(saved){applySave(JSON.parse(saved));loadedCareer=true;}}catch(_){toast('Your previous save could not be loaded. A fresh shop is ready; you can import a backup.');}
       if(loadedCareer){saveCareer();if(externalSave)return;}
-      renderOrder();updateHud();$('start-button').disabled=false;$('start-button').textContent=loadedCareer?(state[F.attempted]&&state[0]===0?'RESUME MY POUR':'BACK TO MY BUSINESS'):'OPEN THE SHOP';
-      if(loadedCareer)$('welcome-description').textContent=`Day ${state[F.day]} · ${dollars(state[F.cash])} · ${state[9].toFixed(1)} ★. Your counter is waiting.`;
+      renderOrder();updateHud();$('start-button').disabled=false;$('start-button').textContent=loadedCareer?(state[F.attempted]&&state[0]===0?'RESUME MY POUR':'RESUME SHOP'):'OPEN THE SHOP';
+      if(loadedCareer)$('welcome-description').textContent=`Day ${state[F.day]} · ${dollars(state[F.cash])} · ${state[9].toFixed(1)} ★`;
       $('start-button').focus({preventScroll:true});
     }catch(error){console.error('Perfect Pour could not start:',error);$('boot-error').hidden=false;$('boot-error').textContent='The game couldn’t start. Open this HTML file in a recent version of Chrome, Edge, Firefox, or Safari with JavaScript enabled.';$('start-button').textContent='UNABLE TO OPEN';}
   })();
