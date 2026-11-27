@@ -1,10 +1,10 @@
 {
   "game": "Perfect Pour",
-  "version": "1.04.1",
+  "version": "1.04.2",
   "release_date": "2026-11-27",
-  "revision": "direct-pour-and-contextual-visual-interface",
-  "html_bytes": 432111,
-  "html_sha256": "b133efdb7bf5d375236bbd3b37b3b61716696f14ed425e7d992e10358ec62fa7",
+  "revision": "touch-capture-release-fix",
+  "html_bytes": 432535,
+  "html_sha256": "689a06f9c1a37d64664a487e87a928df0e0c3c9c7780854df7c8a79dac1655c8",
   "wasm_bytes": 44961,
   "wasm_sha256": "f6a5cd045aab69a685544afc130d1d6aefb4ae95288cc343e5efca97ac29fca5",
   "native_tests": 52,
@@ -18,12 +18,9 @@
   "live_url": "https://perfect-pour.pretty-scarf-0591.chatgpt.site",
   "github_ci_url": "https://github.com/SiminanRoll/PerfectPour/actions/workflows/ci.yml",
   "browser_checks": [
-    "Desktop 1280x720: pointer recipe selection focuses Pour and native Space starts immediately. Two Hardcore holds switch Cherry to Cola without early payment, then serve once; a pointer held for six seconds from disabled Settling through Finished does not advance the customer.",
-    "Desktop 1280x720: preparation and post-release cup, gauge, and primary resting rectangles match exactly. The primary action stays 52px tall.",
-    "Phone 320x568: Easy uses a 217x48px primary and separate 76x48px action. Cup, gauge and both actions remain fixed across first hold and release, with the streak row unobscured. A short tap only tops up; held Enter advances one soda; separate Serve pays once.",
-    "Phone 320x568: automatic inline stars, fill/recipe/mix scores and earnings retain the cup. Optional receipt closes to the same result. Paid five-star Continue and returning from Build preserve the paid customer and cash.",
-    "Phone 320x568 and landscape 568x320: all owned ingredient and blend choices fit. Measured document overflow is zero in the inspected preparation, pour, finished and shop states.",
-    "Phone 320x568: storefront artwork is approximately152x89px; upgrade benefits, prices, staff wages and next-day activation remain visible. About and Business tools disclosures stay contained. One $12 sign purchase changes the storefront and cash from $46.09 to $34.09 once."
+    "390x844 managed browser viewport, restored paid mixed cup: native down/up/lostpointercapture/click reproduced the V1.04.1 dead Next button; with V1.04.2 the same captured gesture advances customer6 to7, retaining $46.09 and the existing streak.",
+    "390x844 managed browser viewport, restored last customer of day6: captured Close day reaches the summary once and settles $4.00 wages ($811.93 to $807.93); a separate captured Open next day reaches day7 customer1 with $807.93.",
+    "No layout or CSS changes. Zero document overflow in the observed portrait finished, next-customer preparation, and day-summary states."
   ],
   "balance_checks": {
     "catalog_cases": 6048,
@@ -48,7 +45,7 @@
     "report": "engine/balance-report.json",
     "evidence_scope": "Actual V104 Wasm; single-soda catalog retained and generated mixed careers use independent timing variation for each component. Correct recipes are selected instantly; these are sensitivity scenarios, not measured player performance."
   },
-  "verification_limit": "Managed HTTP preview of the actual standalone bundle, native keyboard/pointer input, and viewport-sized iframes with isolated earned-progress saves. Physical iOS/Android multi-touch, browser chrome, accessibility zoom overrides, direct file launch, subjective listening quality and a broad accessibility audit were not verified.",
+  "verification_limit": "Touch/pen sequences execute actual production handlers against shipped Wasm. Native Chromium pointer capture recreates the capture-release/click boundary in a 390x844 iframe with isolated earned-progress saves; it is not a physical iOS/Safari or Android device test. Earlier visual/audio scope is in the V1.04.1 acceptance record.",
   "audio_verification": "Existing music/effects lifecycle and cue suites pass. Pour and fizz audio now follow the active component; no new auditory mix assessment.",
   "music": "Original quiet synthesized loop; independent persisted music and effects volume.",
   "finish_effect": "Golden rim, glass glint, and bounded sparkles for five-star cups; static reduced-motion treatment.",
@@ -61,8 +58,8 @@
     "verified_bytes": 21676,
     "location": "Help & settings"
   },
-  "acceptance_report": "docs/qa/V1041_ACCEPTANCE.md",
-  "prior_acceptance_report": "docs/qa/V104_ACCEPTANCE.md",
+  "acceptance_report": "docs/qa/V1042_ACCEPTANCE.md",
+  "prior_acceptance_report": "docs/qa/V1041_ACCEPTANCE.md",
   "startup_flow": "Animated intro, then New Game / Continue / Settings. New Game defaults to Hardcore; in-game difficulty controls remain available. A saved business must be confirmed before replacement.",
   "zoom_control": "Fixed-scale viewport, pan-y/no-zoom touch actions, multi-touch/native gesture cancellation, and Ctrl-wheel cancellation. Ordinary wheel and single-touch events remain available.",
   "mixture_checks": {
@@ -77,5 +74,6 @@
   },
   "two_soda_orders": "Customer six introduces 50/50; occasional later requests use 25/75, 50/50, or 75/25 after twelve completed customers. Two numbered bottles, two cumulative target lines, one hold per soda in Hardcore, and top-ups plus explicit switching in Easy. Regular blend and at most one simple add-in keep mixed requests short.",
   "control_flow": "Select a recipe, then hold directly. Hardcore release switches the first mixed soda or serves the final soda. Easy primary always pours and pauses; separate Next soda/Serve becomes available after an attempt. Visible settling leads to an inline review; a fresh Next advances. Optional Details returns to the same cup.",
-  "visual_disclosure": "Owned ingredient choices appear after base selection. Short selection/purchase feedback, phase-specific action icons, optional upgrade information, compact Business tools, and a larger portrait storefront reduce persistent controls and text."
+  "visual_disclosure": "Owned ingredient choices appear after base selection. Short selection/purchase feedback, phase-specific action icons, optional upgrade information, compact Business tools, and a larger portrait storefront reduce persistent controls and text.",
+  "touch_input_fix": "Matching pointerup marks a primary press completed. Normal lostpointercapture preserves it until click; early capture loss and real pointercancel invalidate it. Phase ownership, single payment and stale-input guards remain."
 }

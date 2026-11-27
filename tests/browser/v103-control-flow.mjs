@@ -142,10 +142,12 @@ function extractFunction(name){
   }
   throw new Error(`Unclosed production function ${name}`);
 }
-const functionNames=['primaryAction','primaryPointerDown','releasePointer','cancelPrimaryPointer','primaryClick',
+const captureLossCallback=gameSource.match(/\$\('pour-button'\)\.addEventListener\('lostpointercapture',(\w+)\);/)?.[1];
+assert.ok(captureLossCallback,'Exercise the handler actually bound to primary-button capture loss');
+const functionNames=[...new Set(['primaryAction','primaryPointerDown','releasePointer','cancelPrimaryPointer','primaryClick',captureLossCallback,
   'easyPointerDown','easyAction','nativeActivation','keyDown','keyUp','clearInput','beginInput','releaseInput',
-  'interruptPour','serveDrink','announceNextPart','focusPourAfterPointer','nextOrder','viewReview',
-  'showCommittedPour','showFinishedCup','advanceSimulation','frame'];
+  'interruptPour','serveDrink','announceNextPart','focusPourAfterPointer','nextOrder','openNextDay','viewReview',
+  'showCommittedPour','showFinishedCup','advanceSimulation','frame'])];
 const sodas=vm.runInNewContext(gameSource.match(/const sodas = (\[[\s\S]*?\n  \]);/)[1]);
 const targetText=vm.runInNewContext(gameSource.match(/const targetText=[^;]+;/)[0]+'\ntargetText;');
 const scoreText=vm.runInNewContext(gameSource.split('\n').find(line=>line.trimStart().startsWith('const scoreText='))+'\nscoreText;');
@@ -184,13 +186,14 @@ function inputFixture({hardcore=true,mode='preparing',primed=false,selected=true
     begin_pour(){counts.begin++;return native.begin_pour();},
     end_pour(){counts.release++;return native.end_pour();},
     serve(){counts.serve++;return native.serve();},
-    next_order(){counts.next++;return native.next_order();}
+    next_order(){counts.next++;return native.next_order();},
+    next_day(seed){counts.nextDay++;return native.next_day(seed);}
   };
   const scope={engine,F,sodas,targetText,scoreText,state:snap(),ready:true,externalSave:false,mode,returnMode:'playing',
     easyPress:null,primaryPress:null,suppressPrimaryClick:false,inputOwner:null,activePointer:null,keyHeld:false,settlingSpaceHeld:false,menuActivationKey:'',pouring:false,
     overlays:['intro','welcome','result','summary','pause','help','restart'],Element,
     simulationClock:100,lastFrame:100,lastUi:100,lastAutosave:100,lastSpill:snap()[8],spillFlash:0,settlingElapsed:0,finishElapsed:0,visualTime:0,sceneDirty:false,
-    VISIBLE_FOAM:.001,reducedMotion:true,performance:{now:()=>now},clamp:(x,a,b)=>Math.max(a,Math.min(b,x)),
+    VISIBLE_FOAM:.001,reducedMotion:true,performance:{now:()=>now},randomSeed:()=>907,clamp:(x,a,b)=>Math.max(a,Math.min(b,x)),
     percent:fraction=>Math.round(fraction*100),signedMoney:cents=>(cents<0?'-':'')+'$'+(Math.abs(cents)/100).toFixed(2),
     setTimeout(){throw new Error('Pour input must not defer a tap/hold decision');},
     $(id){if(id==='pour-button')return button;if(id==='easy-action')return easy;if(id==='pressure-controls')return pressure;throw new Error('Unexpected input DOM target '+id);},
@@ -206,7 +209,6 @@ function inputFixture({hardcore=true,mode='preparing',primed=false,selected=true
     setMode(next){if(next!==scope.mode){scope.easyPress=null;scope.primaryPress=null;}scope.mode=next;scope.simulationClock=now;scope.sceneDirty=true;if(next!=='settling')scope.settlingElapsed=0;sync();},
     presentResult(){counts.review++;scope.mode='result';sync();},
     showSummary(){scope.mode='summary';sync();},
-    openNextDay(){counts.nextDay++;scope.mode='preparing';sync();},
     pause(){api.interruptPour();scope.mode='pause';sync();},
     resume(){scope.mode='playing';sync();},closeHelp(){scope.mode='playing';sync();},
     cancelRestart(){scope.mode='store';sync();},leaveStore(){scope.mode='playing';sync();}
@@ -216,15 +218,21 @@ function inputFixture({hardcore=true,mode='preparing',primed=false,selected=true
     button.dataset.action=policy.action;button.disabled=policy.disabled;easy.hidden=!policy.showEasyAction;easy.disabled=policy.easyDisabled;easy.dataset.label=policy.easyLabel;
   }
   const context=vm.createContext(scope);
-  const api=vm.runInContext(activePlayMode+'\n'+functionNames.map(extractFunction).join('\n')+'\n'+leaveWindow+'\n({'+functionNames.join(',')+',leaveWindow,closeResult:'+closeResult+'});',context);
+  const api=vm.runInContext(activePlayMode+'\n'+functionNames.map(extractFunction).join('\n')+'\n'+leaveWindow+'\n({'+functionNames.join(',')+',captureLost:'+captureLossCallback+',leaveWindow,closeResult:'+closeResult+'});',context);
   sync();
-  function event(extra={}){return{button:0,isPrimary:true,pointerId:1,currentTarget:button,target:button,detail:1,repeat:false,prevented:false,preventDefault(){this.prevented=true;},...extra};}
+  function event(extra={}){return{button:0,isPrimary:true,pointerId:1,pointerType:'mouse',currentTarget:button,target:button,detail:1,repeat:false,prevented:false,preventDefault(){this.prevented=true;},...extra};}
   const secondary=extra=>event({currentTarget:easy,target:easy,...extra});
   return{api,scope,button,easy,counts,events,checkpoints,labels,cues,event,secondary,sync,native,
     advance(ms){now+=ms;},tick(ms){now+=ms;api.frame(now);},
     mode(next){scope.mode=next;sync();},finish(){api.showFinishedCup(false);},
     clickEasy(){api.easyPointerDown(secondary());api.releasePointer(secondary());api.easyAction(secondary());},
-    clickPrimary(){api.primaryPointerDown(event());api.releasePointer(event());api.primaryClick(event());}
+    clickPrimary(){api.primaryPointerDown(event());api.releasePointer(event());api.primaryClick(event());},
+    tapPrimary(pointerType='touch'){
+      api.primaryPointerDown(event({pointerType,type:'pointerdown'}));
+      api.releasePointer(event({pointerType,type:'pointerup'}));
+      api.captureLost(event({pointerType,type:'lostpointercapture'}));
+      api.primaryClick(event({pointerType,type:'click'}));
+    }
   };
 }
 function paidFixture(options={}){
@@ -236,6 +244,57 @@ function paidFixture(options={}){
   assert.equal(f.scope.mode,'settling');assert.equal(f.scope.state[0],1);return f;
 }
 const ledger=f=>[9,10,13,16,F.cash,F.streak,F.comboBonus,F.milestone,F.lifetime,F.ingredientTotal,F.customers].map(index=>f.scope.state[index]);
+const savedEngine=f=>new Float64Array(f.native.memory.buffer,f.native.save_ptr(),f.native.save_len()).slice();
+function restoredPaidFixture(saved){
+  const f=inputFixture();
+  new Float64Array(f.native.memory.buffer,f.native.save_ptr(),f.native.save_len()).set(saved);
+  assert.equal(f.native.restore_save(),1,'The shipped engine accepts its existing paid-cup save');
+  f.scope.refreshState();assert.equal(f.scope.state[0],1);f.finish();return f;
+}
+
+// Direct-manipulation pointers release implicit capture after pointerup, before
+// click. Replaying only down/up/click omits the boundary that blocked mobile Next.
+// This is production-handler/Wasm coverage, not a native-device browser test.
+const savedCup=paidFixture();
+for(let n=0;n<600&&savedCup.scope.mode==='settling';n++)savedCup.tick(1000/60);
+assert.equal(savedCup.scope.mode,'finished');
+const paidSave=savedEngine(savedCup);
+for(const pointerType of ['touch','pen']){
+  const resumed=restoredPaidFixture(paidSave),customer=resumed.scope.state[1],cash=resumed.scope.state[F.cash],completed=resumed.scope.state[16];
+  assert.equal(resumed.scope.state[F.cash],savedCup.scope.state[F.cash],'Restoring a paid cup does not repay it');
+  resumed.tapPrimary(pointerType);
+  assert.equal(resumed.counts.next,1,pointerType+' Next survives normal implicit capture loss between pointerup and click');
+  assert.equal(resumed.scope.mode,'preparing');assert.equal(resumed.scope.state[1],customer+1);
+  assert.equal(resumed.scope.state[F.cash],cash);assert.equal(resumed.scope.state[16],completed);
+  assert.equal(resumed.counts.begin,0);assert.equal(resumed.counts.serve,0);
+  resumed.api.primaryClick(resumed.event({pointerType,type:'click'}));
+  assert.equal(resumed.counts.next,1,'A duplicate '+pointerType+' click cannot skip another customer');
+  assert.equal(resumed.scope.state[F.cash],cash);
+  for(const boundary of ['captureLost','cancelPrimaryPointer']){
+    const interrupted=restoredPaidFixture(paidSave);
+    interrupted.api.primaryPointerDown(interrupted.event({pointerType}));
+    interrupted.api[boundary](interrupted.event({pointerType}));
+    interrupted.api.releasePointer(interrupted.event({pointerType}));
+    interrupted.api.captureLost(interrupted.event({pointerType}));
+    interrupted.api.primaryClick(interrupted.event({pointerType}));
+    assert.equal(interrupted.counts.next,0,boundary+' before release cancels a '+pointerType+' Next gesture');
+    interrupted.tapPrimary(pointerType);assert.equal(interrupted.counts.next,1,'A fresh tap works after '+boundary);
+  }
+  const cancelled=restoredPaidFixture(paidSave);
+  cancelled.api.primaryPointerDown(cancelled.event({pointerType}));cancelled.api.releasePointer(cancelled.event({pointerType}));
+  cancelled.api.cancelPrimaryPointer(cancelled.event({pointerType}));cancelled.api.captureLost(cancelled.event({pointerType}));
+  cancelled.api.primaryClick(cancelled.event({pointerType}));
+  assert.equal(cancelled.counts.next,0,'A real cancellation still invalidates a released '+pointerType+' gesture');
+  const otherPointer=restoredPaidFixture(paidSave);
+  otherPointer.api.primaryPointerDown(otherPointer.event({pointerType,pointerId:7}));
+  otherPointer.api.releasePointer(otherPointer.event({pointerType,pointerId:8}));
+  otherPointer.api.captureLost(otherPointer.event({pointerType,pointerId:8}));
+  otherPointer.api.releasePointer(otherPointer.event({pointerType,pointerId:7}));
+  otherPointer.api.captureLost(otherPointer.event({pointerType,pointerId:7}));
+  otherPointer.api.primaryClick(otherPointer.event({pointerType,pointerId:7}));
+  assert.equal(otherPointer.counts.next,1,'Another pointer cannot release or cancel the intended '+pointerType+' Next tap');
+}
+checks.push('restored paid cups advance once for touch and pen down/up/lost-capture/click without repayment; early capture loss and real cancellation invalidate gestures, unrelated pointers do not, and fresh taps recover');
 
 for(const source of ['pointer','key']){
   const direct=inputFixture();
@@ -288,8 +347,22 @@ for(const boundary of ['cancelPrimaryPointer','clearInput','interruptPour']){
 const multi=inputFixture({hardcore:false,primed:true});
 multi.api.primaryPointerDown(multi.event());multi.api.primaryPointerDown(multi.event({pointerId:2}));
 multi.api.releasePointer(multi.event({pointerId:2}));assert.equal(multi.scope.inputOwner,'pointer');assert.equal(multi.counts.release,0);
+multi.api.captureLost(multi.event({pointerId:2}));assert.equal(multi.scope.inputOwner,'pointer');assert.equal(multi.counts.release,0);
 multi.api.cancelPrimaryPointer(multi.event());multi.api.cancelPrimaryPointer(multi.event());multi.api.releasePointer(multi.event());
 assert.equal(multi.counts.release,1);assert.equal(multi.counts.serve,0);
+for(const pointerType of ['touch','pen']){
+  const interruptedPour=inputFixture();
+  interruptedPour.api.primaryPointerDown(interruptedPour.event({pointerType}));interruptedPour.advance(200);
+  interruptedPour.api.captureLost(interruptedPour.event({pointerType}));
+  assert.equal(interruptedPour.counts.release,1);assert.equal(interruptedPour.scope.mode,'settling');
+  interruptedPour.api.releasePointer(interruptedPour.event({pointerType}));interruptedPour.finish();
+  interruptedPour.api.captureLost(interruptedPour.event({pointerType}));interruptedPour.api.primaryClick(interruptedPour.event({pointerType}));
+  assert.equal(interruptedPour.counts.release,1);assert.equal(interruptedPour.counts.next,0,'An interrupted '+pointerType+' pour cannot become Next');
+  const easyPour=inputFixture({hardcore:false});
+  easyPour.api.primaryPointerDown(easyPour.event({pointerType}));easyPour.advance(100);easyPour.api.releasePointer(easyPour.event({pointerType}));
+  easyPour.api.captureLost(easyPour.event({pointerType}));easyPour.api.primaryClick(easyPour.event({pointerType}));
+  assert.equal(easyPour.counts.release,1);assert.equal(easyPour.counts.serve,0);assert.equal(easyPour.scope.mode,'playing');
+}
 checks.push('Easy service rejects active holds and presses that began while unavailable; cancellation clears pending secondary activation; extra pointers cannot steal a pour');
 
 const hardMix=inputFixture({mixed:true}),mixOpening=ledger(hardMix);
@@ -360,10 +433,26 @@ for(let order=1;order<=goal;order++){
   if(order<goal)closing.clickPrimary();
 }
 assert.equal(closing.scope.state[0],1);assert.equal(closing.scope.state[16],goal);assert.equal(closing.counts.next,goal-1);
+const lastPaidSave=savedEngine(closing);
 closing.clickPrimary();assert.equal(closing.scope.state[0],2);assert.equal(closing.scope.mode,'summary');assert.equal(closing.counts.next,goal);
 const closedLedger=ledger(closing);closing.api.nextOrder();assert.deepEqual(ledger(closing),closedLedger);assert.equal(closing.counts.next,goal);assert.equal(closing.counts.nextDay,0);
+for(const pointerType of ['touch','pen']){
+  const dayEnd=restoredPaidFixture(lastPaidSave),day=dayEnd.scope.state[F.day];
+  assert.equal(dayEnd.scope.state[1],dayEnd.scope.state[F.goal]);
+  dayEnd.tapPrimary(pointerType);
+  assert.equal(dayEnd.counts.next,1,pointerType+' Close day survives normal implicit capture loss');
+  assert.equal(dayEnd.scope.state[0],2);assert.equal(dayEnd.scope.mode,'summary');
+  const closeCash=dayEnd.scope.state[F.cash];dayEnd.api.primaryClick(dayEnd.event({pointerType}));
+  assert.equal(dayEnd.counts.next,1);assert.equal(dayEnd.counts.nextDay,0);assert.equal(dayEnd.scope.state[F.cash],closeCash);
+  dayEnd.tapPrimary(pointerType);
+  assert.equal(dayEnd.counts.nextDay,1,pointerType+' Open next day survives normal implicit capture loss');
+  assert.equal(dayEnd.scope.state[F.day],day+1);assert.equal(dayEnd.scope.state[0],0);assert.equal(dayEnd.scope.mode,'preparing');
+  const openCash=dayEnd.scope.state[F.cash];dayEnd.api.primaryClick(dayEnd.event({pointerType}));
+  assert.equal(dayEnd.counts.nextDay,1);assert.equal(dayEnd.counts.begin,0);assert.equal(dayEnd.scope.state[F.cash],openCash);
+}
 checks.push('the actual frame path waits for visible settling, renders one inline result and cue, and keeps the cup until explicit Next; optional receipt keys cannot advance; its real close callback returns to the cup without repayment or another cue');
 checks.push('one explicit Next per customer reaches the last inline result; Close day executes the actual day-close branch once and leaves opening tomorrow explicit');
+checks.push('touch and pen Close day and Open next day each survive implicit capture release and execute the production action once, with duplicate clicks unable to open another day or pour');
 
 const settleSpace=paidFixture();
 settleSpace.api.keyDown(settleSpace.event({code:'Space'}));settleSpace.finish();
@@ -390,18 +479,18 @@ lostEnter.api.keyDown(lostEnter.event({code:'Enter'}));assert.equal(lostEnter.sc
 lostEnter.api.leaveWindow();assert.equal(lostEnter.scope.menuActivationKey,'');lostEnter.finish();
 lostEnter.api.keyDown(lostEnter.event({code:'Enter'}));assert.equal(lostEnter.counts.next,1,'Blur clears a missing Enter keyup so the next fresh key is not swallowed');
 const settlePointer=paidFixture();settlePointer.api.primaryPointerDown(settlePointer.event());settlePointer.finish();
-settlePointer.api.releasePointer(settlePointer.event());settlePointer.api.primaryClick(settlePointer.event());
+settlePointer.api.releasePointer(settlePointer.event());settlePointer.api.captureLost(settlePointer.event());settlePointer.api.primaryClick(settlePointer.event());
 assert.equal(settlePointer.counts.next,0,'A press begun on disabled settling cannot become Next');
 const missingDown=paidFixture();assert.equal(missingDown.scope.suppressPrimaryClick,false);missingDown.finish();
 missingDown.api.primaryClick(missingDown.event());assert.equal(missingDown.counts.next,0,'A synthesized click after missing disabled pointerdown has no fresh action owner');
 missingDown.api.primaryPointerDown(missingDown.event());missingDown.api.cancelPrimaryPointer(missingDown.event());missingDown.api.primaryClick(missingDown.event());
 assert.equal(missingDown.counts.next,0,'Cancelling a Next press invalidates its later click');
 missingDown.clickPrimary();assert.equal(missingDown.counts.next,1,'A new complete pointer gesture still advances normally');
-const lateRelease=inputFixture();lateRelease.api.primaryPointerDown(lateRelease.event());lateRelease.advance(200);lateRelease.api.releasePointer(lateRelease.event());lateRelease.finish();lateRelease.api.primaryClick(lateRelease.event());
+const lateRelease=inputFixture();lateRelease.api.primaryPointerDown(lateRelease.event());lateRelease.advance(200);lateRelease.api.releasePointer(lateRelease.event());lateRelease.finish();lateRelease.api.captureLost(lateRelease.event());lateRelease.api.primaryClick(lateRelease.event());
 assert.equal(lateRelease.counts.next,0,'The original hold release click cannot skip a result that appears before click delivery');
 const pointerDuringKey=inputFixture();pointerDuringKey.api.keyDown(pointerDuringKey.event({code:'Space'}));
 pointerDuringKey.api.primaryPointerDown(pointerDuringKey.event({pointerId:2}));pointerDuringKey.advance(200);pointerDuringKey.api.keyUp(pointerDuringKey.event({code:'Space'}));pointerDuringKey.finish();
-pointerDuringKey.api.releasePointer(pointerDuringKey.event({pointerId:2}));pointerDuringKey.api.primaryClick(pointerDuringKey.event({pointerId:2}));
+pointerDuringKey.api.releasePointer(pointerDuringKey.event({pointerId:2}));pointerDuringKey.api.captureLost(pointerDuringKey.event({pointerId:2}));pointerDuringKey.api.primaryClick(pointerDuringKey.event({pointerId:2}));
 assert.equal(pointerDuringKey.counts.next,0,'A pointer press begun while Space owns the pour cannot become Next when released later');
 const assistive=paidFixture();assistive.finish();assistive.api.primaryClick(assistive.event({detail:0}));assert.equal(assistive.counts.next,1,'An intentional assistive click remains available after a missing pointer click');
 checks.push('Space, Enter, native Easy activation, disabled settling presses and pointers begun during another hold cannot skip the completed cup; blur clears lost keyup state; fresh discrete input and assistive clicks still work');

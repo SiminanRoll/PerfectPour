@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
   <meta name="theme-color" content="#124c4c">
   <meta name="description" content="A little soda shop. A perfect pour. An offline soda-pouring and shop-building game. One pour, happy customers, and a business of your own.">
-  <title>Perfect Pour V1.04.1 · Your soda story</title>
+  <title>Perfect Pour V1.04.2 · Your soda story</title>
   <link rel="icon" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA2NCA2NCI+PHJlY3Qgd2lkdGg9IjY0IiBoZWlnaHQ9IjY0IiByeD0iMTUiIGZpbGw9IiMxNzRiNDkiLz48cGF0aCBkPSJNMTggMTdoMzBsLTQgMzZIMjJ6IiBmaWxsPSIjZmZjYzZjIi8+PHBhdGggZD0iTTM0IDE4IDM5IDhoMTFNMTYgMTdoMzQiIGZpbGw9Im5vbmUiIHN0cm9rZT0iI2ZmZmFmMCIgc3Ryb2tlLXdpZHRoPSI0IiBzdHJva2UtbGluZWNhcD0icm91bmQiLz48Y2lyY2xlIGN4PSIyOCIgY3k9IjM1IiByPSIyIiBmaWxsPSIjMTc0YjQ5Ii8+PGNpcmNsZSBjeD0iMzkiIGN5PSIzNSIgcj0iMiIgZmlsbD0iIzE3NGI0OSIvPjxwYXRoIGQ9Ik0yOCA0NHE2IDYgMTEgMCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjMTc0YjQ5IiBzdHJva2Utd2lkdGg9IjMiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIvPjwvc3ZnPg==">
   <style>
 /* Perfect Pour V1.02 · A warm, illustrated counter. Everything stays offline. */
@@ -1068,7 +1068,7 @@ body[data-game-mode="intro"]>.global-utility,body[data-game-mode="welcome"]>.glo
         <g class="intro-air-bubbles" stroke="#b5d3ac" stroke-width="3"><circle cx="171" cy="325" r="9"/><circle cx="453" cy="362" r="7"/><circle cx="105" cy="270" r="5"/><circle cx="506" cy="176" r="7"/><circle cx="366" cy="73" r="4"/></g>
       </svg>
     </div>
-    <span class="title-version">V1.04.1</span>
+    <span class="title-version">V1.04.2</span>
   </section>
 </div>
 
@@ -1084,7 +1084,7 @@ body[data-game-mode="intro"]>.global-utility,body[data-game-mode="welcome"]>.glo
         <button class="menu-action menu-settings" id="menu-settings"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M4 17h16"/><circle cx="9" cy="7" r="3"/><circle cx="15" cy="17" r="3"/></svg><span>SETTINGS</span></button>
       </nav>
     </div>
-    <span class="title-version">V1.04.1</span>
+    <span class="title-version">V1.04.2</span>
   </section>
 </div>
 <p id="boot-error" class="title-boot-error" role="alert" hidden></p>
@@ -2877,7 +2877,7 @@ body[data-game-mode="intro"]>.global-utility,body[data-game-mode="welcome"]>.glo
     if(event.button!==0||event.isPrimary===false)return;
     if(inputOwner!==null){primaryPress=null;suppressPrimaryClick=true;event.preventDefault();return;}
     suppressPrimaryClick=false;
-    primaryPress={id:event.pointerId,action:$('pour-button').dataset.action,mode};
+    primaryPress={id:event.pointerId,action:$('pour-button').dataset.action,mode,released:false};
     if($('pour-button').disabled||mode==='settling'){suppressPrimaryClick=true;event.preventDefault();return;}
     if(!['preparing','playing'].includes(mode))return;
     const action=$('pour-button').dataset.action;
@@ -2887,7 +2887,14 @@ body[data-game-mode="intro"]>.global-utility,body[data-game-mode="welcome"]>.glo
     if(beginInput('pointer'))activePointer=event.pointerId;
   }
   function releasePointer(event){
+    if(primaryPress&&primaryPress.id===event.pointerId)primaryPress.released=true;
     if(inputOwner==='pointer'&&(activePointer===null||event.pointerId===activePointer))releaseInput('pointer');
+  }
+  function releasePrimaryCapture(event){
+    // Touch and pen release their implicit capture after pointerup, before click.
+    // Keep that completed tap; capture lost before release still cancels it.
+    if(primaryPress&&primaryPress.id===event.pointerId&&primaryPress.released)return;
+    cancelPrimaryPointer(event);
   }
   function cancelPrimaryPointer(event){
     if(easyPress&&easyPress.id===event.pointerId)easyPress=null;
@@ -2914,7 +2921,7 @@ body[data-game-mode="intro"]>.global-utility,body[data-game-mode="welcome"]>.glo
   }
   $('pour-button').addEventListener('pointerdown',primaryPointerDown);
   window.addEventListener('pointerup',releasePointer);window.addEventListener('pointercancel',cancelPrimaryPointer);
-  $('pour-button').addEventListener('lostpointercapture',cancelPrimaryPointer);
+  $('pour-button').addEventListener('lostpointercapture',releasePrimaryCapture);
   $('pour-button').addEventListener('contextmenu',event=>event.preventDefault());
   $('pour-button').addEventListener('click',primaryClick);
   $('easy-action').addEventListener('pointerdown',easyPointerDown);$('easy-action').addEventListener('click',easyAction);
