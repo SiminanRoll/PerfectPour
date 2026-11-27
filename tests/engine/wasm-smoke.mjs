@@ -6,13 +6,22 @@ const module=await WebAssembly.compile(bytes);
 assert.deepEqual(WebAssembly.Module.imports(module),[],'Engine remains dependency-free');
 const {exports:e}=await WebAssembly.instantiate(module,{}),I=contract.snapshot.fields;
 for(const name of Object.keys(contract.exports))assert.equal(typeof e[name],'function',name);
-assert.equal(e.state_len(),124);assert.equal(e.save_len(),120);
+assert.equal(e.state_len(),134);assert.equal(e.save_len(),120);
 const s=()=>Array.from(new Float32Array(e.memory.buffer,e.state_ptr(),e.state_len()));
 const value=n=>s()[I[n]];
 const save=()=>Array.from(new Float64Array(e.memory.buffer,e.save_ptr(),e.save_len()));
 const restore=a=>{const p=e.save_ptr(),buffer=new Float64Array(e.memory.buffer,p,e.save_len());buffer.fill(0);buffer.set(a);return e.restore_save();};
 const advance=t=>{while(t>1e-8){const dt=Math.min(t,1/120);e.step(dt,1);t-=dt;}};
-const perfect=()=>{assert.equal(e.set_pressure(0),1);const before=s();begin();advance(before[4]*before[5]/before[19]);e.end_pour();if(!before[21])e.serve();assert.equal(value('stars'),5);};
+const pourRequested=()=>{
+ prepare();const parts=value('isMix')?2:1;
+ for(let part=0;part<parts;part++){
+  const before=s();assert.equal(begin(),1);
+  advance(Math.max(0,before[I.activeTarget]*before[5]-before[64])/before[19]);
+  e.end_pour();if(!before[21])assert.equal(e.serve(),1);
+  assert.equal(value('phase'),part===parts-1?1:0,'Only the final component commits the customer');
+ }
+};
+const perfect=()=>{assert.equal(e.set_pressure(0),1);pourRequested();assert.equal(value('stars'),5);};
 const prepare=()=>{const a=s();if(a[109]===1)assert.equal(e.set_recipe(a[2],a[98],a[99],a[100],a[101]),1);};
 const begin=()=>{if(value('selectedSoda')===4)prepare();return e.begin_pour();};
 const checks=[];
@@ -23,7 +32,7 @@ begin();assert.equal(e.set_pressure(0),0);assert.equal(e.set_mode(0),0);assert.e
 advance(1.75);const held=s();e.end_pour();const paid=s();assert.equal(value('stars'),5);assert.equal(value('phase'),1);
 assert.equal(value('foam'),held[7]);assert.equal(begin(),0);assert.equal(e.serve(),0);
 e.end_pour();advance(2);const settled=s();assert(settled[7]<paid[7]);assert(settled[6]>paid[6]);
-for(let i=0;i<124;i++)if(![6,7,64].includes(i))assert.equal(settled[i],paid[i],`paid field${i} frozen`);
+for(let i=0;i<e.state_len();i++)if(![6,7,64].includes(i))assert.equal(settled[i],paid[i],`paid field${i} frozen`);
 checks.push('One-hold default Hardcore; pressure/mode/input guards; paid settling freezes service and economics');
 const committed=save();assert.equal(restore(committed),1);const cash=value('cash');e.end_pour();e.serve();assert.equal(value('cash'),cash);
 assert.equal(value('foam'),0);assert.equal(value('phase'),1);
@@ -48,7 +57,7 @@ for(const name of ['untouched','paid','staffed-closed']){
  assert.equal(value('lastNet'),old.engine[14]);assert(value('patienceLimit')>=8);
  assert.equal(value('phase'),old.engine[1]);assert.equal(value('day'),old.engine[25]);
  for(let i=0;i<6;i++)assert.equal(s()[34+i],old.engine[34+i]);
- const migrated=save();assert.equal(migrated[0],103);assert.equal(restore(migrated),1);assert.equal(value('cash'),old.engine[21]);
+ const migrated=save();assert.equal(migrated[0],104);assert.equal(restore(migrated),1);assert.equal(value('cash'),old.engine[21]);
  if(name==='staffed-closed'){assert.equal(value('staffOrders'),2);assert.equal(value('wagesPaid'),400);e.next_order();assert.equal(value('cash'),old.engine[21]);assert.equal(e.next_day(8),1);assert.equal(value('orderGoal'),12);}
 }
 checks.push('Three genuine V101 fixtures migrate: untouched, paid and staffed closed day; cash/ownership/payroll preserved');
@@ -60,7 +69,7 @@ for(let seed=1;seed<=64;seed++){
  for(let day=1;day<=2;day++){
   while(value('phase')!==2){
    const request=s();seen.add(`${request[2]}:${request[3]}:${Math.round(request[4]*100)}`);
-   e.set_pressure(1);begin();advance(request[4]*request[5]/request[19]);e.end_pour();
+   e.set_pressure(1);pourRequested();
    if(value('spill')>0)classicSpills++;coverage++;e.next_order();
   }
   if(day===1)e.next_day(seed+7919);

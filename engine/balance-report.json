@@ -1,7 +1,7 @@
 {
-  "version": "1.03",
-  "engineSha256": "faace530dcdcf92e4504ef33ace1bd51c8e28a89d9b26d9f84d35637a7e24c4e",
-  "method": "Actual compiled Rust/Wasm.6048 nominal-hold fixtures=4bases×4cups×7targets×3tap levels×3pressures×3blends×2modes. Correct requested recipes are selected before each hold; add-ins do not displace drink volume. Gentle catalog tested at exact nominal hold; Classic/Rush results are nominal-hold diagnostics, not searched optimal ceilings. Career profiles use seeded Gaussian timing errors around Gentle nominal hold; they are sensitivity scenarios, not measured players. Recipes are selected without simulated prep delay. Menu/review time excluded. All12 upgrade types total195300cents.",
+  "version": "1.04",
+  "engineSha256": "f6a5cd045aab69a685544afc130d1d6aefb4ae95288cc343e5efca97ac29fca5",
+  "method": "Actual compiled Rust/Wasm.6048 single-soda nominal-hold fixtures=4bases×4cups×7targets×3tap levels×3pressures×3blends×2modes. Correct requested recipes are selected before each drink; add-ins do not displace drink volume. Gentle catalog tested at exact nominal hold; Classic/Rush results are nominal-hold diagnostics, not searched optimal ceilings. Generated career profiles include both single and two-soda orders, with an independent seeded Gaussian timing error around the current target for each Gentle component; they are sensitivity scenarios, not measured players. Recipes are selected without simulated prep delay. Menu/review time excluded. All12 upgrade types total195300cents.",
   "catalog": [
     {
       "pressure": "Gentle",
@@ -56,47 +56,47 @@
           "days": 8,
           "firstPurchase": 2,
           "meanFillScore": 100,
-          "cash": 938
+          "cash": 2035
         },
         {
           "seed": 2,
-          "pours": 89,
+          "pours": 88,
           "days": 8,
           "firstPurchase": 2,
           "meanFillScore": 100,
-          "cash": 1072
+          "cash": 680
         },
         {
           "seed": 3,
-          "pours": 92,
+          "pours": 90,
           "days": 8,
           "firstPurchase": 2,
           "meanFillScore": 100,
-          "cash": 2798
+          "cash": 1048
         },
         {
           "seed": 4,
-          "pours": 91,
+          "pours": 90,
           "days": 8,
           "firstPurchase": 3,
           "meanFillScore": 100,
-          "cash": 1981
+          "cash": 818
         },
         {
           "seed": 5,
-          "pours": 91,
+          "pours": 90,
           "days": 8,
           "firstPurchase": 3,
           "meanFillScore": 100,
-          "cash": 1703
+          "cash": 944
         },
         {
           "seed": 6,
-          "pours": 91,
+          "pours": 90,
           "days": 8,
           "firstPurchase": 3,
           "meanFillScore": 100,
-          "cash": 2521
+          "cash": 979
         },
         {
           "seed": 7,
@@ -104,15 +104,15 @@
           "days": 8,
           "firstPurchase": 3,
           "meanFillScore": 100,
-          "cash": 1097
+          "cash": 3041
         },
         {
           "seed": 8,
-          "pours": 91,
+          "pours": 89,
           "days": 8,
           "firstPurchase": 2,
           "meanFillScore": 100,
-          "cash": 2136
+          "cash": 787
         },
         {
           "seed": 9,
@@ -120,7 +120,7 @@
           "days": 8,
           "firstPurchase": 2,
           "meanFillScore": 100,
-          "cash": 780
+          "cash": 2822
         },
         {
           "seed": 10,
@@ -128,39 +128,39 @@
           "days": 8,
           "firstPurchase": 3,
           "meanFillScore": 100,
-          "cash": 774
+          "cash": 3297
         },
         {
           "seed": 11,
-          "pours": 93,
+          "pours": 92,
           "days": 8,
           "firstPurchase": 2,
           "meanFillScore": 100,
-          "cash": 2441
+          "cash": 2920
         },
         {
           "seed": 12,
-          "pours": 92,
+          "pours": 90,
           "days": 8,
           "firstPurchase": 2,
           "meanFillScore": 100,
-          "cash": 3817
+          "cash": 1620
         },
         {
           "seed": 13,
-          "pours": 91,
+          "pours": 90,
           "days": 8,
           "firstPurchase": 3,
           "meanFillScore": 100,
-          "cash": 686
+          "cash": 463
         },
         {
           "seed": 14,
-          "pours": 92,
+          "pours": 90,
           "days": 8,
           "firstPurchase": 3,
           "meanFillScore": 100,
-          "cash": 2799
+          "cash": 595
         },
         {
           "seed": 15,
@@ -168,20 +168,20 @@
           "days": 8,
           "firstPurchase": 3,
           "meanFillScore": 100,
-          "cash": 1425
+          "cash": 2743
         },
         {
           "seed": 16,
-          "pours": 90,
+          "pours": 88,
           "days": 8,
           "firstPurchase": 2,
           "meanFillScore": 100,
-          "cash": 2769
+          "cash": 523
         }
       ],
       "poursRange": [
-        89,
-        93
+        88,
+        92
       ],
       "daysRange": [
         8,
@@ -199,136 +199,136 @@
       "runs": [
         {
           "seed": 1,
-          "pours": 96,
-          "days": 8,
+          "pours": 100,
+          "days": 9,
           "firstPurchase": 2,
-          "meanFillScore": 96.38,
-          "cash": 1961
+          "meanFillScore": 96.62,
+          "cash": 454
         },
         {
           "seed": 2,
-          "pours": 96,
-          "days": 8,
+          "pours": 103,
+          "days": 9,
           "firstPurchase": 2,
-          "meanFillScore": 96.66,
-          "cash": 615
+          "meanFillScore": 96.5,
+          "cash": 664
         },
         {
           "seed": 3,
-          "pours": 98,
-          "days": 9,
-          "firstPurchase": 2,
-          "meanFillScore": 96.79,
-          "cash": 2373
-        },
-        {
-          "seed": 4,
-          "pours": 93,
-          "days": 8,
-          "firstPurchase": 3,
-          "meanFillScore": 97.25,
-          "cash": 587
-        },
-        {
-          "seed": 5,
-          "pours": 97,
-          "days": 9,
-          "firstPurchase": 3,
-          "meanFillScore": 96.84,
-          "cash": 1859
-        },
-        {
-          "seed": 6,
-          "pours": 93,
-          "days": 8,
-          "firstPurchase": 3,
-          "meanFillScore": 97.29,
-          "cash": 2225
-        },
-        {
-          "seed": 7,
-          "pours": 94,
-          "days": 8,
-          "firstPurchase": 3,
-          "meanFillScore": 96.82,
-          "cash": 696
-        },
-        {
-          "seed": 8,
-          "pours": 95,
-          "days": 8,
-          "firstPurchase": 2,
-          "meanFillScore": 97,
-          "cash": 1683
-        },
-        {
-          "seed": 9,
-          "pours": 94,
-          "days": 8,
-          "firstPurchase": 2,
-          "meanFillScore": 97.13,
-          "cash": 453
-        },
-        {
-          "seed": 10,
-          "pours": 97,
-          "days": 9,
-          "firstPurchase": 3,
-          "meanFillScore": 96.72,
-          "cash": 3100
-        },
-        {
-          "seed": 11,
           "pours": 101,
           "days": 9,
           "firstPurchase": 2,
-          "meanFillScore": 97.04,
-          "cash": 1204
+          "meanFillScore": 96.85,
+          "cash": 3276
         },
         {
-          "seed": 12,
+          "seed": 4,
           "pours": 96,
           "days": 8,
-          "firstPurchase": 2,
-          "meanFillScore": 96.83,
-          "cash": 1404
-        },
-        {
-          "seed": 13,
-          "pours": 94,
-          "days": 8,
           "firstPurchase": 3,
-          "meanFillScore": 97.04,
-          "cash": 2880
+          "meanFillScore": 97.01,
+          "cash": 676
         },
         {
-          "seed": 14,
+          "seed": 5,
           "pours": 96,
           "days": 8,
           "firstPurchase": 3,
           "meanFillScore": 96.96,
-          "cash": 1586
+          "cash": 2012
         },
         {
-          "seed": 15,
-          "pours": 92,
+          "seed": 6,
+          "pours": 99,
+          "days": 9,
+          "firstPurchase": 3,
+          "meanFillScore": 97.01,
+          "cash": 3580
+        },
+        {
+          "seed": 7,
+          "pours": 96,
+          "days": 8,
+          "firstPurchase": 3,
+          "meanFillScore": 96.64,
+          "cash": 1775
+        },
+        {
+          "seed": 8,
+          "pours": 99,
+          "days": 9,
+          "firstPurchase": 2,
+          "meanFillScore": 96.91,
+          "cash": 2280
+        },
+        {
+          "seed": 9,
+          "pours": 93,
+          "days": 8,
+          "firstPurchase": 2,
+          "meanFillScore": 97.21,
+          "cash": 1216
+        },
+        {
+          "seed": 10,
+          "pours": 100,
+          "days": 9,
+          "firstPurchase": 3,
+          "meanFillScore": 96.57,
+          "cash": 767
+        },
+        {
+          "seed": 11,
+          "pours": 96,
+          "days": 8,
+          "firstPurchase": 2,
+          "meanFillScore": 96.94,
+          "cash": 502
+        },
+        {
+          "seed": 12,
+          "pours": 93,
+          "days": 8,
+          "firstPurchase": 2,
+          "meanFillScore": 96.82,
+          "cash": 1298
+        },
+        {
+          "seed": 13,
+          "pours": 100,
+          "days": 9,
+          "firstPurchase": 3,
+          "meanFillScore": 96.7,
+          "cash": 2865
+        },
+        {
+          "seed": 14,
+          "pours": 95,
           "days": 8,
           "firstPurchase": 3,
           "meanFillScore": 96.77,
-          "cash": 562
+          "cash": 1393
+        },
+        {
+          "seed": 15,
+          "pours": 100,
+          "days": 9,
+          "firstPurchase": 3,
+          "meanFillScore": 96.76,
+          "cash": 2409
         },
         {
           "seed": 16,
-          "pours": 92,
+          "pours": 91,
           "days": 8,
           "firstPurchase": 2,
-          "meanFillScore": 96.98,
-          "cash": 751
+          "meanFillScore": 96.91,
+          "cash": 649
         }
       ],
       "poursRange": [
-        92,
-        101
+        91,
+        103
       ],
       "daysRange": [
         8,
@@ -346,136 +346,136 @@
       "runs": [
         {
           "seed": 1,
-          "pours": 144,
-          "days": 12,
+          "pours": 145,
+          "days": 13,
           "firstPurchase": 2,
-          "meanFillScore": 93.02,
-          "cash": 438
+          "meanFillScore": 93.26,
+          "cash": 1794
         },
         {
           "seed": 2,
-          "pours": 142,
-          "days": 12,
-          "firstPurchase": 3,
-          "meanFillScore": 92.67,
-          "cash": 1762
-        },
-        {
-          "seed": 3,
-          "pours": 139,
-          "days": 12,
-          "firstPurchase": 3,
-          "meanFillScore": 93.38,
-          "cash": 2311
-        },
-        {
-          "seed": 4,
-          "pours": 127,
-          "days": 11,
-          "firstPurchase": 3,
-          "meanFillScore": 93.56,
-          "cash": 966
-        },
-        {
-          "seed": 5,
-          "pours": 148,
-          "days": 13,
-          "firstPurchase": 3,
-          "meanFillScore": 93.43,
-          "cash": 3232
-        },
-        {
-          "seed": 6,
-          "pours": 139,
-          "days": 12,
-          "firstPurchase": 3,
-          "meanFillScore": 93.31,
-          "cash": 1677
-        },
-        {
-          "seed": 7,
           "pours": 143,
           "days": 12,
           "firstPurchase": 3,
-          "meanFillScore": 92.77,
-          "cash": 2091
+          "meanFillScore": 92.33,
+          "cash": 792
         },
         {
-          "seed": 8,
+          "seed": 3,
           "pours": 142,
           "days": 12,
           "firstPurchase": 3,
-          "meanFillScore": 93.25,
-          "cash": 1338
+          "meanFillScore": 93.36,
+          "cash": 813
+        },
+        {
+          "seed": 4,
+          "pours": 139,
+          "days": 12,
+          "firstPurchase": 3,
+          "meanFillScore": 93.72,
+          "cash": 1479
+        },
+        {
+          "seed": 5,
+          "pours": 144,
+          "days": 12,
+          "firstPurchase": 3,
+          "meanFillScore": 93.81,
+          "cash": 408
+        },
+        {
+          "seed": 6,
+          "pours": 145,
+          "days": 13,
+          "firstPurchase": 3,
+          "meanFillScore": 93.23,
+          "cash": 1559
+        },
+        {
+          "seed": 7,
+          "pours": 144,
+          "days": 12,
+          "firstPurchase": 3,
+          "meanFillScore": 92.48,
+          "cash": 2382
+        },
+        {
+          "seed": 8,
+          "pours": 148,
+          "days": 13,
+          "firstPurchase": 3,
+          "meanFillScore": 92.69,
+          "cash": 413
         },
         {
           "seed": 9,
-          "pours": 134,
-          "days": 12,
+          "pours": 132,
+          "days": 11,
           "firstPurchase": 2,
-          "meanFillScore": 93.86,
-          "cash": 482
+          "meanFillScore": 93.77,
+          "cash": 1602
         },
         {
           "seed": 10,
-          "pours": 139,
-          "days": 12,
-          "firstPurchase": 3,
-          "meanFillScore": 93.11,
-          "cash": 2616
-        },
-        {
-          "seed": 11,
-          "pours": 140,
-          "days": 12,
-          "firstPurchase": 3,
-          "meanFillScore": 93.53,
-          "cash": 2620
-        },
-        {
-          "seed": 12,
           "pours": 138,
           "days": 12,
           "firstPurchase": 3,
-          "meanFillScore": 93.2,
-          "cash": 1739
+          "meanFillScore": 93.09,
+          "cash": 511
+        },
+        {
+          "seed": 11,
+          "pours": 149,
+          "days": 13,
+          "firstPurchase": 3,
+          "meanFillScore": 93.06,
+          "cash": 1150
+        },
+        {
+          "seed": 12,
+          "pours": 133,
+          "days": 12,
+          "firstPurchase": 3,
+          "meanFillScore": 93.14,
+          "cash": 877
         },
         {
           "seed": 13,
-          "pours": 139,
-          "days": 12,
+          "pours": 148,
+          "days": 13,
           "firstPurchase": 3,
-          "meanFillScore": 93.37,
-          "cash": 1715
+          "meanFillScore": 92.95,
+          "cash": 2903
         },
         {
           "seed": 14,
           "pours": 141,
           "days": 12,
           "firstPurchase": 3,
-          "meanFillScore": 93.42,
-          "cash": 845
+          "meanFillScore": 93.23,
+          "cash": 521
         },
         {
           "seed": 15,
-          "pours": 141,
-          "days": 12,
+          "pours": 145,
+          "days": 13,
           "firstPurchase": 3,
-          "meanFillScore": 93.23,
-          "cash": 2178
+          "meanFillScore": 92.86,
+          "cash": 1107
         },
         {
           "seed": 16,
-          "pours": 138,
+          "pours": 143,
           "days": 12,
           "firstPurchase": 3,
-          "meanFillScore": 93.68,
-          "cash": 414
+          "meanFillScore": 92.87,
+          "cash": 1411
         }
       ],
       "poursRange": [
-        127,
-        148
+        132,
+        149
       ],
       "daysRange": [
         11,

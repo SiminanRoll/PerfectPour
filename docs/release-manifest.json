@@ -1,16 +1,16 @@
 {
   "game": "Perfect Pour",
-  "version": "1.03.2",
+  "version": "1.04",
   "release_date": "2026-11-27",
-  "revision": "animated-title-main-menu-and-mobile-zoom-guards",
-  "html_bytes": 379757,
-  "html_sha256": "6d05daf15b4f6f711248ae09048191a622c4f43a39d330295f1293773d6c775a",
-  "wasm_bytes": 39420,
-  "wasm_sha256": "faace530dcdcf92e4504ef33ace1bd51c8e28a89d9b26d9f84d35637a7e24c4e",
-  "native_tests": 40,
+  "revision": "two-soda-ratio-orders-and-numbered-pour-guides",
+  "html_bytes": 402319,
+  "html_sha256": "8505abd7f2c868804ecdd2a14a713a007b6643254b1c2ed480c97d8c948b4075",
+  "wasm_bytes": 44961,
+  "wasm_sha256": "f6a5cd045aab69a685544afc130d1d6aefb4ae95288cc343e5efca97ac29fca5",
+  "native_tests": 52,
   "wasm_imports": 0,
-  "snapshot_fields": 124,
-  "save_version": 103,
+  "snapshot_fields": 134,
+  "save_version": 104,
   "save_doubles": 120,
   "inline_scripts": 8,
   "repository": "https://github.com/SiminanRoll/PerfectPour",
@@ -18,12 +18,11 @@
   "live_url": "https://perfect-pour.pretty-scarf-0591.chatgpt.site",
   "github_ci_url": "https://github.com/SiminanRoll/PerfectPour/actions/workflows/ci.yml",
   "browser_checks": [
-    "Animated intro and illustrated main menu visually verified at1280x720,320x568,390x844,568x320 with zero document overflow; narrow landscape menu targets remain44px tall",
-    "Native held Enter1100ms and Space1100ms activate the intro once and stop at the main menu, without beginning a game",
-    "Fresh New Game opens Hardcore, Day1, zero cash, and recipe preparation; one native Space hold commits once into visible settling",
-    "Saved Day5/$497.51 fixture shows its upgraded storefront; New Game cancellation returns to the menu and Continue preserves the business and advanced order",
-    "Settings opens and returns to the main menu; expanded controls at320x568 scroll within the392px content area from0 to405px while the close button stays visible",
-    "Computed html/body touch-action is pan-y; title and pour surfaces block touch gestures, while the settings content retains pan-y scrolling"
+    "Desktop 1280x720: two distinct native Space holds advance Cherry then Cola; first release preserves the same customer and $34.65, final release pays once to $41.67, with visible settling and a golden finished cup before review.",
+    "Desktop mixed-order cup and primary button retain identical resting rectangles across the first release; the pressed button uses its existing 4px feedback translation only.",
+    "Phone 320x568: 25/75 Orange/Cherry request shows 11.25% first guide and 45% total guide; preparation, pouring and review have zero document overflow.",
+    "Phone 320x568: Easy release pauses the current part, a second hold tops it up, a short tap switches to part two, and the final short tap serves. Incorrect proportions yield a lower recipe-plus-mix score.",
+    "Landscape 568x320: Continue restores the untouched second part with its prior liquid, same customer and $34.65, clearly highlights Cola and the final guide, and measures zero document overflow."
   ],
   "balance_checks": {
     "catalog_cases": 6048,
@@ -32,27 +31,27 @@
     "seeded_careers": 48,
     "full_catalog_cost_dollars": 1953,
     "perfect_timing_completion_pours": [
-      89,
-      93
+      88,
+      92
     ],
     "timing_sd_70ms_completion_pours": [
-      92,
-      101
+      91,
+      103
     ],
     "timing_sd_150ms_completion_pours": [
-      127,
-      148
+      132,
+      149
     ],
     "empty_cup_revenue_120_attempts": 0,
     "recipe_preparation_model": "Correct recipes selected instantly; no simulated reading or ingredient-selection delay.",
     "report": "engine/balance-report.json",
-    "evidence_scope": "V1.03 balance model retained for the unchanged Rust/Wasm engine and rerun for V1.03.2; correct recipes are selected instantly, not a human preparation playtest."
+    "evidence_scope": "Actual V104 Wasm; single-soda catalog retained and generated mixed careers use independent timing variation for each component. Correct recipes are selected instantly; these are sensitivity scenarios, not measured player performance."
   },
   "verification_limit": "Managed HTTP preview of the actual standalone bundle with viewport-sized iframe checks and isolated earned-progress fixtures. Physical iOS/Android multi-touch, mobile browser chrome, OS/browser accessibility zoom overrides, and direct file launch were not verified. Gesture callbacks and event cancellation are tested separately against the production functions. Optional expanded settings and receipts retain internal scrolling.",
-  "audio_verification": "Existing music/effects lifecycle and cue suites pass. Music now starts at the main menu after the explicit Start gesture and honors the saved settings. No new auditory mix assessment.",
+  "audio_verification": "Existing music/effects lifecycle and cue suites pass. Pour and fizz audio now follow the active component; no new auditory mix assessment.",
   "music": "Original quiet synthesized loop; independent persisted music and effects volume.",
   "finish_effect": "Golden rim, glass glint, and bounded sparkles for five-star cups; static reduced-motion treatment.",
-  "save_migration": "V103 writes a separate key and reads genuine V101/V102 saves. Legacy keys remain untouched; current legacy cups remain plain without new costs.",
+  "save_migration": "V104 writes a separate key and imports genuine V101/V102/V103 saves without replacing legacy entries. Existing current cups stay single-soda. Interrupted Hardcore consumes only the held component; an untouched second pour stays available. Paid cups and receipts cannot pay or charge twice.",
   "app_icon": {
     "download_name": "Perfect_Pour_App_Icon.png",
     "format": "PNG",
@@ -61,8 +60,19 @@
     "verified_bytes": 21676,
     "location": "Help & settings"
   },
-  "acceptance_report": "docs/qa/V1032_ACCEPTANCE.md",
-  "prior_acceptance_report": "docs/qa/V1031_ACCEPTANCE.md",
+  "acceptance_report": "docs/qa/V104_ACCEPTANCE.md",
+  "prior_acceptance_report": "docs/qa/V1032_ACCEPTANCE.md",
   "startup_flow": "Animated intro, then New Game / Continue / Settings. New Game defaults to Hardcore; in-game difficulty controls remain available. A saved business must be confirmed before replacement.",
-  "zoom_control": "Fixed-scale viewport, pan-y/no-zoom touch actions, multi-touch/native gesture cancellation, and Ctrl-wheel cancellation. Ordinary wheel and single-touch events remain available."
+  "zoom_control": "Fixed-scale viewport, pan-y/no-zoom touch actions, multi-touch/native gesture cancellation, and Ctrl-wheel cancellation. Ordinary wheel and single-touch events remain available.",
+  "mixture_checks": {
+    "native_gentle_catalog_cases": 3024,
+    "wasm_mode_pressure_pair_ratio_cases": 216,
+    "generated_career_customers": 240,
+    "generated_mixed_customers": 86,
+    "legacy_v103_full_snapshot_fixtures": 5,
+    "native_tests_command": "python3 engine/build_engine.py",
+    "native_toolchain": "Existing isolated Rust 1.100.0 toolchain",
+    "suite": "tests/engine/v104-mixtures.mjs"
+  },
+  "two_soda_orders": "Customer six introduces 50/50; occasional later requests use 25/75, 50/50, or 75/25 after twelve completed customers. Two numbered bottles, two cumulative target lines, one hold per soda in Hardcore, and top-ups plus explicit switching in Easy. Regular blend and at most one simple add-in keep mixed requests short."
 }

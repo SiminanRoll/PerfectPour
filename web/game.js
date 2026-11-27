@@ -1,4 +1,4 @@
-/* Perfect Pour V1.03.2 · Presentation and input. Simulation, business, saves, and rules are Rust/Wasm. */
+/* Perfect Pour V1.04 · Presentation and input. Simulation, business, saves, and rules are Rust/Wasm. */
 (() => {
   'use strict';
   const WASM_BASE64 = '__WASM_BASE64__';
@@ -37,8 +37,8 @@
     1:['“Oops. That’s not the pour I ordered.”','“Let’s give that another try next time.”','“The bubbles got the better of this one.”']
   };
 
-  const F={cash:20,hardcore:21,attempted:22,holding:23,day:24,goal:25,streak:26,bestStreak:27,combo:28,comboBonus:29,milestone:30,perfectTip:31,serviceTip:32,lifetime:33,owned:34,cost:40,canBuy:46,spendable:47,reserve:48,staffSales:49,wages:50,helperActive:51,specialistActive:52,customers:53,basePay:54,modePay:55,signPay:56,foamScale:57,good:58,net:59,lifetimePerfect:60,bestShift:61,businessLevel:62,previousRating:63,beverageMl:64,pressure:65,waste:66,cleanupSeconds:67,patience:68,patienceLimit:69,menuPrice:70,ingredientCost:71,cleanupCost:72,refund:73,lastNet:74,ingredientTotal:75,cleanupTotal:76,refundTotal:77,signTotal:78,serviceTotal:79,staffOrders:80,staffCapacity:81,demand:82,missed:83,interior:84,catering:85,interiorCost:86,cateringCost:87,nextStreak:88,nextReward:89,hardcoreBest:90,easyBest:91,cleanupSaved:92,training:93,trainingCost:94,tier:95,canPressure:96,speedTip:97,orderedCherries:98,orderedLime:99,orderedSyrup:100,orderedBlend:101,selectedSoda:102,selectedCherries:103,selectedLime:104,selectedSyrup:105,selectedBlend:106,recipeAccuracy:107,recipeLocked:108,canRecipe:109,hasCitrus:110,hasSyrup:111,hasMixer:112,citrusCost:113,syrupCost:114,mixerCost:115,recipePremium:116,selectedAddinCost:117,prepStarted:118,recipeFizz:119,fillStars:120,recipeMistakes:121,prepAllowance:122,orderIsCustom:123};
-  const SAVE_KEY='perfect-pour-business-v103',LEGACY_SAVE_KEYS=['perfect-pour-business-v102','perfect-pour-business-v101'];
+  const F={cash:20,hardcore:21,attempted:22,holding:23,day:24,goal:25,streak:26,bestStreak:27,combo:28,comboBonus:29,milestone:30,perfectTip:31,serviceTip:32,lifetime:33,owned:34,cost:40,canBuy:46,spendable:47,reserve:48,staffSales:49,wages:50,helperActive:51,specialistActive:52,customers:53,basePay:54,modePay:55,signPay:56,foamScale:57,good:58,net:59,lifetimePerfect:60,bestShift:61,businessLevel:62,previousRating:63,beverageMl:64,pressure:65,waste:66,cleanupSeconds:67,patience:68,patienceLimit:69,menuPrice:70,ingredientCost:71,cleanupCost:72,refund:73,lastNet:74,ingredientTotal:75,cleanupTotal:76,refundTotal:77,signTotal:78,serviceTotal:79,staffOrders:80,staffCapacity:81,demand:82,missed:83,interior:84,catering:85,interiorCost:86,cateringCost:87,nextStreak:88,nextReward:89,hardcoreBest:90,easyBest:91,cleanupSaved:92,training:93,trainingCost:94,tier:95,canPressure:96,speedTip:97,orderedCherries:98,orderedLime:99,orderedSyrup:100,orderedBlend:101,selectedSoda:102,selectedCherries:103,selectedLime:104,selectedSyrup:105,selectedBlend:106,recipeAccuracy:107,recipeLocked:108,canRecipe:109,hasCitrus:110,hasSyrup:111,hasMixer:112,citrusCost:113,syrupCost:114,mixerCost:115,recipePremium:116,selectedAddinCost:117,prepStarted:118,recipeFizz:119,fillStars:120,recipeMistakes:121,prepAllowance:122,orderIsCustom:123,orderedSecondSoda:124,firstShare:125,pourPart:126,partAttempted:127,activeSoda:128,activeTarget:129,firstBeverageMl:130,mixAccuracy:131,mixStars:132,isMix:133};
+  const SAVE_KEY='perfect-pour-business-v104',LEGACY_SAVE_KEYS=['perfect-pour-business-v103','perfect-pour-business-v102','perfect-pour-business-v101'];
   const upgrades=[
     {name:'Neon identity',max:3,unit:'SIGN',description:'Better prices. More visitors.',effect:l=>`Prices +${l*8}% → +${(l+1)*8}%`,owned:l=>`+${l*8}% prices · +${l*2} daily demand`},
     {name:'Patio seats',max:2,unit:'PATIO',description:'Room for your specialist’s queue.',effect:l=>`Staff capacity +${l*2} → +${(l+1)*2}`,owned:l=>`+${l*2} capacity · +${l*3} demand · +${l}s patience`},
@@ -53,6 +53,8 @@
     {name:'Cherry syrup rack',max:1,unit:'RECIPES',description:'Give your sodas a cherry swirl.',effect:()=> 'Unlock syrup pump orders',owned:()=> 'Cherry syrup available'},
     {name:'Mixing dispenser',max:1,unit:'RECIPES',description:'Light, regular, or boldly yours.',effect:()=> 'Unlock soda-water blend orders',owned:()=> 'Three recipe blends available'}
   ];
+  const sodaNames=['Orange','Cherry','Lime','Cola'];
+  const targetText=fraction=>String(Math.round(fraction*10000)/100);
   const pressureNames=['Gentle','Classic','Rush'];
   const pressureNotes=['Steady flow · more time to aim','Balanced flow · lively foam','Fast flow · bigger foam risk'];
   const text=(id,value)=>{const el=$(id);if(el&&el.textContent!==String(value))el.textContent=value;};
@@ -99,11 +101,11 @@
   }
   function captureSave(){
     const ptr=engine.save_ptr(),len=engine.save_len();
-    return{format:'perfect-pour-business',version:103,engine:Array.from(new Float64Array(engine.memory.buffer,ptr,len))};
+    return{format:'perfect-pour-business',version:104,engine:Array.from(new Float64Array(engine.memory.buffer,ptr,len))};
   }
   function applySave(data){
-    const expected=data?.version===101?80:[102,103].includes(data?.version)?120:0;
-    if(!data||data.format!=='perfect-pour-business'||!expected||!Array.isArray(data.engine)||data.engine.length!==expected||data.engine[0]!==data.version||!data.engine.every(Number.isFinite))throw new Error('Choose a Perfect Pour V1.01, V1.02, or V1.03 business save.');
+    const expected=data?.version===101?80:[102,103,104].includes(data?.version)?120:0;
+    if(!data||data.format!=='perfect-pour-business'||!expected||!Array.isArray(data.engine)||data.engine.length!==expected||data.engine[0]!==data.version||!data.engine.every(Number.isFinite))throw new Error('Choose a Perfect Pour V1.01–V1.04 business save.');
     const ptr=engine.save_ptr(),buffer=new Float64Array(engine.memory.buffer,ptr,engine.save_len());buffer.fill(0);buffer.set(data.engine);
     if(engine.restore_save()!==1)throw new Error('The save data is damaged or contains invalid values.');
     refreshState();
@@ -141,13 +143,13 @@
     }catch(error){toast(error instanceof SyntaxError?'That file is not a valid JSON save.':error.message||'The save could not be imported.');}
   }
   function updateModeUi(){
-    const hard=state[F.hardcore]===1,locked=state[F.attempted]===1&&state[0]===0||['settling','finished'].includes(mode);
+    const hard=state[F.hardcore]===1,locked=state[F.attempted]===1&&state[0]===0||['settling','finished'].includes(mode),mix=state[F.isMix]===1;
     for(const id of ['hardcore-mode','easy-mode']){
       const button=$(id),selected=id.includes('hardcore')===hard;
       button.classList.toggle('active',selected);button.setAttribute('aria-pressed',String(selected));button.disabled=locked;
-      button.title=locked?'Finish this customer first.':id.includes('hardcore')?'One hold. Release serves. +15% base pay.':'Pause, top up, then serve.';
+      button.title=locked?'Finish this customer first.':id.includes('hardcore')?'One hold per soda. Final release serves. +15% base pay.':'Pause, top up, then serve.';
     }
-    const flow=window.PourFlow.resolve({mode,hardcore:hard,attempted:state[F.attempted]===1,holding:pouring,selectedSoda:state[F.selectedSoda],recipeLocked:state[F.recipeLocked]===1,lastCustomer:state[1]===state[F.goal]});
+    const flow=window.PourFlow.resolve({mode,hardcore:hard,attempted:state[F.attempted]===1,holding:pouring,selectedSoda:state[F.selectedSoda],recipeLocked:state[F.recipeLocked]===1,lastCustomer:state[1]===state[F.goal],isMix:mix,pourPart:state[F.pourPart],partAttempted:state[F.partAttempted]===1,activeName:sodaNames[state[F.activeSoda]],nextName:sodaNames[state[F.orderedSecondSoda]]});
     const action=$('pour-button');action.dataset.action=flow.action;action.disabled=flow.disabled;
     text('primary-label',flow.label);text('primary-hint',flow.hint);
     action.setAttribute('aria-label',flow.label+'. '+flow.hint);
@@ -157,7 +159,7 @@
     document.querySelector('.mode-switch').hidden=!flow.showMode;
     $('mixed-recipe').hidden=flow.showRecipe||state[F.selectedSoda]>3;
     $('edit-recipe').hidden=mode!=='playing'||state[F.attempted]===1;
-    const tip=mode==='preparing'?'<strong>Match the order.</strong>':mode==='settling'?'<strong>Let it settle.</strong>':mode==='finished'?'<strong>Made by you.</strong>':hard?'<strong>One hold. One pour.</strong>':'<strong>Pour at your pace.</strong>';
+    const tip=mode==='preparing'?'<strong>Match the order.</strong>':mode==='settling'?'<strong>Let it settle.</strong>':mode==='finished'?'<strong>Made by you.</strong>':hard?'<strong>One hold'+(mix?' per soda.':'. One pour.')+'</strong>':'<strong>Pour at your pace.</strong>';
     if($('tip-text').innerHTML!==tip)$('tip-text').innerHTML=tip;
     for(let i=0;i<3;i++){
       const button=$(['pressure-gentle','pressure-classic','pressure-rush'][i]);
@@ -174,7 +176,7 @@
     if(engine.set_mode(hard?1:0)!==1){toast('Finish this pour before changing the mode.');return;}
     refreshState();saveCareer();if(externalSave)return;updateHud();if(mode==='store')renderStore();
     if(mode==='playing')$('pour-button').focus({preventScroll:true});
-    if(mode!=='welcome')toast(hard?'Hardcore: one hold, release to serve. +15% base pay.':'Easy: stop, settle, top up, then serve.');
+    if(mode!=='welcome')toast(hard?'Hardcore: one hold per soda. Final release serves. +15% base pay.':'Easy: stop, settle, top up, then serve.');
   }
   function clearInput(){cancelPendingPointer();inputOwner=null;activePointer=null;pouring=false;$('pour-button').classList.remove('pressed');document.querySelector('.tap-machine').classList.remove('pouring');stopPourSound();}
   function beginInput(source){
@@ -185,8 +187,11 @@
   }
   function releaseInput(source){
     if(inputOwner!==source)return;
-    advanceSimulation(performance.now());clearInput();engine.end_pour();refreshState();
-    if(state[0]===1)showCommittedPour();else{setCustomerMood('neutral');saveCareer();if(externalSave)return;updateHud();}
+    advanceSimulation(performance.now());const part=state[F.pourPart];clearInput();engine.end_pour();refreshState();
+    if(state[0]===1)showCommittedPour();else{setCustomerMood('neutral');saveCareer();if(externalSave)return;updateHud();if(state[F.pourPart]!==part)announceNextPart();}
+  }
+  function announceNextPart(){
+    announce('Part 2: '+sodas[state[F.activeSoda]].name+'. Hold for the final line at '+targetText(state[4])+' percent.');
   }
   function interruptPour(){cancelPendingPointer();if(inputOwner!==null)releaseInput(inputOwner);}
   function startupSaveCurrent(){
@@ -213,7 +218,7 @@
     if(!ready||mode!=='welcome'||!loadedCareer||!startupSaveCurrent())return;
     careerActive=true;openAudio();saveCareer();if(externalSave)return;
     if(state[0]===1){if(state[7]/state[5]>VISIBLE_FOAM)showCommittedPour();else showFinishedCup(false);return;}if(state[0]===2){showSummary(false);return;}
-    renderOrder();setMode(activePlayMode(),state[F.selectedSoda]<4?'pour-button':'base-0');saveCareer();if(externalSave)return;playCue('day');announce('Shop open. Match the recipe, then choose Ready to pour. '+(state[F.hardcore]?'Hardcore gives you one hold.':'Easy allows top-ups.'));
+    renderOrder();setMode(activePlayMode(),state[F.selectedSoda]<4?'pour-button':'base-0');saveCareer();if(externalSave)return;playCue('day');announce('Shop open. '+(state[F.isMix]===1?'Two sodas, in order. ':'Match the recipe, then choose Ready to pour. ')+(state[F.hardcore]?'One hold per soda.':'Easy allows top-ups.'));
   }
   function openNextDay(){
     if(!ready||state[0]!==2)return;
@@ -252,19 +257,20 @@
     const tokens=[],labels=['Cherry','Lime','Syrup'],kinds=['cherry','lime','syrup'];
     values.slice(0,3).forEach((n,i)=>{if(n)tokens.push(`<span class="recipe-chip">${window.PourRecipeArt.icon(kinds[i])}<b>×${n}</b><span class="sr-only">${labels[i]}</span></span>`);});
     if(!tokens.length)tokens.push('<span class="recipe-chip plain-chip">Plain</span>');
-    if(state[F.hasMixer]||values[3]!==1)tokens.push(`<span class="recipe-chip blend-chip">${window.PourRecipeArt.icon('water',{blend:values[3]})}<b>${blendNames[values[3]]}</b></span>`);
+    if(state[F.hasMixer]&&state[F.isMix]!==1||values[3]!==1)tokens.push(`<span class="recipe-chip blend-chip">${window.PourRecipeArt.icon('water',{blend:values[3]})}<b>${blendNames[values[3]]}</b></span>`);
     return tokens.join('');
   }
   function recipeDescription(){
-    const bits=[sodas[state[2]].name];
+    const bits=state[F.isMix]===1?[targetText(state[F.firstShare])+' percent '+sodas[state[2]].name+' then '+targetText(1-state[F.firstShare])+' percent '+sodas[state[F.orderedSecondSoda]].name]:[sodas[state[2]].name];
     if(state[F.orderedCherries])bits.push(state[F.orderedCherries]+' '+(state[F.orderedCherries]===1?'cherry':'cherries'));
     if(state[F.orderedLime])bits.push('a lime wedge');
     if(state[F.orderedSyrup])bits.push(state[F.orderedSyrup]+' cherry syrup '+(state[F.orderedSyrup]===1?'pump':'pumps'));
-    if(state[F.hasMixer]||state[F.orderedBlend]!==1)bits.push(state[F.orderedBlend]===0?'extra soda water':state[F.orderedBlend]===2?'bold blend':'regular blend');
+    if(state[F.hasMixer]&&state[F.isMix]!==1||state[F.orderedBlend]!==1)bits.push(state[F.orderedBlend]===0?'extra soda water':state[F.orderedBlend]===2?'bold blend':'regular blend');
     return bits.join(', ')+'. Fill to '+percent(state[4])+' percent.';
   }
   function renderRecipe(){
-    const key=[...Array.from(state.slice(98,107)),state[F.hasCitrus],state[F.hasSyrup],state[F.hasMixer],state[F.recipeLocked],state[0]].join(':');
+    const mix=state[F.isMix]===1,part=state[F.pourPart]||0;
+    const key=[...Array.from(state.slice(98,107)),state[F.hasCitrus],state[F.hasSyrup],state[F.hasMixer],state[F.recipeLocked],state[0],state[F.orderedSecondSoda],state[F.firstShare],part,mix].join(':');
     if(key===recipeUiKey)return;recipeUiKey=key;
     if(!$('base-options').children.length){
       $('base-options').innerHTML=['Orange','Cherry','Lime','Cola'].map((name,i)=>`<button id="base-${i}" data-base="${i}" class="base-option" aria-label="${name} soda base" title="${name} soda" aria-pressed="false">${window.PourRecipeArt.icon('base',{soda:i})}<strong>${name}</strong></button>`).join('');
@@ -272,22 +278,37 @@
       $('blend-options').innerHTML=blendNames.map((name,i)=>`<button data-blend="${i}" aria-pressed="false">${window.PourRecipeArt.icon('water',{blend:i})}<strong>${name}</strong></button>`).join('');
     }
     $('base-options').querySelectorAll('button').forEach((b,i)=>{b.setAttribute('aria-pressed',String(state[F.selectedSoda]===i));b.disabled=state[F.canRecipe]!==1;});
+    $('base-options').hidden=mix;
+    const pair=mix?window.PourRecipeArt.renderRatioOrder({first:state[2],second:state[F.orderedSecondSoda],share:state[F.firstShare],part,complete:state[0]!==0}):'';
+    $('mix-prep-sequence').hidden=!mix;
+    if(mix)$('mix-prep-sequence').innerHTML=pair;
     [['cherries',F.selectedCherries,true,2],['lime',F.selectedLime,state[F.hasCitrus]===1,1],['syrup',F.selectedSyrup,state[F.hasSyrup]===1,2]].forEach(([name,field,available,max])=>{
       const button=$('ingredient-options').querySelector(`[data-ingredient="${name}"]`),n=state[field];
       text(name+'-count',available?n:'');text(name+'-availability',available?'':'Locked');
       button.disabled=!available||state[F.canRecipe]!==1;button.classList.toggle('selected',n>0);button.classList.toggle('locked',!available);button.setAttribute('aria-label',available?`${name}: ${n}. Tap to cycle zero to ${max}.`:`${name} locked. Unlock in Build.`);button.title=available?`${name}: ${n}. Tap to change.`:'Unlock in Build';
     });
-    $('blend-controls').hidden=state[F.hasMixer]!==1;
+    $('blend-controls').hidden=state[F.hasMixer]!==1||mix;
     $('blend-options').querySelectorAll('button').forEach((button,i)=>{button.setAttribute('aria-pressed',String(state[F.selectedBlend]===i));button.disabled=state[F.canRecipe]!==1;});
     text('recipe-cost',dollars(state[F.selectedAddinCost]));
+    $('order-line').classList.toggle('has-ratio',mix);
+    if(mix)$('order-line').innerHTML=pair+'<strong>'+percent(state[4])+'%</strong>';
     $('order-recipe').innerHTML=recipeTokens(true);$('order-recipe').setAttribute('aria-label',recipeDescription());
-    $('mixed-recipe').innerHTML='<span class="mixed-label">YOUR MIX</span>'+(state[F.selectedSoda]<4?'<span class="recipe-chip">'+window.PourRecipeArt.icon('base',{soda:state[F.selectedSoda]})+'<b>'+['Orange','Cherry','Lime','Cola'][state[F.selectedSoda]]+'</b></span>':'')+recipeTokens(false);
-    const selected=state[F.selectedSoda]<4?state[F.selectedSoda]:state[2],soda=sodas[selected];
+    $('mixed-recipe').innerHTML='<span class="mixed-label">YOUR MIX</span>'+(mix?pair:state[F.selectedSoda]<4?'<span class="recipe-chip">'+window.PourRecipeArt.icon('base',{soda:state[F.selectedSoda]})+'<b>'+sodaNames[state[F.selectedSoda]]+'</b></span>':'')+recipeTokens(false);
+    const selected=mix?state[F.activeSoda]:state[F.selectedSoda]<4?state[F.selectedSoda]:state[2],soda=sodas[selected];
     document.documentElement.style.setProperty('--soda',window.PourRecipeArt.tint(soda.color,state[F.selectedBlend],state[F.selectedSyrup]));
-    text('tap-name',state[F.selectedSoda]<4?soda.name.toUpperCase():'CHOOSE YOUR BASE');text('drink-name',sodas[state[2]].name);text('drink-flavor',sodas[state[2]].flavor);
+    text('tap-name',state[F.selectedSoda]<4?soda.name.toUpperCase():'CHOOSE YOUR BASE');text('drink-name',mix?sodaNames[state[2]]+' + '+sodaNames[state[F.orderedSecondSoda]]:sodas[state[2]].name);text('drink-flavor',mix?'Two sodas. Your perfect mix.':sodas[state[2]].flavor);
     text('fizz-label',soda.fizz);text('fizz-note',state[F.selectedBlend]===0?'Light blend · a little more fizz':state[F.selectedBlend]===2?'Bold blend · richer color':soda.note);
     $('fizz-meter').setAttribute('aria-label',soda.fizz.toLowerCase()+' fizz, '+blendNames[state[F.selectedBlend]].toLowerCase()+' blend');
     [...$('fizz-meter').children].forEach((dot,i)=>dot.classList.toggle('on',i<=selected));
+    const activeTarget=mix?state[F.activeTarget]:state[4];
+    text('target-label',mix?(part===0?'1/2':'2/2'):'TARGET');
+    $('target-percent').innerHTML=targetText(activeTarget)+'<small>%</small>';
+    text('station-target',(mix?'TOTAL ':'')+percent(state[4])+'%');
+    const finalGuide=$('target-track'),firstGuide=$('mix-target-track');
+    finalGuide.style.left=(state[4]*100)+'%';finalGuide.classList.toggle('is-active',!mix||part===1);
+    finalGuide.style.setProperty('--target-color',mix?sodas[state[F.orderedSecondSoda]].color:'#174b49');
+    finalGuide.dataset.step=mix?'2':'';firstGuide.hidden=!mix;
+    if(mix){firstGuide.style.left=(state[4]*state[F.firstShare]*100)+'%';firstGuide.style.setProperty('--target-color',sodas[state[2]].color);firstGuide.classList.toggle('is-active',part===0);firstGuide.dataset.step='1';}
     sceneDirty=true;
   }
   function changeRecipe(kind,value){
@@ -305,7 +326,7 @@
   function readyToPour(){
     if(mode!=='preparing'||state[F.selectedSoda]>3)return;
     $('pressure-controls').open=false;setMode('playing','pour-button');saveCareer();
-    if(!externalSave)announce(state[F.hardcore]?'Recipe ready. Hold Space once. Release commits your drink.':'Recipe ready. Hold to pour; after release, tap to serve or hold again to top up.');
+    if(!externalSave)announce(state[F.isMix]===1?'Part 1: '+sodas[state[F.activeSoda]].name+'. Fill to the first line at '+targetText(state[F.activeTarget])+' percent. '+(state[F.hardcore]?'Release switches to the next soda.':'Tap Next soda when ready; hold again to top up.'):state[F.hardcore]?'Recipe ready. Hold Space once. Release commits your drink.':'Recipe ready. Hold to pour; after release, tap to serve or hold again to top up.');
   }
   function editRecipe(){if(mode==='playing'&&state[F.attempted]!==1){setMode('preparing','pour-button');announce('Adjust your recipe before the first pour.');}}
   function renderOrder(){
@@ -328,26 +349,30 @@
     if(!state)return;
     const fill=clamp(state[6]/state[5],0,1),foam=clamp(state[7]/state[5],0,1);
     $('liquid-track').style.width=(fill*100)+'%';$('foam-track').style.left=(fill*100)+'%';$('foam-track').style.width=(Math.min(foam,1-fill)*100)+'%';
+    if(state[F.isMix]===1){
+      const first=state[F.selectedSoda]<4?state[F.selectedSoda]:state[2],share=state[F.beverageMl]>0?clamp(state[F.firstBeverageMl]/state[F.beverageMl],0,1):1;
+      $('liquid-track').style.background=window.PourRecipeArt.mixColor(window.PourRecipeArt.tint(sodas[first].color,state[F.selectedBlend],state[F.selectedSyrup]),window.PourRecipeArt.tint(sodas[state[F.orderedSecondSoda]].color,state[F.selectedBlend],state[F.selectedSyrup]),share);
+    }else $('liquid-track').style.background='';
     if($('patience-track'))$('patience-track').style.width=(clamp(state[F.patience],0,1)*100)+'%';
   }
   function updateLiveFeedback(){
-    const fill=state[6]/state[5],foam=state[7]/state[5],hard=state[F.hardcore]===1;
+    const fill=state[6]/state[5],foam=state[7]/state[5],hard=state[F.hardcore]===1,mix=state[F.isMix]===1,target=mix?state[F.activeTarget]:state[4];
     text('liquid-percent',percent(fill)+'%');text('foam-percent',foam>VISIBLE_FOAM&&foam<.005?'<1%':percent(foam)+'%');
     const remaining=Math.max(0,state[F.patience]*state[F.patienceLimit]);
     text('patience-label',state[0]===1?'Served':state[F.prepStarted]||state[F.attempted]?remaining.toFixed(1)+'s':state[F.patienceLimit].toFixed(0)+'s');
     if($('patience-track'))$('patience-track').classList.toggle('low',state[F.patience]<.25);
-    let message=mode==='preparing'?'Match their mix':hard?'One hold · one pour':'Top up or serve',kind='';
+    let message=mode==='preparing'?(mix?'Two sodas · in order':'Match their mix'):mix?(state[F.pourPart]+1)+'/2 · '+sodaNames[state[F.activeSoda]]:hard?'One hold · one pour':'Top up or serve',kind='';
     if(state[8]>1){message=`Spill · ${Math.round(state[F.waste])} mL lost`;kind='warning';}
-    else if(fill>state[4]+.025){message='Above the line';kind='warning';}
-    else if(Math.abs(fill-state[4])<.025&&fill>.1){message='At the line · still fizzy';kind='ready';}
+    else if(fill>target+.025){message='Above the line';kind='warning';}
+    else if(Math.abs(fill-target)<.025&&fill>.1){message='At the line · still fizzy';kind='ready';}
     else if(foam>.12)message='Leave room for fizz';
-    else if(fill>state[4]-.08)message='Almost there…';
+    else if(fill>target-.08)message='Almost there…';
     if((state[F.prepStarted]||state[F.attempted])&&state[F.patience]<.12&&state[0]===0){message=state[F.patience]<=0?'Too slow · price falling':'Hurry · tip fading';kind='warning';}
     if(state[0]===1){message=mode==='settling'?'Settling…':state[12]===5?'✦ Perfect pour':`${percent(state[F.beverageMl]/state[5])}% poured · ${percent(state[4])}% ordered`;kind=state[12]===5&&mode!=='settling'?'ready':'';}
     text('live-message',message);$('live-message').className='live-message'+(kind?' '+kind:'');
     if(kind==='warning'&&lastFeedback!==message&&pouring&&lastFeedback!=='warning')announce(message);
     lastFeedback=kind;
-    canvas.setAttribute('aria-label',`Cup: ${percent(fill)} percent soda, ${foam>VISIBLE_FOAM&&foam<.005?'less than1':percent(foam)} percent foam. Target ${percent(state[4])} percent. Soda waste ${Math.round(state[F.waste])} milliliters.`);
+    canvas.setAttribute('aria-label',`Cup: ${percent(fill)} percent soda, ${foam>VISIBLE_FOAM&&foam<.005?'less than1':percent(foam)} percent foam. ${mix?'Part '+(state[F.pourPart]+1)+': '+sodas[state[F.activeSoda]].name+'. Active line '+targetText(target)+' percent. Final line ': 'Target '}${percent(state[4])} percent. Soda waste ${Math.round(state[F.waste])} milliliters.`);
   }
   function updateHud(){
     if(!state)return;
@@ -372,7 +397,8 @@
   }
   function serveDrink(){
     if(!ready||mode!=='playing'||state[F.hardcore]===1)return;
-    interruptPour();engine.serve();refreshState();if(state[0]===1)showCommittedPour();
+    interruptPour();const part=state[F.pourPart];if(engine.serve()!==1)return;refreshState();
+    if(state[0]===1)showCommittedPour();else{saveCareer();if(externalSave)return;updateHud();if(state[F.pourPart]!==part)announceNextPart();}
   }
   function showCommittedPour(){
     saveCareer();if(externalSave)return;settlingElapsed=0;finishElapsed=0;
@@ -385,7 +411,7 @@
     setCustomerMood(state[12]>=4?'happy':state[12]<=2?'disappointed':'neutral');
     text('customer-status',perfect?'✦ YOU NAILED IT':state[12]>=4?'ONE HAPPY GUEST':'A POUR TO LEARN FROM');
     setMode('finished','pour-button');
-    announce(`Cup settled. ${scoreText(state[11],state[F.fillStars])} percent accuracy. Final fill ${percent(state[F.beverageMl]/state[5])} percent. Choose See review when ready.`);
+    announce(`Cup settled. ${scoreText(state[11],state[F.fillStars])} percent fill accuracy.${state[F.isMix]===1?' '+Math.floor(state[F.mixAccuracy])+' percent mix accuracy.':''} Final fill ${percent(state[F.beverageMl]/state[5])} percent. Choose See review when ready.`);
     if(celebrate&&!document.hidden&&document.hasFocus()){
       openAudio();playCue(perfect?'perfect':state[12]>=4?'good':'bad');
       if(state[F.milestone]>0){playCue('streak',{streak:state[F.streak]});confetti();}
@@ -401,15 +427,16 @@
     setCustomerMood(stars>=4?'happy':stars<=2?'disappointed':'neutral');
     $('review-stars').innerHTML='★'.repeat(stars)+'<span class="empty">'+'★'.repeat(5-stars)+'</span>';$('review-stars').setAttribute('aria-label',stars+' out of5 stars');
     text('result-title',['','Try the next cup.','Keep practicing.','Getting there.','Lovely pour!','Perfect pour!'][stars]);
-    const choices=reviewLines[stars],fillError=state[F.beverageMl]/state[5]-state[4];
-    text('review-quote',state[F.recipeMistakes]?'“Check my recipe next time!”':stars<=2?(fillError<0?'“I was hoping for a fuller cup.”':'“That’s more soda than I ordered.”'):choices[(order+state[F.day]-2)%choices.length]);
+    const choices=reviewLines[stars],fillError=state[F.beverageMl]/state[5]-state[4],mix=state[F.isMix]===1,actualShare=state[F.beverageMl]>0?clamp(state[F.firstBeverageMl]/state[F.beverageMl],0,1):0;
+    text('review-quote',state[F.recipeMistakes]?'“Check my recipe next time!”':mix&&state[F.mixStars]<5?'“A little more '+sodaNames[actualShare>state[F.firstShare]?state[F.orderedSecondSoda]:state[2]]+' next time!”':stars<=2?(fillError<0?'“I was hoping for a fuller cup.”':'“That’s more soda than I ordered.”'):choices[(order+state[F.day]-2)%choices.length]);
     text('result-eyebrow',state[F.refund]>0&&state[F.basePay]===0?'ORDER REFUNDED':'GUEST REVIEW');
-    $('result-recipe').innerHTML=Math.round(state[F.recipeAccuracy])+'<small>%</small>';
+    text('result-recipe-label',mix?'RECIPE + MIX':'RECIPE');
+    $('result-recipe').innerHTML=Math.floor(mix?Math.min(state[F.recipeAccuracy],state[F.mixAccuracy]):state[F.recipeAccuracy])+'<small>%</small>';
     $('result-accuracy').innerHTML=accuracy+'<small>%</small>';text('result-earned',signedMoney(state[F.lastNet]));
-    $('result-details').innerHTML=`<span>◎ ${percent(state[4])}% target</span><span>◉ ${percent(state[F.beverageMl]/state[5])}% poured</span><span>◒ ${Math.round(state[F.waste])} mL wasted</span>`;
+    $('result-details').innerHTML=mix?`<span>◉ ${percent(state[F.beverageMl]/state[5])}% / ${percent(state[4])}% fill</span><span>Mix ${percent(actualShare)}/${100-percent(actualShare)} · goal ${percent(state[F.firstShare])}/${100-percent(state[F.firstShare])}</span>`+(state[F.waste]>.5?`<span>◒ ${Math.round(state[F.waste])} mL wasted</span>`:''):`<span>◎ ${percent(state[4])}% target</span><span>◉ ${percent(state[F.beverageMl]/state[5])}% poured</span><span>◒ ${Math.round(state[F.waste])} mL wasted</span>`;
     const missing=[];const mask=state[F.recipeMistakes];
     if(mask&1)missing.push('Base: '+sodas[state[2]].name);if(mask&2)missing.push('Cherries: '+state[F.orderedCherries]);if(mask&4)missing.push('Lime: '+state[F.orderedLime]);if(mask&8)missing.push('Syrup: '+state[F.orderedSyrup]);if(mask&16)missing.push('Blend: '+blendNames[state[F.orderedBlend]]);
-    $('result-details').innerHTML+=(missing.length?'<span class="recipe-error">Requested '+missing.join(' · ')+'</span>':'<span class="recipe-exact">✓ Recipe exact</span>');
+    $('result-details').innerHTML+=(missing.length?'<span class="recipe-error">Requested '+missing.join(' · ')+'</span>':'<span class="recipe-exact">✓ '+(mix?'Ingredients matched':'Recipe exact')+'</span>');
     document.querySelector('.receipt-details').open=false;
     text('result-combo',streak>0?(state[F.milestone]>0?`✦ ${streak} in a row · +${dollars(state[F.milestone])}`:`${streak} good ${streak===1?'pour':'pours'} · ${state[F.combo].toFixed(2)}×`):'Next cup, new streak.');
     const rows=[['Soda sale',state[F.basePay]],['Streak',state[F.comboBonus]],['Milestone',state[F.milestone]],['Perfect tip',state[F.perfectTip]],['Service tips',state[F.serviceTip]],['Ingredients',-state[F.ingredientCost]],['Cleanup',-state[F.cleanupCost]]];
@@ -419,12 +446,12 @@
     text('next-price-note',order===state[F.goal]?'Day complete':delta>.025?'Better reputation · better prices':delta<-.025?'Reputation down':'Reputation steady');
     saveCareer();if(externalSave)return;setMode('result','pour-button');
     if(celebrate)playCue(stars===5?'perfect':stars>=4?'good':'bad');
-    announce(`${stars} ${stars===1?'star':'stars'}. ${accuracy} percent accuracy. Net ${signedMoney(state[F.lastNet])}. ${streak} good ${streak===1?'pour':'pours'} in a row.`);
+    announce(`${stars} ${stars===1?'star':'stars'}. ${accuracy} percent fill accuracy.${state[F.isMix]===1?' '+Math.floor(state[F.mixAccuracy])+' percent mix accuracy.':''} Net ${signedMoney(state[F.lastNet])}. ${streak} good ${streak===1?'pour':'pours'} in a row.`);
   }
   function nextOrder(){
     if(mode!=='result')return;clearInput();engine.next_order();refreshState();saveCareer();if(externalSave)return;
     if(state[0]===2){showSummary(true);return;}
-    renderOrder();setMode(activePlayMode(),state[F.selectedSoda]<4?'pour-button':'base-0');announce(`${sodas[state[2]].name}, filled to ${percent(state[4])} percent. ${sodas[state[2]].fizz} fizz.`);
+    renderOrder();setMode(activePlayMode(),state[F.selectedSoda]<4?'pour-button':'base-0');announce(recipeDescription()+(state[F.isMix]===1?' Pour the highlighted soda first.':''));
   }
   function showSummary(celebrate){
     const rating=state[9],goal=state[F.goal];
@@ -522,7 +549,7 @@
     }catch(_){}
   }
   function playCue(name,options){if(settings.sound&&audio.context&&!document.hidden&&document.hasFocus())window.PerfectPourSounds?.cue(name,options);}
-  function startPourSound(){if(settings.sound&&audio.context)window.PerfectPourSounds?.startPour(state&&state[F.selectedSoda]<4?state[F.selectedSoda]:0);}
+  function startPourSound(){if(settings.sound&&audio.context)window.PerfectPourSounds?.startPour(state?state[F.activeSoda]??(state[F.selectedSoda]<4?state[F.selectedSoda]:0):0);}
   function stopPourSound(){window.PerfectPourSounds?.stopPour();}
   function soundToggle(){
     settings.sound=!settings.sound;saveSettings();updateSoundButton();window.PerfectPourSounds?.setEnabled(settings.sound);
@@ -569,16 +596,21 @@
     ctx.setTransform(1,0,0,1,0,0);ctx.clearRect(0,0,pixelW,pixelH);
     const scale=Math.min(pixelW/420,pixelH/440);
     ctx.setTransform(scale,0,0,scale,(pixelW-420*scale)/2-50*scale,(pixelH-440*scale)/2);
-    const s=state||[0,1,0,0,.65,280,0,0,0],rawSoda=sodas[s[F.selectedSoda]<4?s[F.selectedSoda]:s[2]],soda={...rawSoda,color:window.PourRecipeArt.tint(rawSoda.color,s[F.selectedBlend]??1,s[F.selectedSyrup]||0),light:window.PourRecipeArt.tint(rawSoda.light,s[F.selectedBlend]??1,s[F.selectedSyrup]||0)},g=cupGeometry(s[3]),t=visualTime;
+    const s=state||[0,1,0,0,.65,280,0,0,0],mix=s[F.isMix]===1,firstIndex=s[F.selectedSoda]<4?s[F.selectedSoda]:s[2],rawSoda=sodas[mix?s[F.activeSoda]:firstIndex],soda={...rawSoda,color:window.PourRecipeArt.tint(rawSoda.color,s[F.selectedBlend]??1,s[F.selectedSyrup]||0),light:window.PourRecipeArt.tint(rawSoda.light,s[F.selectedBlend]??1,s[F.selectedSyrup]||0)},g=cupGeometry(s[3]),t=visualTime;
+    let drink=soda;
+    if(mix){
+      const share=s[F.beverageMl]>0?clamp(s[F.firstBeverageMl]/s[F.beverageMl],0,1):1,first=sodas[firstIndex],second=sodas[s[F.orderedSecondSoda]],tint=color=>window.PourRecipeArt.tint(color,s[F.selectedBlend],s[F.selectedSyrup]);
+      drink={color:window.PourRecipeArt.mixColor(tint(first.color),tint(second.color),share),light:window.PourRecipeArt.mixColor(tint(first.light),tint(second.light),share)};
+    }
     const fill=clamp(s[6]/s[5],0,1),foam=clamp(s[7]/s[5],0,1),liquidY=g.level(fill),foamY=g.level(fill+foam),targetY=g.level(s[4]);
     // Counter shadow and the little paper coaster.
     ctx.fillStyle='#174b491b';ctx.beginPath();ctx.ellipse(260,405,g.cup.top*.7,10,0,0,Math.PI*2);ctx.fill();
     ctx.fillStyle='#f6e7c8';ctx.strokeStyle='#174b4955';ctx.lineWidth=1.5;ctx.beginPath();ctx.ellipse(260,400,g.cup.top*.62,10,0,0,Math.PI*2);ctx.fill();ctx.stroke();
-    if(s[8]>.2){ctx.save();ctx.globalAlpha=.38;ctx.fillStyle=soda.color;ctx.beginPath();ctx.ellipse(260,402,Math.min(118,35+s[8]*.45),6+Math.min(4,s[8]*.03),0,0,Math.PI*2);ctx.fill();ctx.restore();}
+    if(s[8]>.2){ctx.save();ctx.globalAlpha=.38;ctx.fillStyle=drink.color;ctx.beginPath();ctx.ellipse(260,402,Math.min(118,35+s[8]*.45),6+Math.min(4,s[8]*.03),0,0,Math.PI*2);ctx.fill();ctx.restore();}
     cupPath(g);ctx.fillStyle='#fffdf44d';ctx.fill();ctx.save();ctx.clip();
     // Liquid, a very small animated meniscus, and rising bubbles.
     if(fill>0){
-      const gradient=ctx.createLinearGradient(0,liquidY,0,g.bottom);gradient.addColorStop(0,soda.light);gradient.addColorStop(.14,soda.color);gradient.addColorStop(1,soda.color);ctx.fillStyle=gradient;
+      const gradient=ctx.createLinearGradient(0,liquidY,0,g.bottom);gradient.addColorStop(0,drink.light);gradient.addColorStop(.14,drink.color);gradient.addColorStop(1,drink.color);ctx.fillStyle=gradient;
       ctx.beginPath();ctx.moveTo(130,g.bottom+12);ctx.lineTo(130,liquidY);for(let x=130;x<=390;x+=5)ctx.lineTo(x,liquidY+Math.sin(x*.045+t*3)*(pouring?1.8:.55));ctx.lineTo(390,g.bottom+12);ctx.closePath();ctx.fill();
       ctx.save();ctx.beginPath();ctx.rect(120,liquidY+4,280,g.bottom-liquidY);ctx.clip();
       for(let i=0;i<22;i++){const lane=((i*67)%100)/100,x=260+(lane-.5)*g.cup.top*.75,range=Math.max(1,g.bottom-liquidY),yy=g.bottom-((i*33+t*(15+s[2]*5))%range),rad=1.3+(i%3)*.55;ctx.beginPath();ctx.arc(x,yy,rad,0,Math.PI*2);ctx.fillStyle='#fff8d968';ctx.fill();}
@@ -604,8 +636,15 @@
     cupPath(g);ctx.strokeStyle='#174b49';ctx.lineWidth=3;ctx.lineJoin='round';ctx.stroke();ctx.beginPath();ctx.ellipse(260,g.top,g.cup.top/2,5,0,0,Math.PI*2);ctx.strokeStyle='#174b49';ctx.lineWidth=2.3;ctx.stroke();
     window.PourRecipeArt.drawRim(ctx,{geometry:g,lime:s[F.selectedLime]||0,time:t,reducedMotion});
     // Dashed requested level, mapped from volume (not a naïve cup-height percent).
-    ctx.save();ctx.setLineDash([5,5]);ctx.strokeStyle='#174b49c4';ctx.lineWidth=1.6;ctx.beginPath();ctx.moveTo(260-g.cup.top/2-24,targetY);ctx.lineTo(260+g.cup.top/2+27,targetY);ctx.stroke();ctx.restore();
-    const tagX=260+g.cup.top/2+24;roundedRect(tagX,targetY-18,61,36,10);ctx.fillStyle='#fffaf0';ctx.fill();ctx.strokeStyle='#174b49';ctx.lineWidth=1.5;ctx.stroke();ctx.textAlign='center';ctx.fillStyle='#174b49';ctx.font='bold 19px Trebuchet MS';ctx.fillText(percent(s[4])+'%',tagX+30.5,targetY+.5);
+    const currentTarget=mix?s[F.activeTarget]:s[4],currentY=g.level(currentTarget);
+    const guide=(y,color,active)=>{ctx.save();ctx.setLineDash(active?[6,4]:[3,5]);ctx.strokeStyle=color;ctx.globalAlpha=active?1:.6;ctx.lineWidth=active?2.5:1.5;ctx.beginPath();ctx.moveTo(260-g.cup.top/2-24,y);ctx.lineTo(260+g.cup.top/2+27,y);ctx.stroke();ctx.restore();};
+    if(mix){
+      const firstY=g.level(s[4]*s[F.firstShare]),firstActive=s[F.pourPart]===0;
+      guide(firstY,sodas[s[2]].color,firstActive);guide(targetY,sodas[s[F.orderedSecondSoda]].color,!firstActive);
+      const quietY=firstActive?targetY:firstY,quietWidth=firstActive?67:27,quietX=260-g.cup.top/2-25-quietWidth;
+      roundedRect(quietX,quietY-12,quietWidth,24,7);ctx.fillStyle='#fffaf0e8';ctx.fill();ctx.strokeStyle=firstActive?sodas[s[F.orderedSecondSoda]].color:sodas[s[2]].color;ctx.lineWidth=1.5;ctx.stroke();ctx.textAlign='center';ctx.fillStyle='#174b49';ctx.font='bold 13px Trebuchet MS';ctx.fillText(firstActive?'2 · '+percent(s[4])+'%':'1',quietX+quietWidth/2,quietY+4);
+    }else{ctx.save();ctx.setLineDash([5,5]);ctx.strokeStyle='#174b49c4';ctx.lineWidth=1.6;ctx.beginPath();ctx.moveTo(260-g.cup.top/2-24,targetY);ctx.lineTo(260+g.cup.top/2+27,targetY);ctx.stroke();ctx.restore();}
+    const tagX=260+g.cup.top/2+24,targetLabel=targetText(currentTarget)+'%';roundedRect(tagX,currentY-18,61,36,10);ctx.fillStyle='#fffaf0';ctx.fill();ctx.strokeStyle=mix?soda.color:'#174b49';ctx.lineWidth=mix?2.5:1.5;ctx.stroke();ctx.textAlign='center';ctx.fillStyle='#174b49';ctx.font='bold '+(targetLabel.length>5?15:19)+'px Trebuchet MS';ctx.fillText(targetLabel,tagX+30.5,currentY+.5);
     // The stream falls to the visible surface, with small fizzy flecks.
     if(pouring&&mode==='playing'){
       const surface=fill+foam>0?foamY:g.bottom-5;ctx.beginPath();ctx.moveTo(254,25);for(let y=25;y<=surface;y+=9)ctx.lineTo(254+Math.sin(y*.1+t*22)*1.4,y);ctx.lineTo(266,surface);for(let y=surface;y>=25;y-=9)ctx.lineTo(266+Math.sin(y*.09+t*24)*1.4,y);ctx.closePath();ctx.fillStyle=soda.color;ctx.globalAlpha=.85;ctx.fill();ctx.globalAlpha=1;ctx.strokeStyle=soda.light;ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(258,29);ctx.lineTo(258,surface-2);ctx.stroke();
@@ -637,7 +676,7 @@
       if(physical||serving){updateMeter();if(now-lastUi>120){updateLiveFeedback();lastUi=now;}}
       if((pouring||serving)&&now-lastAutosave>500){saveCareer();if(externalSave)return;lastAutosave=now;}
       const fizzAudible=document.hasFocus()&&(mode==='settling'||mode==='playing'&&!pouring);
-      window.PerfectPourSounds?.updateFoam(state[7]/state[5],state[F.selectedSoda]<4?state[F.selectedSoda]:state[2],fizzAudible);
+      window.PerfectPourSounds?.updateFoam(state[7]/state[5],state[F.activeSoda]??(state[F.selectedSoda]<4?state[F.selectedSoda]:state[2]),fizzAudible);
       if(mode!=='store'&&(sceneDirty||physical||shine)){draw();sceneDirty=false;}
     }else if(sceneDirty&&!document.hidden){draw();sceneDirty=false;}
     requestAnimationFrame(frame);
