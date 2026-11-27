@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-/** Pure presentation transitions, not DOM events or a browser playtest. */
+/** Immediate-hold policy and actual production input boundaries; not a browser playtest. */
 import assert from 'node:assert/strict';
 import {readFile} from 'node:fs/promises';
 import vm from 'node:vm';
@@ -21,9 +21,10 @@ assert.equal(resolve(state).showPressure, true);
 for (const base of [-1,4,5,NaN,undefined,1.5])
   assert.equal(resolve({...state,selectedSoda:base}).disabled, true, 'An unchosen/invalid base cannot suggest a pour');
 state.selectedSoda = 0;
-assert.equal(resolve(state).action, 'ready');
+assert.equal(resolve(state).action, 'pour');
 assert.equal(resolve(state).disabled, false);
 assert.equal(resolve(state).stage, 'prep');
+assert.equal(resolve(state).showRecipe, true,'A selected base can pour immediately while ingredients remain editable');
 state.mode = 'playing';
 assert.equal(resolve(state).action, 'pour');
 assert.equal(resolve(state).stage, 'ready');
@@ -31,10 +32,11 @@ assert.equal(resolve(state).showRecipe, false);
 assert.equal(resolve(state).showPressure, false);
 assert.equal(resolve(state).showMode, false);
 const before = {...state}; resolve(state); assert.deepEqual(state, before, 'Presentation never mutates game/input state');
-checks.push('a prepared base unlocks Ready; the stable pour view hides recipe/pressure controls before the first hold');
+checks.push('a selected base unlocks Hold to pour directly; preparation stays editable until the first actual hold');
 
 state = {...state,attempted:true,holding:true,recipeLocked:true};
-assert.equal(resolve(state).label, 'RELEASE TO SERVE');
+assert.equal(resolve(state).label, 'POURING…');
+assert.equal(resolve(state).hint, 'Release to serve');
 assert.equal(resolve(state).showRecipe, false);
 assert.equal(resolve(state).showPressure, false);
 assert.equal(resolve(state).showMode, false);
@@ -48,49 +50,59 @@ for (let frame=0;frame<240;frame++) {
   assert.equal(action.disabled, true);
 }
 state.mode = 'finished';
-assert.equal(resolve(state).action, 'review');
+assert.equal(resolve(state).action, 'next');
 assert.equal(resolve(state).disabled, false);
 assert.equal(resolve(state).showRecipe, false);
-state.mode = 'result';
-assert.equal(resolve(state).action, 'next');
 assert.equal(resolve(state).label, 'NEXT CUSTOMER');
+assert.equal(resolve({...state,lastCustomer:true}).label, 'CLOSE THE DAY');
+state.mode = 'result';
+assert.equal(resolve(state).action, 'none');
+assert.equal(resolve(state).disabled, true,'Optional receipt has no hidden Next action');
 state.lastCustomer = true;
-assert.equal(resolve(state).label, 'CLOSE THE DAY');
+assert.equal(resolve(state).action, 'none');
 state.mode = 'summary';
 assert.equal(resolve(state).action, 'nextDay');
 assert.equal(resolve(state).showPressure, false);
-checks.push('Hardcore advances from one hold to a disabled settling action, then explicit review and next-customer/day actions');
+checks.push('Hardcore retains visible disabled settling; the completed cup offers Next customer or Close day directly, without a required review action');
 
 state = {...clean,mode:'playing',hardcore:false,selectedSoda:3};
 assert.equal(resolve(state).action, 'pour');
+assert.equal(resolve(state).easyDisabled, true);
 state = {...state,attempted:true,holding:true,recipeLocked:true};
-assert.equal(resolve(state).label, 'RELEASE TO PAUSE');
+assert.equal(resolve(state).hint, 'Release to pause');
+assert.equal(resolve(state).easyDisabled, true,'An active hold cannot be served by the separate action');
 state.holding = false;
-assert.equal(resolve(state).action, 'easyServe');
-assert.equal(resolve(state).hint, 'Tap to serve · hold to top up');
+assert.equal(resolve(state).action, 'pour');
+assert.equal(resolve(state).hint, 'Release to pause');
+assert.equal(resolve(state).showEasyAction, true);
+assert.equal(resolve(state).easyDisabled, false);
+assert.equal(resolve(state).easyLabel, 'SERVE');
 assert.equal(resolve(state).showRecipe, false, 'Easy top-ups do not unlock recipe edits');
 state.holding = true;
 assert.equal(resolve(state).action, 'pour');
 state = {...state,holding:false,mode:'settling'};
 assert.equal(resolve(state).disabled, true);
-state.mode = 'finished'; assert.equal(resolve(state).action, 'review');
-checks.push('Easy uses the same action for tap-to-serve or hold-to-top-up while the recipe remains locked');
+state.mode = 'finished'; assert.equal(resolve(state).action, 'next');
+assert.equal(resolve(state).showEasyAction, false);
+checks.push('Easy always uses its main button to pour and a separate enabled-after-release Serve action; the recipe remains locked during top-ups');
 
 const mixReady={...clean,mode:'playing',selectedSoda:0,isMix:true};
 assert.equal(resolve(mixReady).action,'pour');
 assert.match(resolve(mixReady).label,/1\/2/);
 const mixHeld={...mixReady,attempted:true,partAttempted:true,holding:true,recipeLocked:true};
-assert.equal(resolve(mixHeld).label,'RELEASE TO SWITCH');
+assert.equal(resolve(mixHeld).hint,'Release to switch');
 const mixSecond={...mixHeld,holding:false,pourPart:1,partAttempted:false,activeName:'Cola'};
 assert.equal(resolve(mixSecond).action,'pour','A global attempt does not consume the untouched second component');
 assert.equal(resolve(mixSecond).disabled,false);assert.match(resolve(mixSecond).label,/COLA.*2\/2/);
 assert.equal(resolve(mixSecond).showRecipe,false);assert.equal(resolve(mixSecond).showPressure,false);
-assert.equal(resolve({...mixSecond,holding:true,partAttempted:true}).label,'RELEASE TO SERVE');
+assert.equal(resolve({...mixSecond,holding:true,partAttempted:true}).hint,'Release to serve');
 const easyMix={...mixHeld,hardcore:false,holding:false};
-assert.equal(resolve(easyMix).action,'easyServe');assert.equal(resolve(easyMix).label,'NEXT SODA');
-assert.equal(resolve(easyMix).hint,'Tap to switch · hold to top up');
-assert.equal(resolve({...easyMix,pourPart:1}).label,'SERVE DRINK');
-checks.push('mixtures retain the one primary action: Hardcore switches after its first hold; Easy offers a tap-to-switch/top-up boundary; the untouched second part stays pourable with recipe controls locked');
+assert.equal(resolve(easyMix).action,'pour');assert.equal(resolve(easyMix).easyLabel,'NEXT SODA');
+assert.equal(resolve(easyMix).easyDisabled,false);
+assert.equal(resolve({...easyMix,pourPart:1}).easyLabel,'SERVE');
+assert.equal(resolve({...easyMix,pourPart:1,partAttempted:false}).easyDisabled,true,'The unattempted second component cannot be served');
+assert.equal(resolve(mixHeld).showEasyAction,false);
+checks.push('Hardcore switches after the first hold; Easy uses a distinct Next soda action; the fresh second component is pourable but cannot be served before an attempt');
 
 for (const mode of ['intro','welcome','store','pause','help','restart','unknown']) {
   const action=resolve({...clean,mode});
@@ -104,7 +116,7 @@ assert.equal(resolve({...clean,mode:'store'}).showMode, true);
 assert.equal(resolve({...clean,recipeLocked:true,selectedSoda:2}).showRecipe, false);
 assert.equal(resolve({...clean,recipeLocked:true,selectedSoda:2}).disabled, true);
 assert.equal(resolve().action, 'none');
-checks.push('menus and inactive modes cannot expose a live pour/review action; phase policy is deterministic and side-effect free');
+checks.push('menus and inactive modes cannot expose a live action; phase policy is deterministic and side-effect free');
 
 // Exercise the actual production input functions with a clocked event boundary
 // and the shipped Wasm. The DOM shim models only the controls these functions
@@ -130,59 +142,70 @@ function extractFunction(name){
   }
   throw new Error(`Unclosed production function ${name}`);
 }
-const functionNames=['cancelPendingPointer','primaryAction','primaryPointerDown','releasePointer',
-  'cancelPrimaryPointer','primaryClick','nativeActivation','keyDown','keyUp',
-  'clearInput','beginInput','releaseInput','interruptPour','serveDrink','readyToPour','announceNextPart'];
+const functionNames=['primaryAction','primaryPointerDown','releasePointer','cancelPrimaryPointer','primaryClick',
+  'easyPointerDown','easyAction','nativeActivation','keyDown','keyUp','clearInput','beginInput','releaseInput',
+  'interruptPour','serveDrink','announceNextPart','focusPourAfterPointer','nextOrder','viewReview',
+  'showCommittedPour','showFinishedCup','advanceSimulation','frame'];
 const sodas=vm.runInNewContext(gameSource.match(/const sodas = (\[[\s\S]*?\n  \]);/)[1]);
 const targetText=vm.runInNewContext(gameSource.match(/const targetText=[^;]+;/)[0]+'\ntargetText;');
+const scoreText=vm.runInNewContext(gameSource.split('\n').find(line=>line.trimStart().startsWith('const scoreText='))+'\nscoreText;');
+const activePlayMode=gameSource.split('\n').find(line=>line.trimStart().startsWith('const activePlayMode='));
+assert.ok(activePlayMode);
+const closeResult=gameSource.match(/\$\('close-result'\)\.addEventListener\('click',(\(\)=>\{[^\n]*?\})\);/)?.[1];
+const leaveWindow=gameSource.match(/const leaveWindow=\(\)=>\{[^\n]+?\};/)?.[0];
+assert.ok(closeResult,'Exercise the actual optional-receipt close callback');
+assert.ok(leaveWindow,'Exercise the actual blur/pagehide input boundary');
 class Element {
-  constructor(id,tag='button'){this.id=id;this.tag=tag;this.dataset={};this.disabled=false;this.hidden=false;this.open=false;this.captures=[];this.classes=new Set();this.classList={add:x=>this.classes.add(x),remove:x=>this.classes.delete(x)};}
+  constructor(id,tag='button'){this.id=id;this.tag=tag;this.dataset={};this.disabled=false;this.hidden=false;this.open=false;this.captures=[];this.focusCount=0;this.classes=new Set();this.classList={add:x=>this.classes.add(x),remove:x=>this.classes.delete(x)};}
   closest(selector){return selector.split(',').some(part=>part.trim()===this.tag)?this:null;}
   setPointerCapture(id){this.captures.push(id);}
-  focus(){}
+  focus(){this.focusCount++;}
 }
-function inputFixture({hardcore=true,mode='playing',primed=false,selected=true,mixed=false,part=0}={}){
-  const native=new WebAssembly.Instance(module,{}).exports;
-  native.reset(907);
+function inputFixture({hardcore=true,mode='preparing',primed=false,selected=true,mixed=false,part=0}={}){
+  const native=new WebAssembly.Instance(module,{}).exports;native.reset(907);
   const snap=()=>new Float32Array(native.memory.buffer,native.state_ptr(),native.state_len());
   if(mixed){
     for(let order=0;order<5;order++){
       const s=snap();assert.equal(s[F.isMix],0);native.set_recipe(s[2],s[F.orderedCherries],s[F.orderedLime],s[F.orderedSyrup],s[F.orderedBlend]);native.set_pressure(0);
       native.begin_pour();let time=s[4]*s[5]/s[19];while(time>1e-8){const dt=Math.min(time,.25);native.step(dt,0);time-=dt;}native.end_pour();native.next_order();
     }
-    assert.equal(snap()[F.isMix],1,'The sixth generated customer is the introductory mixture');
+    assert.equal(snap()[F.isMix],1,'The sixth generated customer introduces mixtures');
   }
   native.set_mode(hardcore?1:0);
   if(selected){const s=snap();native.set_recipe(s[2],s[F.orderedCherries],s[F.orderedLime],s[F.orderedSyrup],s[F.orderedBlend]);}
   if(part===1){assert.equal(mixed,true);native.begin_pour();native.step(.2,0);native.end_pour();if(!hardcore)native.serve();assert.equal(snap()[F.pourPart],1);}
-  if(primed){native.begin_pour();native.step(.2,0);native.end_pour();}
-  let now=0,simulatedAt=0,nextTimer=0;const timers=new Map(),events=[];
-  const counts={begin:0,release:0,serve:0,review:0,next:0,nextDay:0,save:0};
-  const checkpoints=[];
-  const button=new Element('pour-button'),tap=new Element('tap-machine','div'),pressure=new Element('pressure-controls','details');
+  if(primed){assert.equal(hardcore,false,'Primed fixture is an Easy top-up state');native.begin_pour();native.step(.2,0);native.end_pour();}
+  if((part===1||primed)&&mode==='preparing')mode='playing';
+  let now=100;
+  const events=[],checkpoints=[],labels=new Map(),cues=[];
+  const counts={begin:0,release:0,serve:0,review:0,next:0,nextDay:0,save:0,inline:0,confetti:0};
+  const button=new Element('pour-button'),easy=new Element('easy-action'),tap=new Element('tap-machine','div'),pressure=new Element('pressure-controls','details'),area=new Element('pour-area','div');
   const engine={...native,
     begin_pour(){counts.begin++;return native.begin_pour();},
     end_pour(){counts.release++;return native.end_pour();},
-    serve(){counts.serve++;return native.serve();}
+    serve(){counts.serve++;return native.serve();},
+    next_order(){counts.next++;return native.next_order();}
   };
-  const scope={engine,F,sodas,targetText,state:snap(),ready:true,externalSave:false,mode,returnMode:'playing',
-    pendingPointer:null,suppressPrimaryClick:false,inputOwner:null,activePointer:null,
-    keyHeld:false,settlingSpaceHeld:false,menuActivationKey:'',pouring:false,
+  const scope={engine,F,sodas,targetText,scoreText,state:snap(),ready:true,externalSave:false,mode,returnMode:'playing',
+    easyPress:null,primaryPress:null,suppressPrimaryClick:false,inputOwner:null,activePointer:null,keyHeld:false,settlingSpaceHeld:false,menuActivationKey:'',pouring:false,
     overlays:['intro','welcome','result','summary','pause','help','restart'],Element,
-    performance:{now:()=>now},
-    setTimeout(fn,delay){const id=++nextTimer;timers.set(id,{fn,at:now+delay});return id;},
-    clearTimeout(id){timers.delete(id);},
-    $(id){if(id==='pour-button')return button;if(id==='pressure-controls')return pressure;throw new Error(`Unexpected input DOM target ${id}`);},
-    document:{querySelector(selector){if(selector==='.tap-machine')return tap;if(selector==='.overlay:not([hidden])')return null;throw new Error(`Unexpected input DOM query ${selector}`);},querySelectorAll(){return[];}},
+    simulationClock:100,lastFrame:100,lastUi:100,lastAutosave:100,lastSpill:snap()[8],spillFlash:0,settlingElapsed:0,finishElapsed:0,visualTime:0,sceneDirty:false,
+    VISIBLE_FOAM:.001,reducedMotion:true,performance:{now:()=>now},clamp:(x,a,b)=>Math.max(a,Math.min(b,x)),
+    percent:fraction=>Math.round(fraction*100),signedMoney:cents=>(cents<0?'-':'')+'$'+(Math.abs(cents)/100).toFixed(2),
+    setTimeout(){throw new Error('Pour input must not defer a tap/hold decision');},
+    $(id){if(id==='pour-button')return button;if(id==='easy-action')return easy;if(id==='pressure-controls')return pressure;throw new Error('Unexpected input DOM target '+id);},
+    document:{hidden:false,hasFocus:()=>true,querySelector(selector){if(selector==='.tap-machine')return tap;if(selector==='.pour-area')return area;if(selector==='.overlay:not([hidden])')return null;throw new Error('Unexpected input DOM query '+selector);},querySelectorAll(){return[];}},
+    window:{PerfectPourSounds:{updateFoam(){},suspend(){}}},requestAnimationFrame(){},draw(){},updateMeter(){},updateLiveFeedback(){},
     refreshState(){scope.state=snap();},
-    advanceSimulation(at){let remaining=(at-simulatedAt)/1000;simulatedAt=at;if(!['playing','preparing'].includes(scope.mode))return;while(remaining>1e-9){const h=Math.min(.25,remaining);native.step(h,0);remaining-=h;}scope.refreshState();},
-    saveCareer(){counts.save++;checkpoints.push(Array.from(new Float64Array(native.memory.buffer,native.save_ptr(),native.save_len())));},setCustomerMood(){},openAudio(){},startPourSound(){},stopPourSound(){},
-    announce(message){events.push(message);},
-    updateHud(){sync();},
-    setMode(next){scope.mode=next;sync();},
-    showCommittedPour(){scope.mode='settling';sync();},
-    viewReview(){counts.review++;scope.mode='result';sync();},
-    nextOrder(){counts.next++;native.next_order();scope.refreshState();scope.mode='preparing';sync();},
+    saveCareer(){counts.save++;checkpoints.push(Array.from(new Float64Array(native.memory.buffer,native.save_ptr(),native.save_len())));},
+    setCustomerMood(){},openAudio(){},startPourSound(){},stopPourSound(){},
+    announce(message){events.push(message);},text(id,value){labels.set(id,String(value));},
+    playCue(name){cues.push(name);},confetti(){counts.confetti++;},
+    updateHud(){sync();},renderOrder(){sync();},renderReview(){counts.inline++;},
+    recipeDescription(){return 'Current soda order.';},
+    setMode(next){if(next!==scope.mode){scope.easyPress=null;scope.primaryPress=null;}scope.mode=next;scope.simulationClock=now;scope.sceneDirty=true;if(next!=='settling')scope.settlingElapsed=0;sync();},
+    presentResult(){counts.review++;scope.mode='result';sync();},
+    showSummary(){scope.mode='summary';sync();},
     openNextDay(){counts.nextDay++;scope.mode='preparing';sync();},
     pause(){api.interruptPour();scope.mode='pause';sync();},
     resume(){scope.mode='playing';sync();},closeHelp(){scope.mode='playing';sync();},
@@ -190,208 +213,217 @@ function inputFixture({hardcore=true,mode='playing',primed=false,selected=true,m
   };
   function sync(){
     const s=scope.state,policy=resolve({mode:scope.mode,hardcore:s[F.hardcore],attempted:s[F.attempted],holding:s[F.holding],selectedSoda:s[F.selectedSoda],recipeLocked:s[F.recipeLocked],lastCustomer:s[1]===s[F.goal],isMix:s[F.isMix],pourPart:s[F.pourPart],partAttempted:s[F.partAttempted],activeName:sodas[s[F.activeSoda]]?.name,nextName:sodas[s[F.orderedSecondSoda]]?.name});
-    button.dataset.action=policy.action;button.disabled=policy.disabled;
+    button.dataset.action=policy.action;button.disabled=policy.disabled;easy.hidden=!policy.showEasyAction;easy.disabled=policy.easyDisabled;easy.dataset.label=policy.easyLabel;
   }
   const context=vm.createContext(scope);
-  const api=vm.runInContext(functionNames.map(extractFunction).join('\n')+`\n({${functionNames.join(',')}});`,context);
+  const api=vm.runInContext(activePlayMode+'\n'+functionNames.map(extractFunction).join('\n')+'\n'+leaveWindow+'\n({'+functionNames.join(',')+',leaveWindow,closeResult:'+closeResult+'});',context);
   sync();
-  function advance(ms){
-    const end=now+ms;
-    for(;;){let next;for(const [id,timer] of timers)if(timer.at<=end&&(!next||timer.at<next.timer.at))next={id,timer};if(!next)break;now=next.timer.at;timers.delete(next.id);next.timer.fn();}
-    now=end;
-  }
   function event(extra={}){return{button:0,isPrimary:true,pointerId:1,currentTarget:button,target:button,detail:1,repeat:false,prevented:false,preventDefault(){this.prevented=true;},...extra};}
-  return{api,scope,button,counts,events,timers,checkpoints,advance,event,sync,native,
-    mode(next){scope.mode=next;sync();},
-    finish(){scope.mode='finished';sync();}
+  const secondary=extra=>event({currentTarget:easy,target:easy,...extra});
+  return{api,scope,button,easy,counts,events,checkpoints,labels,cues,event,secondary,sync,native,
+    advance(ms){now+=ms;},tick(ms){now+=ms;api.frame(now);},
+    mode(next){scope.mode=next;sync();},finish(){api.showFinishedCup(false);},
+    clickEasy(){api.easyPointerDown(secondary());api.releasePointer(secondary());api.easyAction(secondary());},
+    clickPrimary(){api.primaryPointerDown(event());api.releasePointer(event());api.primaryClick(event());}
   };
 }
+function paidFixture(options={}){
+  const f=inputFixture(options),parts=options.mixed?2:1;
+  for(let part=0;part<parts;part++){
+    f.api.primaryPointerDown(f.event());f.advance(200);f.api.releasePointer(f.event());f.api.primaryClick(f.event());
+    if(options.hardcore===false)f.clickEasy();
+  }
+  assert.equal(f.scope.mode,'settling');assert.equal(f.scope.state[0],1);return f;
+}
+const ledger=f=>[9,10,13,16,F.cash,F.streak,F.comboBonus,F.milestone,F.lifetime,F.ingredientTotal,F.customers].map(index=>f.scope.state[index]);
 
-const hc=inputFixture();
-hc.api.primaryPointerDown(hc.event());hc.advance(200);
-hc.api.releasePointer(hc.event());hc.api.primaryClick(hc.event());
-assert.equal(hc.counts.begin,1);assert.equal(hc.counts.release,1);
-assert.equal(hc.scope.mode,'settling');assert.equal(hc.scope.state[16],1);
-hc.api.primaryPointerDown(hc.event());hc.api.releasePointer(hc.event());
-assert.equal(hc.counts.begin,1,'A committed Hardcore cup cannot begin a second hold');
-checks.push('actual Hardcore pointer handlers commit one Wasm attempt and suppress the release click');
+for(const source of ['pointer','key']){
+  const direct=inputFixture();
+  if(source==='pointer')direct.api.primaryPointerDown(direct.event());else direct.api.keyDown(direct.event({code:'Space'}));
+  assert.equal(direct.counts.begin,1);assert.equal(direct.scope.mode,'playing');assert.equal(direct.scope.inputOwner,source);
+  assert.equal(direct.scope.state[F.holding],1,'The first preparation gesture starts liquid immediately');
+  direct.advance(200);
+  if(source==='pointer'){direct.api.releasePointer(direct.event());direct.api.primaryClick(direct.event());}else direct.api.keyUp(direct.event({code:'Space'}));
+  assert.equal(direct.counts.release,1);assert.equal(direct.scope.mode,'settling');assert.equal(direct.scope.state[16],1);
+  assert(direct.scope.state[F.beverageMl]>0);assert.equal(direct.counts.next,0);
+}
+const noBase=inputFixture({selected:false});
+noBase.api.keyDown(noBase.event({code:'Space'}));assert.equal(noBase.counts.begin,0);
+const request=noBase.scope.state;noBase.native.set_recipe(request[2],request[F.orderedCherries],request[F.orderedLime],request[F.orderedSyrup],request[F.orderedBlend]);noBase.scope.refreshState();noBase.sync();
+noBase.api.keyDown(noBase.event({code:'Space',repeat:true}));noBase.api.keyUp(noBase.event({code:'Space'}));
+assert.equal(noBase.counts.begin,0,'Space started before a base selection stays consumed until release');
+noBase.api.keyDown(noBase.event({code:'Space'}));assert.equal(noBase.counts.begin,1);noBase.api.keyUp(noBase.event({code:'Space'}));
+checks.push('actual preparation pointer-down and fresh Space begin the first Wasm hold immediately; an invalid-base Space cannot become a pour while still held');
 
-const tapServe=inputFixture({hardcore:false,primed:true});
-tapServe.api.primaryPointerDown(tapServe.event());tapServe.advance(159);
-assert.equal(tapServe.counts.begin,0);tapServe.api.releasePointer(tapServe.event());tapServe.api.primaryClick(tapServe.event());
-assert.equal(tapServe.counts.serve,1);assert.equal(tapServe.counts.begin,0);assert.equal(tapServe.scope.state[16],1);assert.equal(tapServe.timers.size,0);
-const holdTopup=inputFixture({hardcore:false,primed:true});
-holdTopup.api.primaryPointerDown(holdTopup.event());holdTopup.advance(160);
-assert.equal(holdTopup.counts.begin,1);assert.equal(holdTopup.scope.inputOwner,'pointer');holdTopup.advance(200);
-holdTopup.api.releasePointer(holdTopup.event());holdTopup.api.primaryClick(holdTopup.event());
-assert.equal(holdTopup.counts.release,1);assert.equal(holdTopup.counts.serve,0);assert.equal(holdTopup.scope.state[16],0);assert.equal(holdTopup.scope.mode,'playing');assert.equal(holdTopup.timers.size,0);
-checks.push('actual Easy tap below160ms serves once; a160ms hold tops up without its release click accidentally serving');
+const emptyHard=inputFixture();emptyHard.clickPrimary();
+assert.equal(emptyHard.counts.begin,1);assert.equal(emptyHard.counts.release,1);assert.equal(emptyHard.scope.state[16],1);
+assert.equal(emptyHard.scope.state[F.beverageMl],0);assert.equal(emptyHard.scope.mode,'settling');
+const emptyEasy=inputFixture({hardcore:false});emptyEasy.clickPrimary();emptyEasy.clickPrimary();
+assert.equal(emptyEasy.counts.begin,2);assert.equal(emptyEasy.counts.serve,0);assert.equal(emptyEasy.scope.state[16],0);
+assert.equal(emptyEasy.scope.state[F.beverageMl],0);assert.equal(emptyEasy.button.dataset.action,'pour');assert.equal(emptyEasy.easy.disabled,false);
+emptyEasy.clickEasy();assert.equal(emptyEasy.counts.serve,1);assert.equal(emptyEasy.scope.state[16],1);
+for(const duration of [20,159,160,240]){
+  const topup=inputFixture({hardcore:false,primed:true}),before=topup.scope.state[F.beverageMl];
+  topup.api.primaryPointerDown(topup.event());assert.equal(topup.counts.begin,1,'Every primary press begins immediately at '+duration+'ms');
+  topup.advance(duration);topup.api.releasePointer(topup.event());topup.api.primaryClick(topup.event());
+  assert.equal(topup.counts.serve,0);assert.equal(topup.scope.state[16],0);assert.equal(topup.scope.mode,'playing');
+  assert(topup.scope.state[F.beverageMl]>before);assert.equal(topup.button.dataset.action,'pour');
+}
+checks.push('even an immediate primary click consumes a Hardcore attempt; Easy quick taps only pour and pause, including empty cups; no duration selects an alternate Serve behavior');
 
-const emptyEasy=inputFixture({hardcore:false});
-emptyEasy.api.primaryPointerDown(emptyEasy.event());emptyEasy.api.releasePointer(emptyEasy.event());emptyEasy.api.primaryClick(emptyEasy.event());
-assert.equal(emptyEasy.scope.state[F.attempted],1);assert.equal(emptyEasy.scope.state[6]+emptyEasy.scope.state[7],0);
-emptyEasy.api.primaryPointerDown(emptyEasy.event());emptyEasy.advance(80);emptyEasy.api.releasePointer(emptyEasy.event());emptyEasy.api.primaryClick(emptyEasy.event());
-assert.equal(emptyEasy.counts.serve,1);assert.equal(emptyEasy.scope.state[16],1,'An empty Easy attempt can be submitted instead of trapping the player');
-assert.equal(emptyEasy.scope.mode,'settling');
-checks.push('an immediate Easy release still has a usable serve action, including an empty cup');
-
+const whileHeld=inputFixture({hardcore:false,primed:true});
+whileHeld.api.keyDown(whileHeld.event({code:'Space'}));assert.equal(whileHeld.easy.disabled,true);
+whileHeld.api.serveDrink();whileHeld.api.easyPointerDown(whileHeld.secondary({pointerId:2}));
+whileHeld.api.keyDown(whileHeld.event({code:'Enter'}));
+assert.equal(whileHeld.counts.serve,0);assert.equal(whileHeld.scope.inputOwner,'key');assert.equal(whileHeld.scope.state[F.holding],1);
+whileHeld.advance(200);whileHeld.api.keyUp(whileHeld.event({code:'Space'}));
+whileHeld.api.easyAction(whileHeld.secondary({pointerId:2}));assert.equal(whileHeld.counts.serve,0,'A service press begun during a hold cannot become valid on release');
+whileHeld.api.keyUp(whileHeld.event({code:'Enter'}));
+whileHeld.clickEasy();assert.equal(whileHeld.counts.serve,1);
 for(const boundary of ['cancelPrimaryPointer','clearInput','interruptPour']){
   const cancelled=inputFixture({hardcore:false,primed:true});
-  cancelled.api.primaryPointerDown(cancelled.event());cancelled.advance(80);
-  cancelled.api[boundary](cancelled.event());cancelled.advance(500);cancelled.api.releasePointer(cancelled.event());
-  assert.equal(cancelled.counts.begin,0,`${boundary} cancels the deferred hold`);
-  assert.equal(cancelled.counts.serve,0,`${boundary} cannot submit a deferred tap`);
-  assert.equal(cancelled.timers.size,0);
+  cancelled.api.easyPointerDown(cancelled.secondary());cancelled.api[boundary](cancelled.secondary());cancelled.api.easyAction(cancelled.secondary());
+  assert.equal(cancelled.counts.serve,0,boundary+' discards a stale secondary press');
 }
-const multiple=inputFixture({hardcore:false,primed:true});
-multiple.api.primaryPointerDown(multiple.event());multiple.api.primaryPointerDown(multiple.event({pointerId:2}));
-multiple.api.releasePointer(multiple.event({pointerId:2}));assert.equal(multiple.scope.pendingPointer.id,1);
-assert.equal(multiple.counts.serve,0);multiple.api.cancelPrimaryPointer(multiple.event());
-const keyOwnership=inputFixture({hardcore:false,primed:true});
-keyOwnership.api.primaryPointerDown(keyOwnership.event());keyOwnership.advance(80);keyOwnership.api.keyDown(keyOwnership.event({code:'Space'}));
-keyOwnership.advance(200);keyOwnership.api.releasePointer(keyOwnership.event());
-assert.equal(keyOwnership.counts.serve,0);assert.equal(keyOwnership.counts.begin,1);assert.equal(keyOwnership.scope.inputOwner,'key');
-keyOwnership.api.keyUp(keyOwnership.event({code:'Space'}));assert.equal(keyOwnership.counts.release,1);assert.equal(keyOwnership.timers.size,0);
-checks.push('actual cancel, clear, and interrupt boundaries release pending timers; extra pointers cannot steal ownership; Space cancels a pending pointer decision');
+const multi=inputFixture({hardcore:false,primed:true});
+multi.api.primaryPointerDown(multi.event());multi.api.primaryPointerDown(multi.event({pointerId:2}));
+multi.api.releasePointer(multi.event({pointerId:2}));assert.equal(multi.scope.inputOwner,'pointer');assert.equal(multi.counts.release,0);
+multi.api.cancelPrimaryPointer(multi.event());multi.api.cancelPrimaryPointer(multi.event());multi.api.releasePointer(multi.event());
+assert.equal(multi.counts.release,1);assert.equal(multi.counts.serve,0);
+checks.push('Easy service rejects active holds and presses that began while unavailable; cancellation clears pending secondary activation; extra pointers cannot steal a pour');
 
-const prepSpace=inputFixture({mode:'preparing'});
-prepSpace.api.keyDown(prepSpace.event({code:'Space'}));assert.equal(prepSpace.counts.begin,0);
-prepSpace.mode('playing');prepSpace.api.keyDown(prepSpace.event({code:'Space',repeat:true}));prepSpace.api.keyUp(prepSpace.event({code:'Space'}));
-assert.equal(prepSpace.counts.begin,0,'Space begun during preparation remains consumed even if readiness changes');
-prepSpace.api.keyDown(prepSpace.event({code:'Space'}));prepSpace.api.keyDown(prepSpace.event({code:'Space',repeat:true}));prepSpace.advance(200);prepSpace.api.keyUp(prepSpace.event({code:'Space'}));
-assert.equal(prepSpace.counts.begin,1);assert.equal(prepSpace.counts.release,1);
-const settleSpace=inputFixture();settleSpace.mode('settling');
+const hardMix=inputFixture({mixed:true}),mixOpening=ledger(hardMix);
+hardMix.api.primaryPointerDown(hardMix.event());hardMix.advance(240);hardMix.api.releasePointer(hardMix.event());hardMix.api.primaryClick(hardMix.event());
+assert.equal(hardMix.counts.begin,1);assert.equal(hardMix.scope.mode,'playing');assert.equal(hardMix.scope.state[F.pourPart],1);
+assert.equal(hardMix.scope.state[F.attempted],1);assert.equal(hardMix.scope.state[F.partAttempted],0);assert.deepEqual(ledger(hardMix),mixOpening);
+assert.equal(hardMix.checkpoints.at(-1)[99],1);assert.equal(hardMix.checkpoints.at(-1)[100],0);
+hardMix.api.cancelPrimaryPointer(hardMix.event());hardMix.api.releasePointer(hardMix.event());assert.equal(hardMix.counts.release,1);
+hardMix.api.primaryPointerDown(hardMix.event({pointerId:2}));hardMix.advance(240);hardMix.api.releasePointer(hardMix.event({pointerId:2}));hardMix.api.primaryClick(hardMix.event());
+assert.equal(hardMix.counts.begin,2);assert.equal(hardMix.counts.release,2);assert.equal(hardMix.scope.mode,'settling');assert.equal(hardMix.scope.state[16],6);
+const keyMix=inputFixture({mixed:true});
+keyMix.api.keyDown(keyMix.event({code:'Space'}));keyMix.advance(200);keyMix.api.interruptPour();
+keyMix.api.keyDown(keyMix.event({code:'Space',repeat:true}));keyMix.api.keyUp(keyMix.event({code:'Space'}));
+assert.equal(keyMix.counts.begin,1);assert.equal(keyMix.scope.state[F.pourPart],1);assert.equal(keyMix.scope.state[F.partAttempted],0);
+keyMix.api.keyDown(keyMix.event({code:'Space'}));keyMix.advance(200);keyMix.api.keyUp(keyMix.event({code:'Space'}));
+assert.equal(keyMix.counts.begin,2);assert.equal(keyMix.scope.mode,'settling');
+checks.push('mixed Hardcore still requires two fresh holds, checkpoints the unpaid component switch, and cannot carry an interrupted held Space into soda two');
+
+const easyMixInput=inputFixture({mixed:true,hardcore:false,primed:true}),easyOpening=ledger(easyMixInput);
+assert.equal(easyMixInput.button.dataset.action,'pour');assert.equal(easyMixInput.easy.dataset.label,'NEXT SODA');
+easyMixInput.clickEasy();assert.equal(easyMixInput.counts.serve,1);assert.equal(easyMixInput.scope.state[F.pourPart],1);
+assert.equal(easyMixInput.scope.state[F.partAttempted],0);assert.equal(easyMixInput.easy.disabled,true);assert.deepEqual(ledger(easyMixInput),easyOpening);
+assert.equal(easyMixInput.checkpoints.at(-1)[99],1);assert.equal(easyMixInput.checkpoints.at(-1)[100],0);
+easyMixInput.clickEasy();assert.equal(easyMixInput.counts.serve,1,'A second click cannot serve the untouched second component');
+for(let hold=0;hold<2;hold++){
+  easyMixInput.api.primaryPointerDown(easyMixInput.event());easyMixInput.advance(100);easyMixInput.api.releasePointer(easyMixInput.event());easyMixInput.api.primaryClick(easyMixInput.event());
+  assert.equal(easyMixInput.scope.state[F.pourPart],1);assert.equal(easyMixInput.counts.serve,1);assert.deepEqual(ledger(easyMixInput),easyOpening);
+}
+assert.equal(easyMixInput.easy.dataset.label,'SERVE');easyMixInput.clickEasy();
+assert.equal(easyMixInput.counts.serve,2);assert.equal(easyMixInput.scope.state[16],6);assert.equal(easyMixInput.scope.mode,'settling');
+for(const part of [0,1]){
+  const easyEnter=inputFixture({mixed:true,hardcore:false,part,primed:true});
+  easyEnter.api.keyDown(easyEnter.event({code:'Enter'}));easyEnter.api.keyDown(easyEnter.event({code:'Enter',repeat:true}));
+  assert.equal(easyEnter.counts.serve,1);assert.equal(easyEnter.counts.begin,0);
+  assert.equal(easyEnter.scope.state[F.pourPart],1);
+  assert.equal(easyEnter.scope.mode,part===0?'playing':'settling');
+}
+checks.push('Easy uses explicit Next soda and Serve controls, saves the unpaid stage transition, allows immediate top-ups at either stage, and gives one secondary action per Enter');
+
+const emptyReveal=inputFixture();emptyReveal.clickPrimary();
+for(let n=0;n<3;n++)emptyReveal.tick(250);
+assert.equal(emptyReveal.scope.state[7],0);assert.equal(emptyReveal.scope.mode,'settling');assert.equal(emptyReveal.counts.inline,0,'Even a foam-free empty tap retains the minimum visible settling beat');
+emptyReveal.tick(100);assert.equal(emptyReveal.scope.mode,'finished');assert.equal(emptyReveal.counts.inline,1);
+const auto=paidFixture(),autoLedger=ledger(auto);
+for(let n=0;n<7;n++)auto.tick(100);
+assert.equal(auto.scope.mode,'settling','The cup remains visible for the minimum settling interval');
+for(let n=0;n<600&&auto.scope.mode==='settling';n++)auto.tick(1000/60);
+assert.equal(auto.scope.mode,'finished');assert.equal(auto.counts.inline,1,'The actual frame path renders the inline result automatically');
+assert.equal(auto.button.dataset.action,'next');assert.equal(auto.counts.next,0);assert.equal(auto.counts.serve,0);
+assert.deepEqual(ledger(auto),autoLedger);assert.equal(auto.cues.filter(name=>['perfect','good','bad'].includes(name)).length,1);
+for(let n=0;n<60;n++)auto.tick(1000/60);
+assert.equal(auto.counts.inline,1);assert.equal(auto.counts.next,0);assert.deepEqual(ledger(auto),autoLedger);
+auto.api.viewReview();assert.equal(auto.counts.review,1);assert.equal(auto.scope.mode,'result');assert.deepEqual(ledger(auto),autoLedger);
+auto.api.closeResult();assert.equal(auto.scope.mode,'finished');assert.equal(auto.cues.filter(name=>['perfect','good','bad'].includes(name)).length,1);
+auto.clickPrimary();assert.equal(auto.counts.next,1);assert.equal(auto.scope.mode,'preparing');assert.equal(auto.scope.state[F.attempted],0);
+auto.api.nextOrder();assert.equal(auto.counts.next,1,'A duplicate Next callback cannot skip the new customer');
+const resultNext=paidFixture();resultNext.finish();resultNext.api.viewReview();const receiptLedger=ledger(resultNext);
+for(const code of ['Space','Enter']){resultNext.api.keyDown(resultNext.event({code}));resultNext.api.keyUp(resultNext.event({code}));}
+resultNext.api.nextOrder();assert.equal(resultNext.counts.next,0);assert.equal(resultNext.scope.mode,'result');assert.deepEqual(ledger(resultNext),receiptLedger);
+resultNext.api.closeResult();resultNext.clickPrimary();assert.equal(resultNext.counts.next,1);assert.equal(resultNext.scope.mode,'preparing');
+const closing=inputFixture(),goal=closing.scope.state[F.goal];
+for(let order=1;order<=goal;order++){
+  const request=closing.scope.state;
+  closing.native.set_recipe(request[2],request[F.orderedCherries],request[F.orderedLime],request[F.orderedSyrup],request[F.orderedBlend]);closing.scope.refreshState();closing.sync();
+  const parts=closing.scope.state[F.isMix]?2:1;
+  for(let part=0;part<parts;part++){closing.api.primaryPointerDown(closing.event());closing.advance(80);closing.api.releasePointer(closing.event());closing.api.primaryClick(closing.event());}
+  assert.equal(closing.scope.mode,'settling');closing.finish();
+  if(order<goal)closing.clickPrimary();
+}
+assert.equal(closing.scope.state[0],1);assert.equal(closing.scope.state[16],goal);assert.equal(closing.counts.next,goal-1);
+closing.clickPrimary();assert.equal(closing.scope.state[0],2);assert.equal(closing.scope.mode,'summary');assert.equal(closing.counts.next,goal);
+const closedLedger=ledger(closing);closing.api.nextOrder();assert.deepEqual(ledger(closing),closedLedger);assert.equal(closing.counts.next,goal);assert.equal(closing.counts.nextDay,0);
+checks.push('the actual frame path waits for visible settling, renders one inline result and cue, and keeps the cup until explicit Next; optional receipt keys cannot advance; its real close callback returns to the cup without repayment or another cue');
+checks.push('one explicit Next per customer reaches the last inline result; Close day executes the actual day-close branch once and leaves opening tomorrow explicit');
+
+const settleSpace=paidFixture();
 settleSpace.api.keyDown(settleSpace.event({code:'Space'}));settleSpace.finish();
 settleSpace.api.keyDown(settleSpace.event({code:'Space',repeat:true}));settleSpace.api.keyUp(settleSpace.event({code:'Space'}));
-assert.equal(settleSpace.counts.review,0,'Space begun during settling cannot open the finished cup review');
-settleSpace.api.keyDown(settleSpace.event({code:'Space'}));assert.equal(settleSpace.counts.review,1);
+assert.equal(settleSpace.counts.next,0,'Space begun during settling cannot activate newly available Next');
+settleSpace.api.keyDown(settleSpace.event({code:'Space'}));assert.equal(settleSpace.counts.next,1);
 settleSpace.api.keyDown(settleSpace.event({code:'Space',repeat:true}));settleSpace.api.keyUp(settleSpace.event({code:'Space'}));
-assert.equal(settleSpace.counts.next,0,'A fresh review Space cannot repeat into Next customer');
-const enter=inputFixture({mode:'preparing'});
-enter.api.keyDown(enter.event({code:'Enter'}));assert.equal(enter.scope.mode,'playing');assert.equal(enter.counts.begin,0);
-enter.finish();enter.api.keyDown(enter.event({code:'Enter'}));enter.api.keyDown(enter.event({code:'Enter',repeat:true}));
-assert.equal(enter.counts.review,1);assert.equal(enter.counts.next,0);
-checks.push('actual Space and Enter handlers preserve preparation/settling handoffs and cannot repeat through review into the next customer');
-
-// The test invokes key callbacks at the native activation boundary. It does
-// not synthesize the browser's click: the intervening mode change represents
-// that control's separate click handler, which the menu suite tests directly.
-for(const code of ['Enter','Space']){
-  const launch=inputFixture({mode:'intro'}),intro=new Element('intro-start'),next=new Element('new-game-button');
-  const initial=launch.event({code,target:intro});launch.api.keyDown(initial);
-  assert.equal(initial.prevented,false,`${code} keeps the initial native Start activation`);
-  assert.equal(launch.scope.menuActivationKey,code);
-  launch.mode('welcome');
-  const repeatOnMenu=launch.event({code,target:next,repeat:true});launch.api.keyDown(repeatOnMenu);
-  assert.equal(repeatOnMenu.prevented,true,`Held ${code} cannot activate the newly focused menu control`);
-  launch.mode('preparing');
-  const repeatOnGame=launch.event({code,repeat:true});launch.api.keyDown(repeatOnGame);
-  assert.equal(repeatOnGame.prevented,true,`Held ${code} cannot cross the menu into gameplay`);
-  assert.equal(launch.counts.begin,0);assert.equal(launch.scope.mode,'preparing');
-  const released=launch.event({code,target:intro});launch.api.keyUp(released);
-  assert.equal(released.prevented,false,'Releasing the first native Space must retain its default click');
-  assert.equal(launch.scope.menuActivationKey,'');
-  launch.api.keyDown(launch.event({code:'Enter'}));
-  assert.equal(launch.scope.mode,'playing','A fresh key remains usable after the launch key is released');
-  assert.equal(launch.counts.begin,0);
-}
-checks.push('native menu Enter/Space keep their first activation but held repeats cannot trigger newly focused menu or game controls');
-
-const noClickAfterHold=inputFixture();
-noClickAfterHold.api.primaryPointerDown(noClickAfterHold.event());noClickAfterHold.advance(200);noClickAfterHold.api.releasePointer(noClickAfterHold.event());
-noClickAfterHold.finish();noClickAfterHold.api.primaryClick(noClickAfterHold.event({detail:0}));
-assert.equal(noClickAfterHold.counts.review,1,'A missing pointer-generated click does not suppress a later assistive activation');
-for(const tag of ['button','a','input','textarea','select','summary']){
-  const native=inputFixture({mode:'preparing'}),control=new Element('native-control',tag);
-  const key=native.event({code:'Space',target:control});native.api.keyDown(key);
-  assert.equal(key.prevented,false,`Native ${tag} Space remains owned by the native control`);
-  assert.equal(native.scope.settlingSpaceHeld,false);
-}
-checks.push('assistive clicks remain usable after an outside release; native controls retain Space ownership');
-
-const settlePointer=inputFixture();settlePointer.mode('settling');
-settlePointer.api.primaryPointerDown(settlePointer.event());settlePointer.finish();
+assert.equal(settleSpace.counts.begin,1,'Held Next Space cannot start pouring for the next customer');
+const settleEnter=paidFixture();
+settleEnter.api.keyDown(settleEnter.event({code:'Enter'}));settleEnter.finish();
+settleEnter.api.keyDown(settleEnter.event({code:'Enter',repeat:true}));assert.equal(settleEnter.counts.next,0);
+settleEnter.api.keyUp(settleEnter.event({code:'Enter'}));settleEnter.api.keyDown(settleEnter.event({code:'Enter'}));
+assert.equal(settleEnter.counts.next,1);
+const nativeServe=inputFixture({hardcore:false,primed:true});
+const firstEnter=nativeServe.secondary({code:'Enter',detail:0});nativeServe.api.keyDown(firstEnter);
+assert.equal(firstEnter.prevented,false,'The separate native button retains its first Enter activation');
+nativeServe.api.easyAction(firstEnter);assert.equal(nativeServe.scope.mode,'settling');nativeServe.finish();
+const repeatAfterFocus=nativeServe.event({code:'Enter',repeat:true});
+nativeServe.api.keyDown(repeatAfterFocus);assert.equal(repeatAfterFocus.prevented,true);assert.equal(nativeServe.counts.next,0);
+nativeServe.api.keyUp(nativeServe.event({code:'Enter'}));nativeServe.api.keyDown(nativeServe.event({code:'Enter'}));
+assert.equal(nativeServe.counts.next,1,'A fresh Enter may advance after the native Serve Enter is released');
+const lostEnter=inputFixture({hardcore:false,primed:true});
+lostEnter.api.keyDown(lostEnter.event({code:'Enter'}));assert.equal(lostEnter.scope.menuActivationKey,'Enter');
+lostEnter.api.leaveWindow();assert.equal(lostEnter.scope.menuActivationKey,'');lostEnter.finish();
+lostEnter.api.keyDown(lostEnter.event({code:'Enter'}));assert.equal(lostEnter.counts.next,1,'Blur clears a missing Enter keyup so the next fresh key is not swallowed');
+const settlePointer=paidFixture();settlePointer.api.primaryPointerDown(settlePointer.event());settlePointer.finish();
 settlePointer.api.releasePointer(settlePointer.event());settlePointer.api.primaryClick(settlePointer.event());
-assert.equal(settlePointer.counts.review,0,'A pointer press begun on the disabled settling action cannot become a review click when the role changes');
-checks.push('a pointer gesture begun during settling cannot activate the newly ready review');
+assert.equal(settlePointer.counts.next,0,'A press begun on disabled settling cannot become Next');
+const missingDown=paidFixture();assert.equal(missingDown.scope.suppressPrimaryClick,false);missingDown.finish();
+missingDown.api.primaryClick(missingDown.event());assert.equal(missingDown.counts.next,0,'A synthesized click after missing disabled pointerdown has no fresh action owner');
+missingDown.api.primaryPointerDown(missingDown.event());missingDown.api.cancelPrimaryPointer(missingDown.event());missingDown.api.primaryClick(missingDown.event());
+assert.equal(missingDown.counts.next,0,'Cancelling a Next press invalidates its later click');
+missingDown.clickPrimary();assert.equal(missingDown.counts.next,1,'A new complete pointer gesture still advances normally');
+const lateRelease=inputFixture();lateRelease.api.primaryPointerDown(lateRelease.event());lateRelease.advance(200);lateRelease.api.releasePointer(lateRelease.event());lateRelease.finish();lateRelease.api.primaryClick(lateRelease.event());
+assert.equal(lateRelease.counts.next,0,'The original hold release click cannot skip a result that appears before click delivery');
+const pointerDuringKey=inputFixture();pointerDuringKey.api.keyDown(pointerDuringKey.event({code:'Space'}));
+pointerDuringKey.api.primaryPointerDown(pointerDuringKey.event({pointerId:2}));pointerDuringKey.advance(200);pointerDuringKey.api.keyUp(pointerDuringKey.event({code:'Space'}));pointerDuringKey.finish();
+pointerDuringKey.api.releasePointer(pointerDuringKey.event({pointerId:2}));pointerDuringKey.api.primaryClick(pointerDuringKey.event({pointerId:2}));
+assert.equal(pointerDuringKey.counts.next,0,'A pointer press begun while Space owns the pour cannot become Next when released later');
+const assistive=paidFixture();assistive.finish();assistive.api.primaryClick(assistive.event({detail:0}));assert.equal(assistive.counts.next,1,'An intentional assistive click remains available after a missing pointer click');
+checks.push('Space, Enter, native Easy activation, disabled settling presses and pointers begun during another hold cannot skip the completed cup; blur clears lost keyup state; fresh discrete input and assistive clicks still work');
 
-const hardMix=inputFixture({mixed:true});
-const openingMixCash=hardMix.scope.state[F.cash],openingMixCompleted=hardMix.scope.state[16];
-hardMix.api.primaryPointerDown(hardMix.event());hardMix.advance(240);
-hardMix.api.releasePointer(hardMix.event());hardMix.api.primaryClick(hardMix.event());
-assert.equal(hardMix.counts.begin,1);assert.equal(hardMix.counts.release,1);
-assert.equal(hardMix.scope.mode,'playing');assert.equal(hardMix.scope.state[F.pourPart],1);
-assert.equal(hardMix.scope.state[F.attempted],1);assert.equal(hardMix.scope.state[F.partAttempted],0);
-assert.equal(hardMix.scope.state[F.cash],openingMixCash);assert.equal(hardMix.scope.state[16],openingMixCompleted);
-assert.equal(hardMix.button.dataset.action,'pour');assert.equal(hardMix.button.disabled,false);
-assert.equal(hardMix.checkpoints.at(-1)[99],1,'The first release checkpoints the next component');
-assert.equal(hardMix.checkpoints.at(-1)[100],0);
-assert.equal(hardMix.events.filter(message=>message.startsWith('Part 2:')).length,1);
-hardMix.api.cancelPrimaryPointer(hardMix.event());hardMix.api.releasePointer(hardMix.event());
-assert.equal(hardMix.counts.release,1,'Late cancel/up callbacks cannot consume the untouched second component');
-hardMix.api.primaryPointerDown(hardMix.event({pointerId:2}));hardMix.advance(240);
-hardMix.api.releasePointer(hardMix.event({pointerId:2}));hardMix.api.primaryClick(hardMix.event());
-assert.equal(hardMix.counts.begin,2);assert.equal(hardMix.counts.release,2);
-assert.equal(hardMix.scope.mode,'settling');assert.equal(hardMix.scope.state[16],openingMixCompleted+1);
-const mixPaid=Array.from(hardMix.scope.state);
-hardMix.api.primaryPointerDown(hardMix.event());hardMix.api.releasePointer(hardMix.event());hardMix.api.primaryClick(hardMix.event());
-assert.equal(hardMix.counts.begin,2);assert.deepEqual(Array.from(hardMix.scope.state),mixPaid);
-checks.push('actual Hardcore mixture pointer handlers require two distinct holds, checkpoint the unpaid component boundary, suppress release clicks, and commit exactly one customer');
-
-const mixKey=inputFixture({mixed:true});
-mixKey.api.keyDown(mixKey.event({code:'Space'}));mixKey.advance(200);mixKey.api.interruptPour();
-assert.equal(mixKey.scope.state[F.pourPart],1);assert.equal(mixKey.scope.keyHeld,true);
-mixKey.api.keyDown(mixKey.event({code:'Space',repeat:true}));mixKey.api.keyUp(mixKey.event({code:'Space'}));
-assert.equal(mixKey.counts.begin,1);assert.equal(mixKey.scope.state[F.partAttempted],0,'A held Space cannot flow through interruption into the next soda');
-mixKey.api.keyDown(mixKey.event({code:'Space'}));mixKey.api.keyDown(mixKey.event({code:'Space',repeat:true}));
-mixKey.advance(200);mixKey.api.keyUp(mixKey.event({code:'Space'}));mixKey.api.keyUp(mixKey.event({code:'Space'}));
-assert.equal(mixKey.counts.begin,2);assert.equal(mixKey.counts.release,2);assert.equal(mixKey.scope.mode,'settling');
-const cancelledMix=inputFixture({mixed:true});
-cancelledMix.api.primaryPointerDown(cancelledMix.event());cancelledMix.advance(180);
-cancelledMix.api.cancelPrimaryPointer(cancelledMix.event());cancelledMix.api.cancelPrimaryPointer(cancelledMix.event());
-cancelledMix.api.releasePointer(cancelledMix.event());cancelledMix.api.primaryClick(cancelledMix.event());
-assert.equal(cancelledMix.counts.release,1);assert.equal(cancelledMix.scope.state[F.pourPart],1);
-assert.equal(cancelledMix.scope.state[F.partAttempted],0);assert.equal(cancelledMix.scope.mode,'playing');
-checks.push('Space interrupted during a mixture remains owned until keyup; pointer cancellation consumes only its current component, including duplicate capture-loss callbacks');
-
-const easySwitch=inputFixture({mixed:true,hardcore:false,primed:true});
-const beforeEasySwitch=Array.from(easySwitch.scope.state);
-easySwitch.api.primaryPointerDown(easySwitch.event());easySwitch.advance(159);
-assert.equal(easySwitch.counts.begin,0);easySwitch.api.releasePointer(easySwitch.event());easySwitch.api.primaryClick(easySwitch.event());
-assert.equal(easySwitch.counts.serve,1);assert.equal(easySwitch.counts.begin,0);
-assert.equal(easySwitch.scope.mode,'playing');assert.equal(easySwitch.scope.state[F.pourPart],1);
-assert.equal(easySwitch.scope.state[F.partAttempted],0);assert.equal(easySwitch.scope.state[16],beforeEasySwitch[16]);
-assert.equal(easySwitch.scope.state[F.cash],beforeEasySwitch[F.cash]);assert.equal(easySwitch.timers.size,0);
-assert.equal(easySwitch.checkpoints.at(-1)[99],1,'Easy Next soda is persisted before the next hold');
-assert.equal(easySwitch.checkpoints.at(-1)[100],0);assert.equal(easySwitch.counts.save,1);
-assert.equal(easySwitch.events.filter(message=>message.startsWith('Part 2:')).length,1);
-easySwitch.api.primaryPointerDown(easySwitch.event());easySwitch.advance(200);easySwitch.api.releasePointer(easySwitch.event());easySwitch.api.primaryClick(easySwitch.event());
-assert.equal(easySwitch.counts.begin,1);assert.equal(easySwitch.counts.serve,1);
-assert.equal(easySwitch.scope.state[16],beforeEasySwitch[16]);
-easySwitch.api.primaryPointerDown(easySwitch.event());easySwitch.advance(159);easySwitch.api.releasePointer(easySwitch.event());easySwitch.api.primaryClick(easySwitch.event());
-assert.equal(easySwitch.counts.serve,2);assert.equal(easySwitch.scope.state[16],beforeEasySwitch[16]+1);
-assert.equal(easySwitch.scope.mode,'settling');
-for(const part of [0,1]){
-  const topup=inputFixture({mixed:true,hardcore:false,part,primed:true});
-  const beverage=topup.scope.state[F.beverageMl],completed=topup.scope.state[16];
-  topup.api.primaryPointerDown(topup.event());topup.advance(160);
-  assert.equal(topup.counts.begin,1);topup.advance(200);
-  topup.api.releasePointer(topup.event());topup.api.primaryClick(topup.event());
-  assert.equal(topup.scope.state[F.pourPart],part);assert.equal(topup.counts.serve,0);
-  assert.equal(topup.scope.state[16],completed);assert(topup.scope.state[F.beverageMl]>beverage);
-  assert.equal(topup.scope.mode,'playing');assert.equal(topup.timers.size,0);
-  for(const boundary of ['cancelPrimaryPointer','clearInput','interruptPour']){
-    const pending=inputFixture({mixed:true,hardcore:false,part,primed:true});
-    pending.api.primaryPointerDown(pending.event());pending.advance(80);pending.api[boundary](pending.event());
-    pending.advance(500);pending.api.releasePointer(pending.event());
-    assert.equal(pending.scope.state[F.pourPart],part);assert.equal(pending.counts.begin,0);assert.equal(pending.counts.serve,0);assert.equal(pending.timers.size,0);
-  }
+for(const code of ['Enter','Space']){
+  const launch=inputFixture({mode:'intro'}),intro=new Element('intro-start'),nextButton=new Element('new-game-button');
+  const initial=launch.event({code,target:intro});launch.api.keyDown(initial);assert.equal(initial.prevented,false);
+  launch.mode('welcome');const menuRepeat=launch.event({code,target:nextButton,repeat:true});launch.api.keyDown(menuRepeat);assert.equal(menuRepeat.prevented,true);
+  launch.mode('preparing');const gameRepeat=launch.event({code,repeat:true});launch.api.keyDown(gameRepeat);assert.equal(gameRepeat.prevented,true);assert.equal(launch.counts.begin,0);
+  const released=launch.event({code,target:intro});launch.api.keyUp(released);assert.equal(released.prevented,false);
+  launch.api.keyDown(launch.event({code:'Space'}));assert.equal(launch.counts.begin,1,'A new Space starts immediately after the menu gesture ends');launch.api.keyUp(launch.event({code:'Space'}));
 }
-const mixEnter=inputFixture({mixed:true,hardcore:false,primed:true});
-mixEnter.api.keyDown(mixEnter.event({code:'Enter'}));mixEnter.api.keyDown(mixEnter.event({code:'Enter',repeat:true}));
-assert.equal(mixEnter.counts.serve,1);assert.equal(mixEnter.counts.begin,0);assert.equal(mixEnter.scope.state[F.pourPart],1);
-assert.equal(mixEnter.scope.state[F.partAttempted],0);
-checks.push('actual Easy mixture tap below160ms advances only the first component and saves it; each160ms hold tops up its own soda; final tap serves once; cancel and repeated Enter cannot skip the second hold');
+for(const tag of ['button','a','input','textarea','select','summary']){
+  const native=inputFixture(),control=new Element('native-control',tag),key=native.event({code:'Space',target:control});
+  native.api.keyDown(key);assert.equal(key.prevented,false,'Native '+tag+' retains Space ownership');assert.equal(native.counts.begin,0);
+}
+const focus=inputFixture();
+focus.api.focusPourAfterPointer(focus.event({detail:0}));assert.equal(focus.button.focusCount,0,'Keyboard ingredient editing retains its focus');
+focus.api.focusPourAfterPointer(focus.event());assert.equal(focus.button.focusCount,1,'Pointer recipe selection returns Space to Pour');
+const unchosenFocus=inputFixture({selected:false});unchosenFocus.api.focusPourAfterPointer(unchosenFocus.event());assert.equal(unchosenFocus.button.focusCount,0);
+focus.mode('playing');focus.api.focusPourAfterPointer(focus.event());assert.equal(focus.button.focusCount,1);
+checks.push('held launch keys remain owned by the menu; native controls retain keyboard editing; pointer-origin recipe selections focus Pour only when its base is valid');
 
 console.log(JSON.stringify({result:'PASS',checks,
-  verification:'Pure control policy plus exact production input functions at clocked event boundaries with shipped Wasm. Browser layout, pointer capture/event synthesis, and focus remain separate browser checks.'},null,2));
+  verification:'Pure action policy and exact production input, frame and next-order functions with shipped Wasm. Browser geometry, native pointer capture/click synthesis and actual focus remain separate browser checks.'},null,2));

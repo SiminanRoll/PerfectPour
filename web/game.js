@@ -1,4 +1,4 @@
-/* Perfect Pour V1.04 · Presentation and input. Simulation, business, saves, and rules are Rust/Wasm. */
+/* Perfect Pour V1.04.1 · Presentation and input. Simulation, business, saves, and rules are Rust/Wasm. */
 (() => {
   'use strict';
   const WASM_BASE64 = '__WASM_BASE64__';
@@ -65,7 +65,7 @@
   let engine,state,mode='intro',returnMode='playing',storeReturn='playing',pauseReturn='preparing',lastFrame=0,simulationClock=0,visualTime=0,lastUi=0;
   let inputOwner=null,activePointer=null,keyHeld=false,settlingSpaceHeld=false,pouring=false,ready=false,lastSpill=0,spillFlash=0,storageAvailable=true,loadedCareer=false,toastTimer;
   let settlingElapsed=0,finishElapsed=0,lastAutosave=0,sceneDirty=true,lastFeedback='',lastSceneKey='',lastSavedRaw=null,externalSave=false;
-  let pendingPointer=null,suppressPrimaryClick=false,recipeUiKey='',iconDownloading=false;
+  let easyPress=null,primaryPress=null,suppressPrimaryClick=false,recipeUiKey='',iconDownloading=false;
   let upgradePage=0,upgradePageSize=1;
   let careerActive=false,menuActivationKey='';
   const blendNames=['Light','Regular','Bold'];
@@ -80,7 +80,7 @@
   function randomSeed(){try{return crypto.getRandomValues(new Uint32Array(1))[0];}catch(_){return(Date.now()^(Math.random()*0xffffffff))>>>0;}}
   function toast(message){clearTimeout(toastTimer);$('toast').textContent=message;$('toast').hidden=false;toastTimer=setTimeout(()=>$('toast').hidden=true,4200);announce(message);}
   function setMode(next,focusId){
-    if(next!==mode)cancelPendingPointer();
+    if(next!==mode){easyPress=null;primaryPress=null;}
     mode=next;simulationClock=performance.now();sceneDirty=true;
     if(next!=='settling')settlingElapsed=0;
     document.querySelector('.game-shell').inert=overlays.includes(next);
@@ -93,7 +93,7 @@
       $('counter-tab').classList.toggle('active',!store);$('store-tab').classList.toggle('active',store);
       $('counter-tab').setAttribute('aria-pressed',String(!store));$('store-tab').setAttribute('aria-pressed',String(store));
     }
-    const primaryHost=$(next==='result'?'result-action-slot':next==='summary'?'summary-action-slot':'counter-action-slot');
+    const primaryHost=$(next==='summary'?'summary-action-slot':'counter-action-slot');
     if($('pour-button').parentElement!==primaryHost)primaryHost.prepend($('pour-button'));
     if(ready){updateHud();if(next==='store')syncViewportLayout();}
     syncMusic();
@@ -154,6 +154,12 @@
     text('primary-label',flow.label);text('primary-hint',flow.hint);
     action.setAttribute('aria-label',flow.label+'. '+flow.hint);
     action.classList.toggle('is-waiting',flow.action==='wait');
+    document.body.dataset.difficulty=hard?'hardcore':'easy';
+    $('easy-action').hidden=!flow.showEasyAction;$('easy-action').disabled=flow.easyDisabled;
+    text('easy-action-label',flow.easyLabel);
+    $('easy-action').setAttribute('aria-label',flow.easyLabel+'. Enter or tap');
+    $('finish-review').hidden=!['finished','result'].includes(mode);
+    $('order-bubble').hidden=['finished','result'].includes(mode);
     document.body.dataset.controlStage=flow.stage;
     $('recipe-workbench').hidden=!flow.showRecipe;$('pressure-controls').hidden=!flow.showPressure;
     document.querySelector('.mode-switch').hidden=!flow.showMode;
@@ -178,12 +184,13 @@
     if(mode==='playing')$('pour-button').focus({preventScroll:true});
     if(mode!=='welcome')toast(hard?'Hardcore: one hold per soda. Final release serves. +15% base pay.':'Easy: stop, settle, top up, then serve.');
   }
-  function clearInput(){cancelPendingPointer();inputOwner=null;activePointer=null;pouring=false;$('pour-button').classList.remove('pressed');document.querySelector('.tap-machine').classList.remove('pouring');stopPourSound();}
+  function clearInput(){easyPress=null;primaryPress=null;inputOwner=null;activePointer=null;pouring=false;$('pour-button').classList.remove('pressed');document.querySelector('.tap-machine').classList.remove('pouring');stopPourSound();}
   function beginInput(source){
-    if(!ready||externalSave||mode!=='playing'||inputOwner!==null||state[0]!==0)return false;
-    if(source==='key')cancelPendingPointer();
+    if(!ready||externalSave||!['preparing','playing'].includes(mode)||inputOwner!==null||state[0]!==0||state[F.selectedSoda]>3)return false;
     advanceSimulation(performance.now());if(engine.begin_pour()!==1)return false;
-    refreshState();inputOwner=source;pouring=true;saveCareer();if(externalSave)return;setCustomerMood('pouring');$('pour-button').classList.add('pressed');document.querySelector('.tap-machine').classList.add('pouring');openAudio();startPourSound();updateHud();return true;
+    refreshState();inputOwner=source;pouring=true;easyPress=null;
+    if(mode==='preparing'){$('pressure-controls').open=false;setMode('playing');}
+    saveCareer();if(externalSave)return false;setCustomerMood('pouring');$('pour-button').classList.add('pressed');document.querySelector('.tap-machine').classList.add('pouring');openAudio();startPourSound();updateHud();return true;
   }
   function releaseInput(source){
     if(inputOwner!==source)return;
@@ -193,7 +200,7 @@
   function announceNextPart(){
     announce('Part 2: '+sodas[state[F.activeSoda]].name+'. Hold for the final line at '+targetText(state[4])+' percent.');
   }
-  function interruptPour(){cancelPendingPointer();if(inputOwner!==null)releaseInput(inputOwner);}
+  function interruptPour(){easyPress=null;if(inputOwner!==null)releaseInput(inputOwner);}
   function startupSaveCurrent(){
     if(externalSave)return false;
     try{if(localStorage.getItem(SAVE_KEY)!==lastSavedRaw){handleExternalSave();return false;}}catch(_){storageAvailable=false;}
@@ -218,7 +225,7 @@
     if(!ready||mode!=='welcome'||!loadedCareer||!startupSaveCurrent())return;
     careerActive=true;openAudio();saveCareer();if(externalSave)return;
     if(state[0]===1){if(state[7]/state[5]>VISIBLE_FOAM)showCommittedPour();else showFinishedCup(false);return;}if(state[0]===2){showSummary(false);return;}
-    renderOrder();setMode(activePlayMode(),state[F.selectedSoda]<4?'pour-button':'base-0');saveCareer();if(externalSave)return;playCue('day');announce('Shop open. '+(state[F.isMix]===1?'Two sodas, in order. ':'Match the recipe, then choose Ready to pour. ')+(state[F.hardcore]?'One hold per soda.':'Easy allows top-ups.'));
+    renderOrder();setMode(activePlayMode(),state[F.selectedSoda]<4?'pour-button':'base-0');saveCareer();if(externalSave)return;playCue('day');announce('Shop open. '+(state[F.isMix]===1?'Two sodas, in order. ':'Match the recipe, then hold Space or the pour button. ')+(state[F.hardcore]?'One hold per soda.':'Easy allows top-ups; use the separate action when ready.'));
   }
   function openNextDay(){
     if(!ready||state[0]!==2)return;
@@ -227,7 +234,7 @@
   function resetBusiness(){
     if(!ready||!['welcome','restart'].includes(mode)||!startupSaveCurrent())return;
     if(mode==='welcome'&&loadedCareer){requestRestart();return;}
-    clearInput();engine.reset(randomSeed());refreshState();careerActive=true;loadedCareer=true;openAudio();saveCareer();if(externalSave)return;renderOrder();setMode(activePlayMode(),state[F.selectedSoda]<4?'pour-button':'base-0');playCue('day');announce('Shop open. Match the recipe, then choose Ready to pour.');
+    clearInput();engine.reset(randomSeed());refreshState();careerActive=true;loadedCareer=true;openAudio();saveCareer();if(externalSave)return;renderOrder();setMode(activePlayMode(),state[F.selectedSoda]<4?'pour-button':'base-0');playCue('day');announce('Shop open. Match the recipe, then hold Space or the pour button.');
   }
   function personIndex(){return(Math.round(state[1])-1+(state[F.day]-1)*3)%names.length;}
   function setCustomerMood(mood){
@@ -284,16 +291,20 @@
     if(mix)$('mix-prep-sequence').innerHTML=pair;
     [['cherries',F.selectedCherries,true,2],['lime',F.selectedLime,state[F.hasCitrus]===1,1],['syrup',F.selectedSyrup,state[F.hasSyrup]===1,2]].forEach(([name,field,available,max])=>{
       const button=$('ingredient-options').querySelector(`[data-ingredient="${name}"]`),n=state[field];
+      button.hidden=!available;
       text(name+'-count',available?n:'');text(name+'-availability',available?'':'Locked');
       button.disabled=!available||state[F.canRecipe]!==1;button.classList.toggle('selected',n>0);button.classList.toggle('locked',!available);button.setAttribute('aria-label',available?`${name}: ${n}. Tap to cycle zero to ${max}.`:`${name} locked. Unlock in Build.`);button.title=available?`${name}: ${n}. Tap to change.`:'Unlock in Build';
     });
-    $('blend-controls').hidden=state[F.hasMixer]!==1||mix;
+    $('ingredient-options').hidden=state[F.selectedSoda]>3;
+    $('blend-controls').hidden=state[F.hasMixer]!==1||mix||state[F.selectedSoda]>3;
     $('blend-options').querySelectorAll('button').forEach((button,i)=>{button.setAttribute('aria-pressed',String(state[F.selectedBlend]===i));button.disabled=state[F.canRecipe]!==1;});
     text('recipe-cost',dollars(state[F.selectedAddinCost]));
+    text('prep-heading',state[F.selectedSoda]>3?'CHOOSE SODA':'RECIPE');
+    text('prep-target',mix?'1/2 · '+targetText(state[F.activeTarget])+'%':percent(state[4])+'% target');
     $('order-line').classList.toggle('has-ratio',mix);
     if(mix)$('order-line').innerHTML=pair+'<strong>'+percent(state[4])+'%</strong>';
     $('order-recipe').innerHTML=recipeTokens(true);$('order-recipe').setAttribute('aria-label',recipeDescription());
-    $('mixed-recipe').innerHTML='<span class="mixed-label">YOUR MIX</span>'+(mix?pair:state[F.selectedSoda]<4?'<span class="recipe-chip">'+window.PourRecipeArt.icon('base',{soda:state[F.selectedSoda]})+'<b>'+sodaNames[state[F.selectedSoda]]+'</b></span>':'')+recipeTokens(false);
+    $('mixed-recipe').innerHTML=(mix?pair:state[F.selectedSoda]<4?'<span class="recipe-chip">'+window.PourRecipeArt.icon('base',{soda:state[F.selectedSoda]})+'<b>'+sodaNames[state[F.selectedSoda]]+'</b></span>':'')+recipeTokens(false);
     const selected=mix?state[F.activeSoda]:state[F.selectedSoda]<4?state[F.selectedSoda]:state[2],soda=sodas[selected];
     document.documentElement.style.setProperty('--soda',window.PourRecipeArt.tint(soda.color,state[F.selectedBlend],state[F.selectedSyrup]));
     text('tap-name',state[F.selectedSoda]<4?soda.name.toUpperCase():'CHOOSE YOUR BASE');text('drink-name',mix?sodaNames[state[2]]+' + '+sodaNames[state[F.orderedSecondSoda]]:sodas[state[2]].name);text('drink-flavor',mix?'Two sodas. Your perfect mix.':sodas[state[2]].flavor);
@@ -319,14 +330,14 @@
     recipe[index]=value;
     if(engine.set_recipe(...recipe)!==1)return;
     refreshState();saveCareer();if(externalSave)return;updateHud();
+    const choice=kind==='base'?$('base-'+value)?.querySelector('svg'):kind==='blend'?$('blend-options').querySelector(`[data-blend="${value}"] svg`):$(kind+'-count');
+    if(!reducedMotion)choice?.animate?.([{transform:'scale(.84)'},{transform:'scale(1.12)',offset:.55},{transform:'scale(1)'}],{duration:210,easing:'ease-out'});
     if(kind==='base')announce(sodas[value].name+' selected.');
     else if(kind==='blend')announce(blendNames[value]+' blend selected.');
     else announce(value+' '+kind+' selected.');
   }
-  function readyToPour(){
-    if(mode!=='preparing'||state[F.selectedSoda]>3)return;
-    $('pressure-controls').open=false;setMode('playing','pour-button');saveCareer();
-    if(!externalSave)announce(state[F.isMix]===1?'Part 1: '+sodas[state[F.activeSoda]].name+'. Fill to the first line at '+targetText(state[F.activeTarget])+' percent. '+(state[F.hardcore]?'Release switches to the next soda.':'Tap Next soda when ready; hold again to top up.'):state[F.hardcore]?'Recipe ready. Hold Space once. Release commits your drink.':'Recipe ready. Hold to pour; after release, tap to serve or hold again to top up.');
+  function focusPourAfterPointer(event){
+    if(event.detail>0&&mode==='preparing'&&state[F.selectedSoda]<4&&!externalSave)$('pour-button').focus({preventScroll:true});
   }
   function editRecipe(){if(mode==='playing'&&state[F.attempted]!==1){setMode('preparing','pour-button');announce('Adjust your recipe before the first pour.');}}
   function renderOrder(){
@@ -396,9 +407,9 @@
     renderRecipe();updateModeUi();updateMeter();updateLiveFeedback();updateBusinessVisuals();
   }
   function serveDrink(){
-    if(!ready||mode!=='playing'||state[F.hardcore]===1)return;
-    interruptPour();const part=state[F.pourPart];if(engine.serve()!==1)return;refreshState();
-    if(state[0]===1)showCommittedPour();else{saveCareer();if(externalSave)return;updateHud();if(state[F.pourPart]!==part)announceNextPart();}
+    if(!ready||externalSave||mode!=='playing'||state[F.hardcore]===1||pouring||inputOwner!==null||state[F.holding]===1||state[F.partAttempted]!==1)return;
+    advanceSimulation(performance.now());const part=state[F.pourPart];if(engine.serve()!==1)return;refreshState();
+    if(state[0]===1)showCommittedPour();else{saveCareer();if(externalSave)return;updateHud();$('pour-button').focus({preventScroll:true});if(state[F.pourPart]!==part)announceNextPart();}
   }
   function showCommittedPour(){
     saveCareer();if(externalSave)return;settlingElapsed=0;finishElapsed=0;
@@ -406,12 +417,13 @@
     setMode('settling');announce('Pour committed. Watch it settle. Your cup will stay on screen.');
   }
   function showFinishedCup(celebrate){
-    finishElapsed=0;
+    if(celebrate)finishElapsed=0;
     const perfect=state[12]===5;
     setCustomerMood(state[12]>=4?'happy':state[12]<=2?'disappointed':'neutral');
     text('customer-status',perfect?'✦ YOU NAILED IT':state[12]>=4?'ONE HAPPY GUEST':'A POUR TO LEARN FROM');
+    renderReview();
     setMode('finished','pour-button');
-    announce(`Cup settled. ${scoreText(state[11],state[F.fillStars])} percent fill accuracy.${state[F.isMix]===1?' '+Math.floor(state[F.mixAccuracy])+' percent mix accuracy.':''} Final fill ${percent(state[F.beverageMl]/state[5])} percent. Choose See review when ready.`);
+    announce(`Cup settled. ${Math.round(state[12])} out of 5 stars. ${scoreText(state[11],state[F.fillStars])} percent fill accuracy.${state[F.isMix]===1?' '+Math.floor(state[F.mixAccuracy])+' percent mix accuracy.':''} Net ${signedMoney(state[F.lastNet])}. ${state[1]===state[F.goal]?'Close the day':'Next customer'} when ready.`);
     if(celebrate&&!document.hidden&&document.hasFocus()){
       openAudio();playCue(perfect?'perfect':state[12]>=4?'good':'bad');
       if(state[F.milestone]>0){playCue('streak',{streak:state[F.streak]});confetti();}
@@ -421,16 +433,18 @@
   function ledgerRow(label,value,extra=''){
     return'<div class="bonus-row '+extra+'"><span>'+label+'</span><strong>'+signedMoney(value)+'</strong></div>';
   }
-  function presentResult(celebrate){
-    clearInput();refreshState();
+  function renderReview(){
     const stars=Math.round(state[12]),accuracy=scoreText(state[11],state[F.fillStars]),order=Math.round(state[1]),streak=Math.round(state[F.streak]);
     setCustomerMood(stars>=4?'happy':stars<=2?'disappointed':'neutral');
-    $('review-stars').innerHTML='★'.repeat(stars)+'<span class="empty">'+'★'.repeat(5-stars)+'</span>';$('review-stars').setAttribute('aria-label',stars+' out of5 stars');
-    text('result-title',['','Try the next cup.','Keep practicing.','Getting there.','Lovely pour!','Perfect pour!'][stars]);
+    const starMarkup='★'.repeat(stars)+'<span class="empty">'+'★'.repeat(5-stars)+'</span>';
+    for(const id of ['review-stars','finish-stars']){$(id).innerHTML=starMarkup;$(id).setAttribute('aria-label',stars+' out of 5 stars');}
+    const title=['','Try the next cup.','Keep practicing.','Getting there.','Lovely pour!','Perfect pour!'][stars];
+    text('result-title',title);text('finish-title',title);text('finish-earned',signedMoney(state[F.lastNet]));text('finish-fill',accuracy+'%');
     const choices=reviewLines[stars],fillError=state[F.beverageMl]/state[5]-state[4],mix=state[F.isMix]===1,actualShare=state[F.beverageMl]>0?clamp(state[F.firstBeverageMl]/state[F.beverageMl],0,1):0;
     text('review-quote',state[F.recipeMistakes]?'“Check my recipe next time!”':mix&&state[F.mixStars]<5?'“A little more '+sodaNames[actualShare>state[F.firstShare]?state[F.orderedSecondSoda]:state[2]]+' next time!”':stars<=2?(fillError<0?'“I was hoping for a fuller cup.”':'“That’s more soda than I ordered.”'):choices[(order+state[F.day]-2)%choices.length]);
     text('result-eyebrow',state[F.refund]>0&&state[F.basePay]===0?'ORDER REFUNDED':'GUEST REVIEW');
     text('result-recipe-label',mix?'RECIPE + MIX':'RECIPE');
+    text('finish-recipe-label',mix?'Recipe + mix':'Recipe');text('finish-recipe',Math.floor(mix?Math.min(state[F.recipeAccuracy],state[F.mixAccuracy]):state[F.recipeAccuracy])+'%');
     $('result-recipe').innerHTML=Math.floor(mix?Math.min(state[F.recipeAccuracy],state[F.mixAccuracy]):state[F.recipeAccuracy])+'<small>%</small>';
     $('result-accuracy').innerHTML=accuracy+'<small>%</small>';text('result-earned',signedMoney(state[F.lastNet]));
     $('result-details').innerHTML=mix?`<span>◉ ${percent(state[F.beverageMl]/state[5])}% / ${percent(state[4])}% fill</span><span>Mix ${percent(actualShare)}/${100-percent(actualShare)} · goal ${percent(state[F.firstShare])}/${100-percent(state[F.firstShare])}</span>`+(state[F.waste]>.5?`<span>◒ ${Math.round(state[F.waste])} mL wasted</span>`:''):`<span>◎ ${percent(state[4])}% target</span><span>◉ ${percent(state[F.beverageMl]/state[5])}% poured</span><span>◒ ${Math.round(state[F.waste])} mL wasted</span>`;
@@ -444,12 +458,16 @@
     text('old-rating',state[F.previousRating].toFixed(1));text('new-rating',state[9].toFixed(1));
     const delta=state[9]-state[F.previousRating];
     text('next-price-note',order===state[F.goal]?'Day complete':delta>.025?'Better reputation · better prices':delta<-.025?'Reputation down':'Reputation steady');
-    saveCareer();if(externalSave)return;setMode('result','pour-button');
+  }
+  function presentResult(celebrate){
+    clearInput();refreshState();renderReview();
+    const stars=Math.round(state[12]),accuracy=scoreText(state[11],state[F.fillStars]),streak=Math.round(state[F.streak]);
+    saveCareer();if(externalSave)return;setMode('result','close-result');
     if(celebrate)playCue(stars===5?'perfect':stars>=4?'good':'bad');
     announce(`${stars} ${stars===1?'star':'stars'}. ${accuracy} percent fill accuracy.${state[F.isMix]===1?' '+Math.floor(state[F.mixAccuracy])+' percent mix accuracy.':''} Net ${signedMoney(state[F.lastNet])}. ${streak} good ${streak===1?'pour':'pours'} in a row.`);
   }
   function nextOrder(){
-    if(mode!=='result')return;clearInput();engine.next_order();refreshState();saveCareer();if(externalSave)return;
+    if(mode!=='finished')return;clearInput();engine.next_order();refreshState();saveCareer();if(externalSave)return;
     if(state[0]===2){showSummary(true);return;}
     renderOrder();setMode(activePlayMode(),state[F.selectedSoda]<4?'pour-button':'base-0');announce(recipeDescription()+(state[F.isMix]===1?' Pour the highlighted soda first.':''));
   }
@@ -482,7 +500,8 @@
       const canBuy=state[F.canBuy]===1&&!maxed&&affordable&&!prerequisite;
       const status=maxed?(i===4||i===5?(state[i===4?F.helperActive:F.specialistActive]?'ON DUTY':'STARTS TOMORROW'):'FULLY BUILT'):prerequisite||(!affordable?`${dollars(Math.max(0,cost-state[F.spendable]))} to go`:state[F.canBuy]!==1?'Finish your cup first':'READY');
       const icon=window.PourStoreArt.upgradeIcon?window.PourStoreArt.upgradeIcon(i,level):'✦';
-      return `<article class="upgrade-card${maxed?' maxed':''}${prerequisite?' locked':''}"><div class="upgrade-icon" aria-hidden="true">${icon}</div><div class="upgrade-copy"><span class="upgrade-level">${item.unit} · ${level}/${item.max}</span><h3>${item.name}</h3><p>${item.description}</p><div class="upgrade-effect">${maxed?item.owned(level):item.effect(level)}</div><span class="upgrade-current">${level&&!maxed?'Now: '+item.owned(level):''}</span></div><button class="buy-button" data-item="${i}" ${canBuy?'':'disabled'} aria-label="${maxed?item.name+' fully owned':(i===4||i===5?'Hire ':'Build ')+item.name+' for '+dollars(cost)}">${maxed?'✓ OWNED':`${i===4||i===5?'HIRE':'BUILD'} <strong>${dollars(cost)}</strong>`}</button><span class="upgrade-status">${status}</span></article>`;
+      const timing=!maxed?([4,5].includes(i)?'Starts next day':[1,6,7,8].includes(i)?'Capacity next day':''):'';
+      return `<article class="upgrade-card${maxed?' maxed':''}${prerequisite?' locked':''}"><div class="upgrade-icon" aria-hidden="true">${icon}</div><div class="upgrade-copy"><span class="upgrade-level">${item.unit} · ${level}/${item.max}</span><h3>${item.name}</h3><div class="upgrade-effect">${maxed?item.owned(level):item.effect(level)}</div>${timing?'<span class="upgrade-timing">'+timing+'</span>':''}</div><button class="buy-button" data-item="${i}" ${canBuy?'':'disabled'} aria-label="${maxed?item.name+' fully owned':(i===4||i===5?'Hire ':'Build ')+item.name+' for '+dollars(cost)}">${maxed?'✓ OWNED':`${i===4||i===5?'HIRE':'BUILD'} <strong>${dollars(cost)}</strong>`}</button><span class="upgrade-status">${status}</span><details class="upgrade-info" name="upgrade-info"><summary aria-label="About ${item.name}" title="About ${item.name}"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 11v6m0-11v1"/></svg></summary><div class="upgrade-info-panel"><strong>${item.name}</strong><p>${item.description}</p><p>${level?'Current: '+item.owned(level):'Next: '+item.effect(level)}</p></div></details></article>`;
     }).join('');
     text('upgrade-page',(upgradePage+1)+' / '+pages);
     $('upgrade-page').setAttribute('aria-label',`Page ${upgradePage+1} of ${pages}. Upgrades ${first+1} to ${last} of ${upgrades.length}.`);
@@ -516,13 +535,14 @@
   function leaveStore(){
     if(mode!=='store')return;
     if(state[0]===2){openNextDay();return;}
-    if(state[0]===1){if(state[7]/state[5]>VISIBLE_FOAM)showCommittedPour();else if(storeReturn==='finished')showFinishedCup(false);else presentResult(false);return;}
+    if(state[0]===1){if(state[7]/state[5]>VISIBLE_FOAM)showCommittedPour();else showFinishedCup(false);return;}
     renderOrder();setMode(state[F.attempted]?'playing':storeReturn==='playing'?'playing':'preparing',state[F.selectedSoda]<4?'pour-button':'base-0');
   }
   function buyUpgrade(index){
     if(mode!=='store'||!Number.isInteger(index)||index<0||index>=upgrades.length)return;
     if(engine.buy(index)!==1){toast('That upgrade needs more cash or another building first.');return;}
     refreshState();saveCareer();if(externalSave)return;renderStore();playCue('purchase');
+    if(!reducedMotion)$('store-art').animate?.([{filter:'brightness(1)'},{filter:'brightness(1.12)',offset:.35},{filter:'brightness(1)'}],{duration:500,easing:'ease-out'});
     toast((index===4||index===5)?`${upgrades[index].name} joins tomorrow.`:[1,6,7,8].includes(index)?`${upgrades[index].name} built. New capacity starts tomorrow.`:`${upgrades[index].name} upgraded.`);
     const replacement=$('upgrade-grid').querySelector(`[data-item="${index}"]`);if(replacement&&!replacement.disabled)replacement.focus({preventScroll:true});else $('store-back').focus({preventScroll:true});
   }
@@ -535,7 +555,7 @@
     if(!ready||!['preparing','playing','pause','store','intro','welcome','settling','finished','result','summary'].includes(mode))return;
     interruptPour();returnMode=mode;setMode('help','close-help');
   }
-  function closeHelp(){if(mode==='help')setMode(returnMode,returnMode==='intro'?'intro-start':returnMode==='welcome'?'menu-settings':returnMode==='pause'?'resume-button':returnMode==='store'?'store-back':returnMode==='finished'?'pour-button':returnMode==='result'?'pour-button':returnMode==='summary'?'pour-button':returnMode==='settling'?'help-button':'pour-button');}
+  function closeHelp(){if(mode==='help')setMode(returnMode,returnMode==='intro'?'intro-start':returnMode==='welcome'?'menu-settings':returnMode==='pause'?'resume-button':returnMode==='store'?'store-back':returnMode==='result'?'close-result':returnMode==='settling'?'help-button':'pour-button');}
   function requestRestart(){if(!['store','welcome'].includes(mode))return;returnMode=mode;setMode('restart','cancel-restart');}
   function cancelRestart(){if(mode==='restart')setMode(returnMode,returnMode==='welcome'?'new-game-button':'store-back');}
   function saveSettings(){try{localStorage.setItem('perfect-pour-v1-settings',JSON.stringify(settings));}catch(_){}}
@@ -690,54 +710,50 @@
     const viewportObserver=new ResizeObserver(syncViewportLayout);
     viewportObserver.observe(canvas);viewportObserver.observe(document.documentElement);
   }
-  function cancelPendingPointer(){
-    if(pendingPointer){clearTimeout(pendingPointer.timer);pendingPointer=null;}
-  }
   function primaryAction(){
     if(!ready||externalSave||$('pour-button').disabled)return;
     const action=$('pour-button').dataset.action;
-    if(action==='ready')readyToPour();
-    else if(action==='easyServe')serveDrink();
-    else if(action==='review')viewReview();
-    else if(action==='next')nextOrder();
+    if(action==='next')nextOrder();
     else if(action==='nextDay')openNextDay();
     else if(action==='pour')announce('Hold Space or hold the button to pour.');
   }
   function primaryPointerDown(event){
-    if(event.button!==0||event.isPrimary===false||pendingPointer||inputOwner!==null)return;
+    if(event.button!==0||event.isPrimary===false)return;
+    if(inputOwner!==null){primaryPress=null;suppressPrimaryClick=true;event.preventDefault();return;}
     suppressPrimaryClick=false;
+    primaryPress={id:event.pointerId,action:$('pour-button').dataset.action,mode};
     if($('pour-button').disabled||mode==='settling'){suppressPrimaryClick=true;event.preventDefault();return;}
-    if(mode!=='playing')return;
+    if(!['preparing','playing'].includes(mode))return;
     const action=$('pour-button').dataset.action;
-    if(action!=='pour'&&action!=='easyServe')return;
+    if(action!=='pour')return;
     event.preventDefault();suppressPrimaryClick=true;
     try{event.currentTarget.setPointerCapture(event.pointerId);}catch(_){}
-    if(action==='pour'){
-      if(beginInput('pointer'))activePointer=event.pointerId;
-      return;
-    }
-    const pending={id:event.pointerId,held:false,timer:null};pendingPointer=pending;
-    pending.timer=setTimeout(()=>{
-      if(pendingPointer!==pending||mode!=='playing'||externalSave||inputOwner!==null)return;
-      pending.held=true;
-      if(beginInput('pointer'))activePointer=pending.id;
-    },160);
+    if(beginInput('pointer'))activePointer=event.pointerId;
   }
   function releasePointer(event){
-    if(inputOwner==='pointer'&&(activePointer===null||event.pointerId===activePointer)){
-      releaseInput('pointer');return;
-    }
-    if(pendingPointer&&pendingPointer.id===event.pointerId){
-      const shouldServe=!pendingPointer.held;cancelPendingPointer();
-      if(shouldServe&&mode==='playing'&&inputOwner===null)serveDrink();
-    }
-  }
-  function cancelPrimaryPointer(event){
-    if(pendingPointer&&pendingPointer.id===event.pointerId)cancelPendingPointer();
     if(inputOwner==='pointer'&&(activePointer===null||event.pointerId===activePointer))releaseInput('pointer');
   }
+  function cancelPrimaryPointer(event){
+    if(easyPress&&easyPress.id===event.pointerId)easyPress=null;
+    if(primaryPress&&primaryPress.id===event.pointerId)primaryPress=null;
+    if(inputOwner==='pointer'&&(activePointer===null||event.pointerId===activePointer))releaseInput('pointer');
+  }
+  function easyPointerDown(event){
+    if(event.button!==0||event.isPrimary===false)return;
+    const valid=ready&&!externalSave&&mode==='playing'&&state[F.hardcore]!==1&&!pouring&&inputOwner===null&&state[F.holding]!==1&&state[F.partAttempted]===1;
+    easyPress={id:event.pointerId,part:state[F.pourPart],valid};
+    if(!valid)event.preventDefault();
+  }
+  function easyAction(event){
+    if(event&&event.detail>0){
+      const press=easyPress;easyPress=null;
+      if(!press||!press.valid||press.part!==state[F.pourPart])return;
+    }
+    serveDrink();
+  }
   function primaryClick(event){
-    if(suppressPrimaryClick&&event.detail!==0){suppressPrimaryClick=false;event.preventDefault();return;}
+    const press=primaryPress;primaryPress=null;
+    if(event.detail!==0&&(suppressPrimaryClick||!press||press.action!==$('pour-button').dataset.action||press.mode!==mode)){suppressPrimaryClick=false;event.preventDefault();return;}
     suppressPrimaryClick=false;primaryAction();
   }
   $('pour-button').addEventListener('pointerdown',primaryPointerDown);
@@ -745,43 +761,50 @@
   $('pour-button').addEventListener('lostpointercapture',cancelPrimaryPointer);
   $('pour-button').addEventListener('contextmenu',event=>event.preventDefault());
   $('pour-button').addEventListener('click',primaryClick);
+  $('easy-action').addEventListener('pointerdown',easyPointerDown);$('easy-action').addEventListener('click',easyAction);
+  $('finish-details').addEventListener('click',viewReview);$('close-result').addEventListener('click',()=>{if(mode==='result')showFinishedCup(false);});
   $('intro-start').addEventListener('click',showMainMenu);$('new-game-button').addEventListener('click',newGame);$('menu-settings').addEventListener('click',showHelp);
   $('start-button').addEventListener('click',openShop);$('edit-recipe').addEventListener('click',editRecipe);
-  $('base-options').addEventListener('click',event=>{const button=event.target.closest('button[data-base]');if(button&&!button.disabled)changeRecipe('base',Number(button.dataset.base));});
+  $('base-options').addEventListener('click',event=>{const button=event.target.closest('button[data-base]');if(button&&!button.disabled){changeRecipe('base',Number(button.dataset.base));focusPourAfterPointer(event);}});
   $('ingredient-options').addEventListener('click',event=>{
     const button=event.target.closest('button[data-ingredient]');if(!button||button.disabled)return;
     const kind=button.dataset.ingredient,field={cherries:F.selectedCherries,lime:F.selectedLime,syrup:F.selectedSyrup}[kind],max=kind==='lime'?1:2;
-    changeRecipe(kind,(state[field]+1)%(max+1));openAudio();playCue('ingredient',{kind:kind==='cherries'?'cherry':kind});
+    changeRecipe(kind,(state[field]+1)%(max+1));openAudio();playCue('ingredient',{kind:kind==='cherries'?'cherry':kind});focusPourAfterPointer(event);
   });
-  $('blend-options').addEventListener('click',event=>{const button=event.target.closest('button[data-blend]');if(button&&!button.disabled)changeRecipe('blend',Number(button.dataset.blend));});
+  $('blend-options').addEventListener('click',event=>{const button=event.target.closest('button[data-blend]');if(button&&!button.disabled){changeRecipe('blend',Number(button.dataset.blend));focusPourAfterPointer(event);}});
   $('sound-button').addEventListener('click',soundToggle);$('music-button').addEventListener('click',musicToggle);$('pause-button').addEventListener('click',pause);$('resume-button').addEventListener('click',resume);$('help-button').addEventListener('click',showHelp);$('close-help').addEventListener('click',closeHelp);
   for(const id of ['store-tab','restart-button','pause-restart','result-store','summary-store'])$(id).addEventListener('click',enterStore);
   $('store-back').addEventListener('click',leaveStore);$('counter-tab').addEventListener('click',()=>{if(mode==='store')leaveStore();});
   $('brand-home').addEventListener('click',event=>{event.preventDefault();enterStore();});
-  $('hardcore-mode').addEventListener('click',()=>changeDifficulty(true));
-  $('easy-mode').addEventListener('click',()=>changeDifficulty(false));
-  ['pressure-gentle','pressure-classic','pressure-rush'].forEach((id,index)=>$(id)?.addEventListener('click',()=>changePressure(index)));
+  $('hardcore-mode').addEventListener('click',event=>{changeDifficulty(true);focusPourAfterPointer(event);});
+  $('easy-mode').addEventListener('click',event=>{changeDifficulty(false);focusPourAfterPointer(event);});
+  ['pressure-gentle','pressure-classic','pressure-rush'].forEach((id,index)=>$(id)?.addEventListener('click',event=>{changePressure(index);focusPourAfterPointer(event);}));
   for(const [id,key,module] of [['music-volume','musicVolume','PourMusic'],['sound-volume','soundVolume','PerfectPourSounds']]){const slider=$(id);if(slider){slider.value=settings[key]*100;slider.addEventListener('input',()=>{settings[key]=clamp(Number(slider.value)/100,0,1);window[module]?.setVolume(settings[key]);saveSettings();});}}
   $('upgrade-grid').addEventListener('click',event=>{const button=event.target.closest('button[data-item]');if(button&&!button.disabled)buyUpgrade(Number(button.dataset.item));});
   $('upgrade-prev').addEventListener('click',()=>changeUpgradePage(-1));$('upgrade-next').addEventListener('click',()=>changeUpgradePage(1));
   $('export-save').addEventListener('click',exportSave);$('import-save').addEventListener('click',()=>$('import-file').click());$('import-file').addEventListener('change',importSave);
   $('reset-business').addEventListener('click',requestRestart);$('confirm-restart').addEventListener('click',resetBusiness);$('cancel-restart').addEventListener('click',cancelRestart);
-  const leaveWindow=()=>{interruptPour();keyHeld=false;settlingSpaceHeld=false;if(['playing','preparing'].includes(mode))pause();saveCareer();if(externalSave)return;window.PourMusic?.stop();window.PerfectPourSounds?.suspend();};window.addEventListener('blur',leaveWindow);window.addEventListener('focus',syncMusic);document.addEventListener('visibilitychange',()=>{if(document.hidden)leaveWindow();else syncMusic();});
+  const leaveWindow=()=>{interruptPour();keyHeld=false;settlingSpaceHeld=false;menuActivationKey='';if(['playing','preparing'].includes(mode))pause();saveCareer();if(externalSave)return;window.PourMusic?.stop();window.PerfectPourSounds?.suspend();};window.addEventListener('blur',leaveWindow);window.addEventListener('focus',syncMusic);document.addEventListener('visibilitychange',()=>{if(document.hidden)leaveWindow();else syncMusic();});
   function nativeActivation(target){const control=target instanceof Element?target.closest('button,a,input,textarea,select,summary,[contenteditable="true"]'):null;return control&&control.id!=='pour-button';}
   function keyDown(event){
-    // A held launch key belongs to its original menu control, even after focus moves.
-    if(menuActivationKey===event.code){if(event.repeat){event.preventDefault();return;}menuActivationKey='';}
+    // Discrete activation belongs to its original control until keyup, even
+    // when serving or closing a menu changes focus underneath a held Enter.
+    if(menuActivationKey===event.code){event.preventDefault();return;}
     if(['intro','welcome'].includes(mode)&&['Enter','Space'].includes(event.code)){
       if(event.repeat){event.preventDefault();return;}
       menuActivationKey=event.code;
       if(!nativeActivation(event.target)){event.preventDefault();if(mode==='intro')showMainMenu();}
       return;
     }
+    if(event.code==='Enter'){
+      if(event.repeat){event.preventDefault();return;}
+      menuActivationKey=event.code;
+    }
     // A Space pressed before pouring is ready cannot turn into a different
     // action when the primary button changes its role while that key is held.
-    if(event.code==='Space'&&((['settling','preparing'].includes(mode)&&!nativeActivation(event.target))||settlingSpaceHeld)){
+    if(event.code==='Space'&&(((mode==='settling'||mode==='preparing'&&state[F.selectedSoda]>3)&&!nativeActivation(event.target))||settlingSpaceHeld)){
       event.preventDefault();settlingSpaceHeld=true;
-      if(mode==='preparing'&&!event.repeat)announce('Finish your recipe, then choose Ready to pour with Enter or a tap.');
+      if(mode==='preparing'&&!event.repeat)announce('Choose a soda base, then hold Space to pour.');
       return;
     }
     if(event.code==='Tab'&&overlays.includes(mode)){
@@ -792,13 +815,17 @@
       event.preventDefault();
       if(!event.repeat&&!keyHeld){
         keyHeld=true;
-        if(mode==='playing'){cancelPendingPointer();beginInput('key');}
-        else if(['finished','result','summary'].includes(mode))primaryAction();
+        if(['preparing','playing'].includes(mode))beginInput('key');
+        else if(['finished','summary'].includes(mode))primaryAction();
       }
       return;
     }
     if(event.repeat)return;
-    if(event.code==='Enter'&&['preparing','playing','finished','result','summary'].includes(mode)){event.preventDefault();cancelPendingPointer();primaryAction();return;}
+    if(event.code==='Enter'&&['preparing','playing','finished','summary'].includes(mode)){
+      event.preventDefault();
+      if(mode==='playing'&&state[F.hardcore]!==1&&state[F.partAttempted]===1)easyAction();else primaryAction();
+      return;
+    }
     if(event.code==='KeyP'||event.code==='Escape'){
       if(['playing','preparing'].includes(mode)){event.preventDefault();pause();}else if(mode==='pause'){event.preventDefault();resume();}else if(mode==='help'){event.preventDefault();closeHelp();}else if(mode==='restart'){event.preventDefault();cancelRestart();}else if(mode==='store'&&event.code==='Escape'){event.preventDefault();leaveStore();}
     }
