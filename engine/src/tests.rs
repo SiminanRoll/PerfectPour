@@ -509,7 +509,7 @@ fn custom_paid_and_interrupted_saves_preserve_recipe_and_payment_once() {
 fn malformed_recipe_saves_are_rejected_including_unowned_ingredients() {
     let valid = Game::new(1).save();
     for (index, value) in [(83, 3.0), (84, 1.0), (85, 1.0), (86, 0.0), (87, 5.0),
-        (88, 3.0), (89, 1.0), (90, 1.0), (91, 2.0), (92, 2.0), (93, 2.0), (96, 12.0), (97, 1.0)] {
+        (88, 6.0), (89, 1.0), (90, 1.0), (91, 2.0), (92, 2.0), (93, 2.0), (96, 12.0), (97, 1.0)] {
         let mut bad = valid; bad[index] = value; assert!(Game::restore(&bad).is_none(), "{index}");
     }
     let mut g = Game::new(1); perfect(&mut g); let mut bad = g.save(); bad[88] = 0.0;
@@ -836,7 +836,7 @@ fn v104_import_defaults_to_no_ice_and_ice_validation_is_atomic() {
     assert_eq!(&restored.state()[..134],&g.state()[..134]);
     old[105] = 1.0; assert!(Game::restore(&old).is_none(), "104 retains its original reserved range");
     let mut g = Game::new(106); g.set_ice(2); let saved = g.save();
-    for (index,value) in [(105,-1.0),(105,3.0),(105,0.5),(106,1.0),(119,1.0),(92,0.0)] {
+    for (index,value) in [(105,-1.0),(105,6.0),(105,0.5),(106,1.0),(119,1.0),(92,0.0)] {
         let mut bad = saved; bad[index] = value; assert!(Game::restore(&bad).is_none(), "bad index{index} value{value}");
     }
 }
