@@ -1,91 +1,48 @@
-# Optional GitHub Pages deployment
+# Publishing Perfect Pour on GitHub Pages
 
-Perfect Pour can be published through Sites while the complete source stays in the private [SiminanRoll/PerfectPour repository](https://github.com/SiminanRoll/PerfectPour). The active `.github/workflows/ci.yml` validates the project. This guide describes an optional GitHub Pages publishing workflow that can be enabled later.
-
-The deployment artifact is `dist/index.html`, the same standalone game that opens offline. It contains the Rust WebAssembly engine, interface, artwork, and sound generation. Deploy the `dist` directory so the game's entry file is at the artifact root.
-
-## Private repository eligibility
-
-GitHub Pages supports private repositories on GitHub Pro, GitHub Team, GitHub Enterprise Cloud, and GitHub Enterprise Server. GitHub Free requires a public source repository. An eligible private repository can publish a publicly accessible Pages site while keeping its source repository private. Organization policy can also restrict publication.
-
-Check the owning account's plan and publication settings before enabling this route. Repository admin or push access does not establish plan eligibility. See [GitHub's publishing-source documentation](https://docs.github.com/en/pages/getting-started-with-github-pages/configuring-a-publishing-source-for-your-github-pages-site) and [organization Pages policy](https://docs.github.com/en/organizations/managing-organization-settings/managing-the-publication-of-github-pages-sites-for-your-organization).
+**GitHub Pages is the intended public game host.** This repository is public,
+and its built game lives in `dist/index.html`, including the Rust/WASM engine,
+visuals, music, ingredient physics and tycoon progression.
 
 ## One-time setup
+1. Open [PerfectPour → Settings → Pages](https://github.com/SiminanRoll/PerfectPour/settings/pages).
+2. Under **Build and deployment**, change **Source** to **GitHub Actions**.
+   A repository owner/admin needs to do this once if not already enabled.
+3. GitHub Actions → **Publish Perfect Pour to GitHub Pages** → **Run workflow**
+   if you want to deploy immediately without editing source again, or push
+   approved changes to `main` and let the CI-success trigger publish.
+4. Open the link displayed by the successful **github-pages** deployment.
+   The default repository address is
+   `https://siminanroll.github.io/PerfectPour/`, but verify the actual
+   URL before sharing; custom domains can alter it.
 
-1. Open the repository's **Settings → Pages**.
-2. Under **Build and deployment → Source**, select **GitHub Actions**.
-3. Add the workflow below as `.github/workflows/pages.yml` after Pages is enabled.
-4. Push to `main`, or run **Publish Perfect Pour** from the Actions tab.
-5. After a successful deployment, open the URL shown by the `github-pages` deployment environment.
+## Automatic deployment
+- `.github/workflows/ci.yml` builds and tests the full game, including
+  Rust, Wasm, the save adapter and the offline HTML.
+- `.github/workflows/pages.yml` starts only after that main-branch CI
+  completes successfully, or via manual dispatch. It checks the committed
+  `dist/index.html`, uploads the `dist/` directory as the Pages artifact,
+  and deploys using the GitHub Pages actions and `github-pages` environment.
+- The CI workflow may commit regenerated `dist/index.html` through its
+  workflow token. The Pages workflow checks out current `main` **after**
+  CI succeeds, so it uses the latest committed standalone bundle. GitHub's
+  special `GITHUB_TOKEN` auto-commits do not themselves trigger ordinary
+  new push workflows.
+- A green CI badge alone is not proof of publication. Confirm a completed
+  Pages workflow, actual deployment URL and live gameplay.
 
-GitHub can create the `github-pages` environment automatically. Creating that environment does not enable the Pages site. The setup steps are documented in [Configuring a publishing source](https://docs.github.com/en/pages/getting-started-with-github-pages/configuring-a-publishing-source-for-your-github-pages-site#publishing-with-a-custom-github-actions-workflow).
+## Existing player progress
+The old public ChatGPT Site is a different web origin. Browser storage from
+that site will not automatically appear at the GitHub Pages address. Export
+the prior career in the older game under **Build → Business tools → Export**,
+then import the downloaded JSON in the GitHub Pages game. The V107 engine
+preserves historical 101/102/103/104/106 progress via its supported migration.
+Do not delete the older Site or tell players their saves were copied.
 
-### Why the workflow does not enable Pages automatically
-
-The ordinary workflow `GITHUB_TOKEN` can deploy an artifact to an enabled Pages site. It cannot perform the initial enablement through `configure-pages` with `enablement: true`: that action requires a separate token for this operation. Current REST documentation specifies **Pages: write** and **Administration: write** for fine-grained tokens creating or configuring the site.
-
-Use the one-time repository settings flow above. See the official [configure-pages inputs](https://github.com/actions/configure-pages/blob/main/action.yml) and [Create a GitHub Pages site API](https://docs.github.com/en/rest/pages/pages#create-a-github-pages-site).
-
-## Proposed publishing workflow
-
-This example publishes the committed standalone release. It checks the offline package before uploading it. CI separately verifies the native Rust engine, compiled Wasm, business rules, and reproducibility of the bundled HTML.
-
-```yaml
-name: Publish Perfect Pour
-
-on:
-  push:
-    branches: [main]
-  workflow_dispatch:
-
-permissions:
-  contents: read
-  pages: write
-  id-token: write
-
-concurrency:
-  group: perfect-pour-pages
-  cancel-in-progress: false
-
-jobs:
-  publish:
-    runs-on: ubuntu-latest
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-    steps:
-      - name: Check out source
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          persist-credentials: false
-
-      - name: Verify standalone release
-        run: node tests/browser/verify_offline.mjs dist/index.html
-
-      - name: Configure Pages
-        uses: actions/configure-pages@45bfe0192ca1faeb007ade9deae92b16b8254a0d # v6.0.0
-
-      - name: Upload game
-        uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5.0.0
-        with:
-          path: dist
-
-      - name: Deploy game
-        id: deployment
-        uses: actions/deploy-pages@368f82528645a54fb793d4d04e342629a3f51346 # v5.0.1
-```
-
-`contents: read` allows checkout. `pages: write` authorizes deployment, and `id-token: write` allows GitHub to verify the deployment's workflow identity. The `github-pages` environment exposes the deployed URL and can restrict which branches deploy. See [Using custom workflows with GitHub Pages](https://docs.github.com/en/pages/getting-started-with-github-pages/using-custom-workflows-with-github-pages).
-
-## Verified action versions
-
-The workflow pins the official release commits verified on 2026-11-27:
-
-| Action | Release | Official source |
-|---|---|---|
-| `actions/checkout` | `v7.0.1` | [Release](https://github.com/actions/checkout/releases/tag/v7.0.1) |
-| `actions/configure-pages` | `v6.0.0` | [Releases](https://github.com/actions/configure-pages/releases) |
-| `actions/upload-pages-artifact` | `v5.0.0` | [Releases](https://github.com/actions/upload-pages-artifact/releases) |
-| `actions/deploy-pages` | `v5.0.1` | [Releases](https://github.com/actions/deploy-pages/releases) |
-
-When updating these actions, verify their current official releases and replace the corresponding pinned commit. The public Pages URL is available only after site configuration and a successful deployment.
+## GitHub Pages errors
+If the workflow says **Get Pages site failed / Pages not enabled / Resource
+not accessible**, first check Settings → Pages → Source = GitHub Actions.
+Do not create a different host or paste personal access tokens into code.
+The Pages environment can be created automatically, but that does not
+enable the Pages site. See [GitHub's publishing-source setup](https://docs.github.com/en/pages/getting-started-with-github-pages/configuring-a-publishing-source-for-your-github-pages-site)
+and [custom Actions deployment](https://docs.github.com/en/pages/getting-started-with-github-pages/using-custom-workflows-with-github-pages).

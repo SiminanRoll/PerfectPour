@@ -1,0 +1,53 @@
+name: Publish Perfect Pour to GitHub Pages
+
+on:
+  workflow_run:
+    workflows: ["Perfect Pour CI"]
+    types: [completed]
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: perfect-pour-pages
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    # Never deploy a failed game build. Manual dispatch is for redeploying a
+    # known-good main artifact after one-time GitHub Pages enablement.
+    if: ${{ github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success' }}
+    name: Deploy tested standalone game
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Check out latest main (after CI auto-commits built artifacts)
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: main
+          persist-credentials: false
+
+      - name: Verify offline game artifact
+        run: |
+          test -s dist/index.html
+          node tests/browser/verify_offline.mjs dist/index.html
+          echo "Publishing commit $(git rev-parse HEAD)"
+
+      - name: Configure existing GitHub Pages site
+        uses: actions/configure-pages@45bfe0192ca1faeb007ade9deae92b16b8254a0d # v6.0.0
+
+      - name: Upload Perfect Pour
+        uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5.0.0
+        with:
+          path: dist
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@368f82528645a54fb793d4d04e342629a3f51346 # v5.0.1

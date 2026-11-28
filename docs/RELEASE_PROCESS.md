@@ -1,48 +1,47 @@
-# Perfect Pour — release and production deployment gate
+# Perfect Pour — main-to-GitHub-Pages release contract
 
-**Owner-approved standing rule:** Every approved game release must be merged
-into GitHub `main` and then deployed to the **existing public game** at
-https://perfect-pour.pretty-scarf-0591.chatgpt.site/. No replacement
-private Site or different host by default.
+**Owner direction:** Publish the existing Perfect Pour source on the public
+GitHub Pages site, rather than the separately hosted ChatGPT Site.
 
-## The authoritative project
-- Source repository: `SiminanRoll/PerfectPour`, branch `main`.
-- Static artifact: `dist/index.html` (Rust/WASM + art + controls embedded).
-- ChatGPT Sites config: `.openai/hosting.json` with existing `project_id`
-  `appgprj_6b0908af5d34819183b47b403fbcb98b`.
-- Existing production URL: https://perfect-pour.pretty-scarf-0591.chatgpt.site/.
-  **Do not change the origin**: existing careers are stored in browser
-  localStorage, and shifting the hostname can make them appear missing.
+## Source and web hosting
+- Canonical repo: `SiminanRoll/PerfectPour`, branch `main`.
+- Shippable artifact: `dist/index.html` (Wasm, art and all gameplay).
+- Publisher: `.github/workflows/pages.yml`, triggered after successful
+  `Perfect Pour CI` on `main`; also supports manual run.
+- One-time admin setting: **Settings → Pages → Build and deployment → Source:
+  GitHub Actions**. A workflow cannot assume or prove this setting exists.
+- GitHub Pages will show the verified URL in the `github-pages` deployment
+  environment when deployed. The usual project URL is
+  `https://siminanroll.github.io/PerfectPour/` unless custom domain
+  settings specify otherwise. Do not assert this URL is live without proof.
+- Original ChatGPT Site and `.openai/hosting.json` remain unchanged as
+  legacy; do not create additional ChatGPT-hosted versions.
 
-## Required release sequence
-1. **Inspect:** identify current `main` HEAD, site project identity and
-   active save schema. Preserve existing functionality and data.
-2. **Implement:** make the requested change, build WASM if engine changes,
-   rebuild `dist/index.html`, and run native Rust + browser/source-contract,
-   gameplay, save-migration and offline checks.
-3. **Merge:** merge approved changes to `main` with the current-HEAD guard;
-   read back the merged SHA. Wait for the **completed** main CI success.
-4. **Deploy the correct site:** use ChatGPT **Sites in Work mode** (or a
-   purpose-built authorized Sites publisher) to select the **existing** Perfect
-   Pour Site. Save a version associated with the verified source commit and
-   **deploy that saved version** to the original production URL. Publishing
-   is a separate action from saving a version; git push alone does not do it.
-5. **Verify production:** open the exact production URL as a visitor; read the
-   actual release version, check the first customer, ice/fruit behavior and
-   next-customer transition, and verify existing progress can be continued
-   without being overwritten. Check target phone layout where possible.
-6. **Report four separate states:** `MERGED` (GitHub SHA), `CI PASSED`
-   (run URL), `DEPLOYED` (Sites version/URL) and `RUNTIME VERIFIED`
-   (actual live behavior). If the Sites publisher is unavailable, report
-   `DEPLOYMENT BLOCKED` rather than calling the operation finished.
+## Required release steps
+1. Check `main` HEAD and `dist/index.html` before editing.
+2. Implement approved work, rebuild Rust/WASM and the standalone release,
+   then run tests for recipe/ice physics, input controls, save migration,
+   tycoon payouts and offline bundling.
+3. Merge to `main` with commit/head checks; confirm successful completed
+   `Perfect Pour CI`. The existing CI may auto-commit built artifacts.
+4. Wait for `Publish Perfect Pour to GitHub Pages` to complete, verifying
+   its `github-pages` deployment environment and page URL. Deployment
+   failure is **not** a released build.
+5. Visit the **Pages URL** and check the intro version, a real pour, transition
+   to the next customer, five-ingredient tray behavior, and current/legacy
+   save import. Report any limitations in browser/device coverage.
+6. Report separately: `MAIN MERGED`, `CI PASSED`, `PAGES DEPLOYED`,
+   `GAMEPLAY VERIFIED`, citing exact SHA and run IDs.
 
-## Why this gate exists
-The GitHub CI regenerates and commits the standalone artifact on `main`.
-It does **not** invoke ChatGPT Sites publication. The existing Site can
-continue serving a previous release after GitHub tests pass. Browser-local
-save data is not shared between unrelated hostnames.
+## Save migration across hosts
+Both game hosts use browser-local storage. A GitHub Pages site is a **new
+origin** relative to `chatgpt.site`. Players need to open the old hosted
+game, choose **Build → Business tools → Export**, visit GitHub Pages and
+choose **Import**. The V107 engine supports V106 and older career imports
+but does not transfer browser storage automatically. Do not tell players
+their saves will appear at a new hostname without importing.
 
-## No private preview release
-Use a local preview, test runner or a saved, undeployed Sites version for
-verification as appropriate. Do **not** publish a second private site as
-a replacement for the existing production game.
+## Rollback
+Revert or redeploy the last verified GitHub Pages release, retaining the
+current save schema and avoiding a hard reset. Never modify the legacy
+ChatGPT Site as part of a GitHub Pages rollback.

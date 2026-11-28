@@ -7,7 +7,7 @@ an extra burst of fizz. Overflow leaves a visible mess beneath the glass.
 
 The original hold/release controls, Easy serving action, business economy and
 customer progression remain. Existing V1.01–V1.05 businesses continue through
-a read-only migration into the new V106 save key. Read [the V1.07 release notes](docs/V107_RELEASE.md)
+a read-only migration into the current V107 save key. Read [the V1.07 release notes](docs/V107_RELEASE.md)
 for ice rules, the counter presentation and save compatibility.
 
 `dist/index.html` is the self-contained offline game, including Rust/WebAssembly,
@@ -169,21 +169,29 @@ Historical filenames also exercise the current game. The V1.06 engine passes **5
 
 See [V1.07 release notes](docs/V107_RELEASE.md), [engine integration](engine/README.md), and [release identity](docs/release-manifest.json). [V1.04.1 acceptance evidence](docs/qa/V1041_ACCEPTANCE.md), [V1.04 notes](docs/V104_RELEASE.md), [V1.04 acceptance evidence](docs/qa/V104_ACCEPTANCE.md), and the earlier release records are retained as historical evidence. The prior V1.06 preview acceptance record is retained as historical visual evidence. Production migration and publication are documented separately.
 
-## Release workflow
+## Release workflow — GitHub Pages
 
-**Owner's standing release instruction:** merge every approved change to
-`SiminanRoll/PerfectPour` `main`, then **publish that exact tested build to the
-existing production ChatGPT Site** at
-https://perfect-pour.pretty-scarf-0591.chatgpt.site/. A passing GitHub Action
-and updated `dist/index.html` are **not** a site deployment.
+**GitHub Pages is the public release destination**, as requested by the owner.
+Every approved update goes to `SiminanRoll/PerfectPour` `main`, passes
+the full Rust/WASM/gameplay/offline CI suite, then the
+[Publish Perfect Pour to GitHub Pages](.github/workflows/pages.yml) workflow
+deploys the tested `dist/index.html` automatically.
 
-The public site is managed by **ChatGPT Sites**, not GitHub Actions. Publish an
-existing site's saved version through Sites/Work, using the existing project
-ID in `.openai/hosting.json`; never create a replacement URL or private
-release Site without a specific instruction. Verify the live version and
-gameplay on the original URL, protecting existing player saves. If the Sites
-publish action isn't accessible, report the blocker and current GitHub SHA.
-**Never claim "live", "deployed", or "release complete" from a GitHub push.**
+One-time activation is under [repository Settings → Pages](https://github.com/SiminanRoll/PerfectPour/settings/pages):
+set **Build and deployment → Source** to **GitHub Actions**. After this is
+enabled, Pages deploys on successful `main` CI runs, with an optional manual
+**Run workflow** action for redeployment. The Pages URL is shown in the
+`github-pages` environment when publication succeeds. See
+[GitHub Pages setup and verification](docs/GITHUB_PAGES.md).
 
-See [the mandatory release checklist](docs/RELEASE_PROCESS.md) and
-[repository agent instructions](AGENTS.md).
+The former `chatgpt.site` URL is a legacy host and **is not the publication
+target**. Leave the existing ChatGPT Site untouched. Because browsers scope
+localStorage to the website's origin, players moving from that site to GitHub
+Pages must **Export** their career through **Build → Business tools → Export**
+on the old site, and **Import** it on the GitHub Pages site. Never claim the
+new host automatically shares old-site saves.
+
+A successful GitHub build is not evidence of a successful Pages deploy.
+Check the completed Pages workflow, its public URL, version, game controls
+and save migration before declaring the release live.
+
