@@ -149,10 +149,6 @@ const functionNames=[...new Set(['primaryAction','primaryPointerDown','releasePo
   'interruptPour','serveDrink','announceNextPart','focusPourAfterPointer','nextOrder','openNextDay','viewReview',
   'showCommittedPour','showFinishedCup','advanceSimulation','frame'])];
 const sodas=vm.runInNewContext(gameSource.match(/const sodas = (\[[\s\S]*?\n  \]);/)[1]);
-const cups=vm.runInNewContext(gameSource.match(/const cups = (\[[\s\S]*?\n  \]);/)[1]);
-const visualWindow={};
-vm.runInNewContext(await readFile(new URL('../../web/pour-visuals.js',import.meta.url),'utf8'),{window:visualWindow});
-functionNames.push('cupGeometry');
 const targetText=vm.runInNewContext(gameSource.match(/const targetText=[^;]+;/)[0]+'\ntargetText;');
 const scoreText=vm.runInNewContext(gameSource.split('\n').find(line=>line.trimStart().startsWith('const scoreText='))+'\nscoreText;');
 const activePlayMode=gameSource.split('\n').find(line=>line.trimStart().startsWith('const activePlayMode='));
@@ -193,8 +189,7 @@ function inputFixture({hardcore=true,mode='preparing',primed=false,selected=true
     next_order(){counts.next++;return native.next_order();},
     next_day(seed){counts.nextDay++;return native.next_day(seed);}
   };
-  const scope={engine,F,sodas,cups,targetText,scoreText,state:snap(),ready:true,externalSave:false,mode,returnMode:'playing',
-    cachedCup:-1,geometry:null,garnishFlight:null,pourVisuals:visualWindow.PourVisuals.create({reducedMotion:true}),startHandoff(){},
+  const scope={engine,F,sodas,targetText,scoreText,state:snap(),ready:true,externalSave:false,mode,returnMode:'playing',
     easyPress:null,primaryPress:null,suppressPrimaryClick:false,inputOwner:null,activePointer:null,keyHeld:false,settlingSpaceHeld:false,menuActivationKey:'',pouring:false,
     overlays:['intro','welcome','result','summary','pause','help','restart'],Element,
     simulationClock:100,lastFrame:100,lastUi:100,lastAutosave:100,lastSpill:snap()[8],spillFlash:0,settlingElapsed:0,finishElapsed:0,visualTime:0,sceneDirty:false,
@@ -518,19 +513,6 @@ focus.api.focusPourAfterPointer(focus.event());assert.equal(focus.button.focusCo
 const unchosenFocus=inputFixture({selected:false});unchosenFocus.api.focusPourAfterPointer(unchosenFocus.event());assert.equal(unchosenFocus.button.focusCount,0);
 focus.mode('playing');focus.api.focusPourAfterPointer(focus.event());assert.equal(focus.button.focusCount,1);
 checks.push('held launch keys remain owned by the menu; native controls retain keyboard editing; pointer-origin recipe selections focus Pour only when its base is valid');
-
-// The final effect frame must clear the last droplet even on a non-perfect
-// finished cup, where neither settling nor the perfect glint requests redraws.
-const finalDrop=paidFixture();finalDrop.finish();
-finalDrop.scope.sceneDirty=false;finalDrop.scope.finishElapsed=8;
-let trailing=true,cleanFrames=0;
-finalDrop.scope.pourVisuals={isAnimating:()=>trailing,update(){trailing=false;}};
-finalDrop.scope.draw=()=>cleanFrames++;
-finalDrop.tick(16);
-assert.equal(cleanFrames,1,'An expiring effect requests one final clean frame');
-finalDrop.tick(16);
-assert.equal(cleanFrames,1,'A settled non-perfect cup stops drawing after cleanup');
-checks.push('the actual frame loop clears the last transient droplet, then returns to idle without a continuous redraw');
 
 console.log(JSON.stringify({result:'PASS',checks,
   verification:'Pure action policy and exact production input, frame and next-order functions with shipped Wasm. Browser geometry, native pointer capture/click synthesis and actual focus remain separate browser checks.'},null,2));

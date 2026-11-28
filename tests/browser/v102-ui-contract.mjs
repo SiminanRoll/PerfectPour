@@ -57,6 +57,11 @@ for(const id of ['announcer','sound-button','music-button','help-button']){
   assert.equal(element.ancestors.some(parent=>(parent.attrs.class||'').split(/\s+/).includes('game-shell')),false,`${id} stays outside the inert game background`);
 }
 assert.equal(elements.get('announcer').attrs['aria-live'],'polite');
+const pressureDial=elements.get('pressure-dial');
+assert.equal(pressureDial?.tag,'input');assert.equal(pressureDial.attrs.type,'range');
+assert.equal(pressureDial.attrs.min,'0');assert.equal(pressureDial.attrs.max,'2');assert.equal(pressureDial.attrs.step,'1');
+assert.equal(pressureDial.attrs['aria-label'],'Tap pressure');assert.ok(elements.has('pressure-readout'));
+assert.equal(F.selectedIce,134);assert.equal(F.iceFizzMultiplier,135);
 for(const id of ['pressure-gentle','pressure-classic','pressure-rush','hardcore-mode','easy-mode'])assert.equal(elements.get(id).tag,'button');
 for(const id of ['intro-start','new-game-button','start-button','menu-settings']){
   const element=elements.get(id);assert.equal(element.tag,'button');
@@ -82,11 +87,14 @@ const adapter=vm.runInNewContext(source.slice(adapterStart,adapterEnd)+'\n({capt
 engine.reset(412);
 assert.equal(readState()[F.hardcore],1,'A fresh career starts in Hardcore');
 const current=adapter.captureSave();
-assert.equal(current.version,104);assert.equal(current.engine.length,120);assert.equal(current.engine[0],104);
+assert.equal(current.version,106);assert.equal(current.engine.length,120);assert.equal(current.engine[0],106);
+assert.equal(readState()[F.selectedIce],0);assert.equal(readState()[F.iceFizzMultiplier],1);
 for(const name of ['v101-untouched','v101-paid','v101-staffed-closed','v102-untouched','v102-paid','v102-partial-hardcore','v102-partial-easy','v103-preparing','v103-partial-hardcore','v103-partial-easy','v103-paid','v103-staffed-closed']){
   const fixture=JSON.parse(await readFile(new URL(`engine/fixtures/${name}.json`,root),'utf8'));
   adapter.applySave(fixture);
-  assert.equal(adapter.captureSave().version,104,`${name} is migrated into104`);
+  assert.equal(adapter.captureSave().version,106,`${name} is imported into106`);
+  assert.equal(fixture.engine[0],fixture.version,`${name} retains its genuine released version`);
+  assert.equal(readState()[F.selectedIce],0,`${name} imports without adding ice`);
   assert.equal(readState()[F.selectedSoda],readState()[2],`${name} retains its existing base`);
   assert.equal(readState()[F.recipeAccuracy],100,`${name} does not acquire a retroactive recipe mistake`);
   if(fixture.version<103)assert.equal(readState()[F.orderedCherries]+readState()[F.orderedLime]+readState()[F.orderedSyrup],0,`${name} retains its plain current order`);
@@ -94,6 +102,14 @@ for(const name of ['v101-untouched','v101-paid','v101-staffed-closed','v102-unto
   assert.equal(readState()[F.orderedSecondSoda],4);assert.equal(readState()[F.firstShare],1);
   if(fixture.expectedRestoreSnapshot)assert.deepEqual(Array.from(readState().slice(0,fixture.expectedRestoreSnapshot.length)),fixture.expectedRestoreSnapshot,`${name} preserves every field observed in its released engine`);
 }
+// A zero-ice save has the unchanged V1.04 120-field payload; its old reserved
+// slots are still zero. Exercise explicit V1.04 import independently of boot.
+const old104={...current,version:104,engine:[104,...current.engine.slice(1)]};
+assert.ok(old104.engine.slice(105).every(value=>value===0));
+adapter.applySave(old104);
+assert.equal(adapter.captureSave().version,106);assert.equal(readState()[F.selectedIce],0);
+assert.deepEqual(adapter.captureSave().engine.slice(1),current.engine.slice(1),'Explicit104 import preserves its complete original payload');
+assert.throws(()=>adapter.applySave({...old104,engine:old104.engine.map((value,index)=>index===105?1:value)}),/damaged|invalid/,'A104 save must keep its original reserved slots zero');
 assert.throws(()=>adapter.applySave({...current,version:101}),/business save/,'Version and array length must agree');
 assert.throws(()=>adapter.applySave({...current,version:105}),/business save/,'Unknown formats cannot reach Rust restore');
 assert.throws(()=>adapter.applySave({...current,engine:current.engine.map((value,index)=>index===21?NaN:value)}),/business save/,'Invalid numbers cannot reach Rust restore');
@@ -132,9 +148,10 @@ for(const [value,stars,expected] of [[88,3,'87.9'],[87.99999237060547,3,'87.9'],
 const keyDeclaration=source.match(/const SAVE_KEY=[^;]+;/)?.[0];
 assert.ok(keyDeclaration);
 const keys=vm.runInNewContext(keyDeclaration+'\n({SAVE_KEY,LEGACY_SAVE_KEYS});');
-assert.equal(keys.SAVE_KEY,'perfect-pour-business-v104');
-assert.deepEqual(Array.from(keys.LEGACY_SAVE_KEYS),['perfect-pour-business-v103','perfect-pour-business-v102','perfect-pour-business-v101']);
-for(const key of keys.LEGACY_SAVE_KEYS)assert.notEqual(keys.SAVE_KEY,key,'New expansion data must never share an old release write key');
+assert.equal(keys.SAVE_KEY,'perfect-pour-business-v106');
+assert.deepEqual(Array.from(keys.LEGACY_SAVE_KEYS),[104,103,102,101].map(version=>`perfect-pour-business-v${version}`),'Released businesses migrate from newest to oldest');
+const originalKeys=[101,102,103,104].map(version=>`perfect-pour-business-v${version}`);
+for(const key of originalKeys)assert.notEqual(keys.SAVE_KEY,key,'V106 saves must not overwrite an old release write key');
 const saveStart=source.indexOf('  function saveCareer(){'),saveEnd=source.indexOf('  function exportSave(){');
 assert.ok(saveStart>=0&&saveEnd>saveStart);
 const resumeStart=source.indexOf('  function resume(){'),resumeEnd=source.indexOf('  function showHelp(){');
@@ -142,12 +159,12 @@ assert.ok(resumeStart>=0&&resumeEnd>resumeStart);
 const storageListenerLine=source.split('\n').find(line=>line.includes("window.addEventListener('storage',"));
 assert.ok(storageListenerLine);
 function persistenceFixture({readFails=false,writeFails=false}={}){
-  const stored=new Map(keys.LEGACY_SAVE_KEYS.map(key=>[key,'legacy business stays intact']));
-  const effects=[],labels=new Map(),restartButton={disabled:false};let writes=0,reloads=0,storageCallback;
+  const stored=new Map(originalKeys.map(key=>[key,'legacy business stays intact']));
+  const reads=[],effects=[],labels=new Map(),restartButton={disabled:false};let writes=0,reloads=0,storageCallback;
   const scope={...keys,ready:true,careerActive:true,externalSave:false,lastSavedRaw:null,storageAvailable:true,
     keyHeld:true,settlingSpaceHeld:true,mode:'playing',captureSave:adapter.captureSave,
     localStorage:{
-      getItem(key){if(readFails)throw new Error('Storage unavailable');return stored.get(key)??null;},
+      getItem(key){reads.push(key);if(readFails)throw new Error('Storage unavailable');return stored.get(key)??null;},
       setItem(key,value){if(writeFails)throw new Error('Quota denied');writes++;stored.set(key,value);}
     },
     clearInput(){effects.push('clear input');},
@@ -161,13 +178,13 @@ function persistenceFixture({readFails=false,writeFails=false}={}){
   const context=vm.createContext(scope);
   const api=vm.runInContext(source.slice(saveStart,saveEnd)+source.slice(resumeStart,resumeEnd)+'\n({saveCareer,handleExternalSave,resume});',context);
   vm.runInContext(storageListenerLine,context);
-  return {api,scope,stored,effects,labels,restartButton,writes:()=>writes,reloads:()=>reloads,storageCallback};
+  return {api,scope,stored,reads,effects,labels,restartButton,writes:()=>writes,reloads:()=>reloads,storageCallback};
 }
 const ordinary=persistenceFixture();ordinary.api.saveCareer();
 assert.equal(ordinary.writes(),1);
 const firstRaw=ordinary.stored.get(keys.SAVE_KEY);
-assert.equal(JSON.parse(firstRaw).version,104);assert.equal(ordinary.scope.lastSavedRaw,firstRaw);
-for(const key of keys.LEGACY_SAVE_KEYS)assert.equal(ordinary.stored.get(key),'legacy business stays intact');
+assert.equal(JSON.parse(firstRaw).version,106);assert.equal(ordinary.scope.lastSavedRaw,firstRaw);
+for(const key of originalKeys){assert.equal(ordinary.stored.get(key),'legacy business stays intact');assert.equal(ordinary.reads.includes(key),false,'Active V106 checkpoints use only the current production key');}
 assert.equal(ordinary.scope.storageAvailable,true);assert.equal(ordinary.scope.externalSave,false);
 engine.reset(900);ordinary.api.saveCareer();assert.equal(ordinary.writes(),2,'An unchanged backing save allows the next ordinary checkpoint');
 engine.reset(901);const newerRaw=JSON.stringify(adapter.captureSave());ordinary.stored.set(keys.SAVE_KEY,newerRaw);
@@ -186,8 +203,12 @@ const eventsFixture=persistenceFixture();eventsFixture.api.saveCareer();
 eventsFixture.storageCallback({key:keys.SAVE_KEY,newValue:'a delayed older event'});
 assert.equal(eventsFixture.scope.externalSave,false,'A delayed event cannot override the current storage comparison');
 eventsFixture.stored.set(keys.SAVE_KEY,newerRaw);
-for(const key of keys.LEGACY_SAVE_KEYS)eventsFixture.storageCallback({key,newValue:'old release activity'});
-assert.equal(eventsFixture.scope.externalSave,false,'An old released tab cannot lock the independent104 career');
+for(const key of originalKeys){
+  eventsFixture.storageCallback({key,newValue:'old release activity'});
+  assert.equal(eventsFixture.stored.get(key),'legacy business stays intact');
+  assert.equal(eventsFixture.reads.includes(key),false,'Original business events do not read their storage keys');
+}
+assert.equal(eventsFixture.scope.externalSave,false,'Old-release activity cannot replace or lock an established V106 business');
 eventsFixture.storageCallback({key:keys.SAVE_KEY,newValue:newerRaw});
 assert.equal(eventsFixture.scope.externalSave,true,'A relevant callback pauses only when backing storage actually differs');
 assert.equal(eventsFixture.writes(),1);assert.equal(eventsFixture.stored.get(keys.SAVE_KEY),newerRaw);
@@ -200,18 +221,46 @@ for(const failure of [{readFails:true},{writeFails:true}]){
   assert.equal(unavailable.writes(),0);assert.match(unavailable.labels.get('save-status'),/Saving unavailable/);
 }
 const bootFallback=source.match(/const saved=([^;]+);/);
-assert.ok(bootFallback,'Boot selects its newest available saved career');
-for(const [current,old103,old102,old101,expected] of [[null,'103 career','102 career','101 career','103 career'],[null,null,'102 career','101 career','102 career'],[null,null,null,'101 career','101 career'],['104 career','103 career','102 career','101 career','104 career'],[null,null,null,null,undefined]]){
-  const stored=new Map([[keys.LEGACY_SAVE_KEYS[0],old103],[keys.LEGACY_SAVE_KEYS[1],old102],[keys.LEGACY_SAVE_KEYS[2],old101]]);
-  const value=vm.runInNewContext(bootFallback[1],{lastSavedRaw:current,LEGACY_SAVE_KEYS:keys.LEGACY_SAVE_KEYS,localStorage:{getItem:key=>{assert.ok(stored.has(key));return stored.get(key);}}});
-  assert.equal(value,expected);
+assert.ok(bootFallback,'Boot selects current progress or a released legacy business');
+for(const available of [[104,103,102,101],[103,102,101],[102,101],[101],[]]){
+  for(const current of [null,'current106 business']){
+    const stored=new Map(available.map(version=>[`perfect-pour-business-v${version}`,`released${version}`]));
+    stored.set('perfect-pour-preview-v106','independent preview business');
+    const before=Array.from(stored),reads=[];
+    const value=vm.runInNewContext(bootFallback[1],{lastSavedRaw:current,LEGACY_SAVE_KEYS:keys.LEGACY_SAVE_KEYS,localStorage:{getItem:key=>{reads.push(key);return stored.get(key)??null;}}});
+    assert.equal(value,current||(available.length?`released${available[0]}`:undefined),'Current106 wins; otherwise the newest released business is selected');
+    if(current)assert.deepEqual(reads,[],'Current progress never falls back to an older business');
+    assert.ok(reads.every(key=>keys.LEGACY_SAVE_KEYS.includes(key)),'Migration only reads the released business keys');
+    assert.deepEqual(Array.from(stored),before,'Boot leaves legacy and preview storage unchanged');
+  }
 }
+
+// Preserve the sound/music choices already made on the public game. Exercise
+// the production settings loader and writer without an audio context.
+const settingsInitial=source.split('\n').find(line=>line.trimStart().startsWith('let settings='));
+const settingsLoad=source.split('\n').find(line=>line.includes("try{const raw=JSON.parse(localStorage.getItem('perfect-pour-v1-settings')"));
+const settingsSave=source.match(/  function saveSettings\(\)\{[^\n]+\}/)?.[0];
+assert.ok(settingsInitial&&settingsLoad&&settingsSave,'Production audio settings use the established key');
+const oldSettings={sound:false,music:true,musicVolume:.36,soundVolume:.74};
+const storedSettings=new Map([['perfect-pour-v1-settings',JSON.stringify(oldSettings)],['perfect-pour-preview-v106-settings','preview settings stay intact']]);
+const settingsReads=[],settingsWrites=[];
+const settingsContext=vm.createContext({clamp:(x,a,b)=>Math.max(a,Math.min(b,x)),localStorage:{
+  getItem(key){settingsReads.push(key);return storedSettings.get(key)??null;},
+  setItem(key,value){settingsWrites.push(key);storedSettings.set(key,value);}
+}});
+const settingsApi=vm.runInContext(settingsInitial+'\n'+settingsLoad+'\n'+settingsSave+'\n({settings,saveSettings});',settingsContext);
+assert.deepEqual(JSON.parse(JSON.stringify(settingsApi.settings)),oldSettings,'Released audio preferences survive the promotion');
+assert.deepEqual(settingsReads,['perfect-pour-v1-settings']);assert.deepEqual(settingsWrites,[],'Loading preferences does not write them');
+settingsApi.settings.sound=true;settingsApi.saveSettings();
+assert.deepEqual(settingsWrites,['perfect-pour-v1-settings']);
+assert.equal(JSON.parse(storedSettings.get('perfect-pour-v1-settings')).sound,true);
+assert.equal(storedSettings.get('perfect-pour-preview-v106-settings'),'preview settings stay intact');
 
 console.log(JSON.stringify({result:'PASS',checks:[
   `${Object.keys(F).length} snapshot aliases and every called engine export match the shipped Wasm contract`,
   'Renderer targets exist; IDs are unique; Easy service is explicit and the completed-cup result is inline with optional receipt details; announcer, Help, and audio controls stay outside the inert game shell',
-  'The actual UI save adapter migrates genuine101/102/103 fixtures into104, preserves every recorded legacy snapshot field, rejects malformed data, and retains interrupted-cup rules',
+  'Explicit UI imports accept genuine101/102/103 fixtures and the unchanged104 schema into106 with zero ice, preserve historical snapshot fields, reject malformed data, and retain interrupted-cup rules',
   'Displayed fill-score boundaries agree with the fill grade, including f32 rounding cases',
-  'V104 saves use a distinct write key with103/102/101 read fallback; actual saveCareer protects a newer backing save, ignores stale event payloads, pauses once, and reloads only on explicit resume',
+  'V106 writes its production key, automatically selects released101–104 progress without modifying legacy entries, preserves audio preferences, protects newer saves, and reloads only on explicit resume',
   'Unavailable or full storage reports the problem while leaving the game playable without a false conflict lock'
 ],verification:'Static authored UI structure and real Wasm adapter checks. Not browser interaction, visual QA, focus simulation, or an accessibility audit.'},null,2));

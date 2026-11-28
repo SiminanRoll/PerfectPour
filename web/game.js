@@ -1,4 +1,4 @@
-/* Perfect Pour V1.05 · Presentation and input. Simulation, business, saves, and rules are Rust/Wasm. */
+/* Perfect Pour V1.06 · A tactile soda counter. Simulation and saves are Rust/Wasm. */
 (() => {
   'use strict';
   const WASM_BASE64 = '__WASM_BASE64__';
@@ -37,8 +37,10 @@
     1:['“Oops. That’s not the pour I ordered.”','“Let’s give that another try next time.”','“The bubbles got the better of this one.”']
   };
 
-  const F={cash:20,hardcore:21,attempted:22,holding:23,day:24,goal:25,streak:26,bestStreak:27,combo:28,comboBonus:29,milestone:30,perfectTip:31,serviceTip:32,lifetime:33,owned:34,cost:40,canBuy:46,spendable:47,reserve:48,staffSales:49,wages:50,helperActive:51,specialistActive:52,customers:53,basePay:54,modePay:55,signPay:56,foamScale:57,good:58,net:59,lifetimePerfect:60,bestShift:61,businessLevel:62,previousRating:63,beverageMl:64,pressure:65,waste:66,cleanupSeconds:67,patience:68,patienceLimit:69,menuPrice:70,ingredientCost:71,cleanupCost:72,refund:73,lastNet:74,ingredientTotal:75,cleanupTotal:76,refundTotal:77,signTotal:78,serviceTotal:79,staffOrders:80,staffCapacity:81,demand:82,missed:83,interior:84,catering:85,interiorCost:86,cateringCost:87,nextStreak:88,nextReward:89,hardcoreBest:90,easyBest:91,cleanupSaved:92,training:93,trainingCost:94,tier:95,canPressure:96,speedTip:97,orderedCherries:98,orderedLime:99,orderedSyrup:100,orderedBlend:101,selectedSoda:102,selectedCherries:103,selectedLime:104,selectedSyrup:105,selectedBlend:106,recipeAccuracy:107,recipeLocked:108,canRecipe:109,hasCitrus:110,hasSyrup:111,hasMixer:112,citrusCost:113,syrupCost:114,mixerCost:115,recipePremium:116,selectedAddinCost:117,prepStarted:118,recipeFizz:119,fillStars:120,recipeMistakes:121,prepAllowance:122,orderIsCustom:123,orderedSecondSoda:124,firstShare:125,pourPart:126,partAttempted:127,activeSoda:128,activeTarget:129,firstBeverageMl:130,mixAccuracy:131,mixStars:132,isMix:133};
-  const SAVE_KEY='perfect-pour-business-v104',LEGACY_SAVE_KEYS=['perfect-pour-business-v103','perfect-pour-business-v102','perfect-pour-business-v101'];
+  const F={cash:20,hardcore:21,attempted:22,holding:23,day:24,goal:25,streak:26,bestStreak:27,combo:28,comboBonus:29,milestone:30,perfectTip:31,serviceTip:32,lifetime:33,owned:34,cost:40,canBuy:46,spendable:47,reserve:48,staffSales:49,wages:50,helperActive:51,specialistActive:52,customers:53,basePay:54,modePay:55,signPay:56,foamScale:57,good:58,net:59,lifetimePerfect:60,bestShift:61,businessLevel:62,previousRating:63,beverageMl:64,pressure:65,waste:66,cleanupSeconds:67,patience:68,patienceLimit:69,menuPrice:70,ingredientCost:71,cleanupCost:72,refund:73,lastNet:74,ingredientTotal:75,cleanupTotal:76,refundTotal:77,signTotal:78,serviceTotal:79,staffOrders:80,staffCapacity:81,demand:82,missed:83,interior:84,catering:85,interiorCost:86,cateringCost:87,nextStreak:88,nextReward:89,hardcoreBest:90,easyBest:91,cleanupSaved:92,training:93,trainingCost:94,tier:95,canPressure:96,speedTip:97,orderedCherries:98,orderedLime:99,orderedSyrup:100,orderedBlend:101,selectedSoda:102,selectedCherries:103,selectedLime:104,selectedSyrup:105,selectedBlend:106,recipeAccuracy:107,recipeLocked:108,canRecipe:109,hasCitrus:110,hasSyrup:111,hasMixer:112,citrusCost:113,syrupCost:114,mixerCost:115,recipePremium:116,selectedAddinCost:117,prepStarted:118,recipeFizz:119,fillStars:120,recipeMistakes:121,prepAllowance:122,orderIsCustom:123,orderedSecondSoda:124,firstShare:125,pourPart:126,partAttempted:127,activeSoda:128,activeTarget:129,firstBeverageMl:130,mixAccuracy:131,mixStars:132,isMix:133,selectedIce:134,iceFizzMultiplier:135};
+  // The review build never reads or overwrites a live business automatically.
+  // Existing businesses can be explicitly imported through Business tools.
+  const SAVE_KEY='perfect-pour-business-v106',LEGACY_SAVE_KEYS=['perfect-pour-business-v104','perfect-pour-business-v103','perfect-pour-business-v102','perfect-pour-business-v101'];
   const upgrades=[
     {name:'Neon identity',max:3,unit:'SIGN',description:'Better prices. More visitors.',effect:l=>`Prices +${l*8}% → +${(l+1)*8}%`,owned:l=>`+${l*8}% prices · +${l*2} daily demand`},
     {name:'Patio seats',max:2,unit:'PATIO',description:'Room for your specialist’s queue.',effect:l=>`Staff capacity +${l*2} → +${(l+1)*2}`,owned:l=>`+${l*2} capacity · +${l*3} demand · +${l}s patience`},
@@ -66,8 +68,7 @@
   let inputOwner=null,activePointer=null,keyHeld=false,settlingSpaceHeld=false,pouring=false,ready=false,lastSpill=0,spillFlash=0,storageAvailable=true,loadedCareer=false,toastTimer;
   let settlingElapsed=0,finishElapsed=0,lastAutosave=0,sceneDirty=true,lastFeedback='',lastSceneKey='',lastSavedRaw=null,externalSave=false;
   let easyPress=null,primaryPress=null,suppressPrimaryClick=false,recipeUiKey='',iconDownloading=false;
-  let upgradePage=0,upgradePageSize=1,garnishFlight=null;
-  const upgradeParts=['sign','seating','awning','tap','helper','specialist','interior','catering','training','citrus','syrup','mixer'];
+  let upgradePage=0,upgradePageSize=1;
   let careerActive=false,menuActivationKey='';
   const blendNames=['Light','Regular','Bold'];
   const activePlayMode=()=>state[F.attempted]===1?'playing':'preparing';
@@ -76,7 +77,6 @@
   const overlays=['intro','welcome','result','summary','pause','help','restart'];
   const audio={context:null};
   const reducedMotion=window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  const pourVisuals=window.PourVisuals.create({reducedMotion});
   function announce(text){$('announcer').textContent=text;}
   function refreshState(){state=new Float32Array(engine.memory.buffer,engine.state_ptr(),engine.state_len());}
   function randomSeed(){try{return crypto.getRandomValues(new Uint32Array(1))[0];}catch(_){return(Date.now()^(Math.random()*0xffffffff))>>>0;}}
@@ -103,11 +103,12 @@
   }
   function captureSave(){
     const ptr=engine.save_ptr(),len=engine.save_len();
-    return{format:'perfect-pour-business',version:104,engine:Array.from(new Float64Array(engine.memory.buffer,ptr,len))};
+    const values=Array.from(new Float64Array(engine.memory.buffer,ptr,len));
+    return{format:'perfect-pour-business',version:values[0],engine:values};
   }
   function applySave(data){
-    const expected=data?.version===101?80:[102,103,104].includes(data?.version)?120:0;
-    if(!data||data.format!=='perfect-pour-business'||!expected||!Array.isArray(data.engine)||data.engine.length!==expected||data.engine[0]!==data.version||!data.engine.every(Number.isFinite))throw new Error('Choose a Perfect Pour V1.01–V1.04 business save.');
+    const expected=data?.version===101?80:[102,103,104,106].includes(data?.version)?120:0;
+    if(!data||data.format!=='perfect-pour-business'||!expected||!Array.isArray(data.engine)||data.engine.length!==expected||data.engine[0]!==data.version||!data.engine.every(Number.isFinite))throw new Error('Choose a Perfect Pour V1.01–V1.06 business save.');
     const ptr=engine.save_ptr(),buffer=new Float64Array(engine.memory.buffer,ptr,engine.save_len());buffer.fill(0);buffer.set(data.engine);
     if(engine.restore_save()!==1)throw new Error('The save data is damaged or contains invalid values.');
     refreshState();
@@ -133,7 +134,7 @@
     if(!ready)return;
     const data=captureSave();data.exportedAt=new Date().toISOString();
     const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'}),url=URL.createObjectURL(blob),a=document.createElement('a');
-    a.href=url;a.download=`Perfect_Pour_Day_${Math.round(state[F.day])}_Save.json`;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),5000);toast('Business save exported. Keep it somewhere safe.');
+    a.href=url;a.download=`Perfect_Pour_V106_Day_${Math.round(state[F.day])}_Save.json`;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),5000);toast('Business save exported. Keep it somewhere safe.');
   }
   async function importSave(event){
     const file=event.target.files&&event.target.files[0];event.target.value='';if(!file)return;
@@ -163,7 +164,9 @@
     $('finish-review').hidden=!['finished','result'].includes(mode);
     $('order-bubble').hidden=['finished','result'].includes(mode);
     document.body.dataset.controlStage=flow.stage;
-    $('recipe-workbench').hidden=!flow.showRecipe;$('pressure-controls').hidden=!flow.showPressure;
+    $('recipe-workbench').hidden=false;
+    $('recipe-workbench').classList.toggle('is-locked',!flow.showRecipe);
+    $('pressure-controls').hidden=true;
     document.querySelector('.mode-switch').hidden=!flow.showMode;
     $('mixed-recipe').hidden=flow.showRecipe||state[F.selectedSoda]>3;
     $('edit-recipe').hidden=mode!=='playing'||state[F.attempted]===1;
@@ -174,10 +177,23 @@
       button.classList.toggle('active',state[F.pressure]===i);button.setAttribute('aria-pressed',String(state[F.pressure]===i));button.disabled=state[F.canPressure]!==1||mode!=='preparing';
     }
     text('pressure-note',pressureNotes[state[F.pressure]]);text('pressure-summary',pressureNames[state[F.pressure]]);
+    const dial=$('pressure-dial');
+    if(dial){
+      dial.value=String(state[F.pressure]);
+      dial.disabled=state[F.canPressure]!==1||mode!=='preparing';
+      dial.setAttribute('aria-valuetext',pressureNames[state[F.pressure]]+' pressure. '+pressureNotes[state[F.pressure]]);
+      dial.closest('.pressure-knob')?.style.setProperty('--pressure-angle',((state[F.pressure]-1)*62)+'deg');
+      text('pressure-readout',pressureNames[state[F.pressure]]);
+    }
   }
   function changePressure(value){
     if(!ready||mode!=='preparing'||engine.set_pressure(value)!==1)return;
-    refreshState();saveCareer();if(externalSave)return;updateHud();sceneDirty=true;$('pressure-controls').open=false;announce(pressureNames[value]+' pressure. '+pressureNotes[value]+'.');
+    refreshState();saveCareer();if(externalSave)return;updateHud();sceneDirty=true;$('pressure-controls').open=false;openAudio();playCue('knob');announce(pressureNames[value]+' pressure. '+pressureNotes[value]+'.');
+  }
+  function changeIce(value){
+    if(!ready||externalSave||mode!=='preparing'||state[F.canRecipe]!==1||state[F.selectedSoda]>3||engine.set_ice(value)!==1)return;
+    refreshState();saveCareer();if(externalSave)return;updateHud();sceneDirty=true;
+    announce(value?value+' '+(value===1?'scoop':'scoops')+' of ice. Extra fizz when you pour.':'No ice.');
   }
   function changeDifficulty(hard){
     if(!ready||pouring)return;
@@ -279,11 +295,11 @@
   }
   function renderRecipe(){
     const mix=state[F.isMix]===1,part=state[F.pourPart]||0;
-    const key=[...Array.from(state.slice(98,107)),state[F.hasCitrus],state[F.hasSyrup],state[F.hasMixer],state[F.recipeLocked],state[0],state[F.orderedSecondSoda],state[F.firstShare],part,mix].join(':');
+    const key=[...Array.from(state.slice(98,107)),state[F.selectedIce],state[F.hasCitrus],state[F.hasSyrup],state[F.hasMixer],state[F.recipeLocked],state[0],state[F.orderedSecondSoda],state[F.firstShare],part,mix].join(':');
     if(key===recipeUiKey)return;recipeUiKey=key;
     if(!$('base-options').children.length){
       $('base-options').innerHTML=['Orange','Cherry','Lime','Cola'].map((name,i)=>`<button id="base-${i}" data-base="${i}" class="base-option" aria-label="${name} soda base" title="${name} soda" aria-pressed="false">${window.PourRecipeArt.icon('base',{soda:i})}<strong>${name}</strong></button>`).join('');
-      $('ingredient-options').innerHTML=[['cherries','cherry','Cherries'],['lime','lime','Lime'],['syrup','syrup','Syrup']].map(([field,kind,name])=>`<button data-ingredient="${field}" class="ingredient-option"><span class="ingredient-picture">${window.PourRecipeArt.icon(kind)}<b id="${field}-count">0</b></span><strong>${name}</strong><small id="${field}-availability" class="ingredient-availability"></small></button>`).join('');
+      $('ingredient-options').innerHTML=[['cherries','cherry','Cherries'],['ice','ice','Ice'],['lime','lime','Limes'],['syrup','syrup','Syrup']].map(([field,kind,name])=>`<button data-ingredient="${field}" class="ingredient-option"><span class="ingredient-picture"><span class="station-art">${window.PourRecipeArt.station(kind,0,{available:true})}</span><b id="${field}-count">0</b></span><strong>${name}</strong><small id="${field}-availability" class="ingredient-availability"></small></button>`).join('');
       $('blend-options').innerHTML=blendNames.map((name,i)=>`<button data-blend="${i}" aria-pressed="false">${window.PourRecipeArt.icon('water',{blend:i})}<strong>${name}</strong></button>`).join('');
     }
     $('base-options').querySelectorAll('button').forEach((b,i)=>{b.setAttribute('aria-pressed',String(state[F.selectedSoda]===i));b.disabled=state[F.canRecipe]!==1;});
@@ -291,13 +307,15 @@
     const pair=mix?window.PourRecipeArt.renderRatioOrder({first:state[2],second:state[F.orderedSecondSoda],share:state[F.firstShare],part,complete:state[0]!==0}):'';
     $('mix-prep-sequence').hidden=!mix;
     if(mix)$('mix-prep-sequence').innerHTML=pair;
-    [['cherries',F.selectedCherries,true,2],['lime',F.selectedLime,state[F.hasCitrus]===1,1],['syrup',F.selectedSyrup,state[F.hasSyrup]===1,2]].forEach(([name,field,available,max])=>{
+    [['cherries',F.selectedCherries,true,2],['ice',F.selectedIce,true,2],['lime',F.selectedLime,state[F.hasCitrus]===1,1],['syrup',F.selectedSyrup,state[F.hasSyrup]===1,2]].forEach(([name,field,available,max])=>{
       const button=$('ingredient-options').querySelector(`[data-ingredient="${name}"]`),n=state[field];
       button.hidden=!available;
-      text(name+'-count',available?n:'');text(name+'-availability',available?'':'Locked');
-      button.disabled=!available||state[F.canRecipe]!==1;button.classList.toggle('selected',n>0);button.classList.toggle('locked',!available);button.setAttribute('aria-label',available?`${name}: ${n}. Tap to cycle zero to ${max}.`:`${name} locked. Unlock in Build.`);button.title=available?`${name}: ${n}. Tap to change.`:'Unlock in Build';
+      text(name+'-count',available?n:'');text(name+'-availability',name==='ice'&&n>0?'Extra fizz':available?'':'Locked');
+      const station=button.querySelector('.station-art'),kind=name==='cherries'?'cherry':name;
+      if(station)station.innerHTML=window.PourRecipeArt.station(kind,n,{available});
+      button.disabled=!available||state[F.canRecipe]!==1||state[F.selectedSoda]>3;button.classList.toggle('selected',n>0);button.classList.toggle('locked',!available);button.setAttribute('aria-pressed',String(n>0));button.setAttribute('aria-label',available?`${name}: ${n}${name==='ice'?' scoops':''}. Tap to cycle zero to ${max}.`:`${name} locked. Unlock in Build.`);button.title=available?`${name}: ${n}${name==='ice'?' scoops · extra fizz':''}. Tap to change.`:'Unlock in Build';
     });
-    $('ingredient-options').hidden=state[F.selectedSoda]>3;
+    $('ingredient-options').hidden=false;
     $('blend-controls').hidden=state[F.hasMixer]!==1||mix||state[F.selectedSoda]>3;
     $('blend-options').querySelectorAll('button').forEach((button,i)=>{button.setAttribute('aria-pressed',String(state[F.selectedBlend]===i));button.disabled=state[F.canRecipe]!==1;});
     text('recipe-cost',dollars(state[F.selectedAddinCost]));
@@ -329,10 +347,9 @@
     advanceSimulation(performance.now());
     const recipe=[state[F.selectedSoda],state[F.selectedCherries],state[F.selectedLime],state[F.selectedSyrup],state[F.selectedBlend]];
     const index={base:0,cherries:1,lime:2,syrup:3,blend:4}[kind];if(index===undefined)return;
-    const previous=recipe[index];recipe[index]=value;
+    recipe[index]=value;
     if(engine.set_recipe(...recipe)!==1)return;
     refreshState();saveCareer();if(externalSave)return;updateHud();
-    if(!reducedMotion&&value>previous&&['cherries','lime'].includes(kind))garnishFlight={kind,count:value,elapsed:0};
     const choice=kind==='base'?$('base-'+value)?.querySelector('svg'):kind==='blend'?$('blend-options').querySelector(`[data-blend="${value}"] svg`):$(kind+'-count');
     if(!reducedMotion)choice?.animate?.([{transform:'scale(.84)'},{transform:'scale(1.12)',offset:.55},{transform:'scale(1)'}],{duration:210,easing:'ease-out'});
     if(kind==='base')announce(sodas[value].name+' selected.');
@@ -354,10 +371,7 @@
     [...$('fizz-meter').children].forEach((dot,i)=>dot.classList.toggle('on',i<=state[2]));
     text('cup-name',cup.name);text('cup-capacity',Math.round(state[5])+' mL');
     $('target-percent').innerHTML=target+'<small>%</small>';text('station-target',target+'%');$('target-track').style.left=target+'%';
-    text('payout-multiplier',state[14].toFixed(2)+'×');lastSpill=state[8];spillFlash=0;lastFeedback='';
-    pourVisuals.reset({spillMl:state[8]});garnishFlight=null;
-    document.querySelector('.pour-area').classList.toggle('has-spill',state[8]>.03);
-    sceneDirty=true;updateHud();
+    text('payout-multiplier',state[14].toFixed(2)+'×');lastSpill=state[8];spillFlash=0;lastFeedback='';sceneDirty=true;updateHud();
   }
   function comboMessage(){
     const left=Math.max(1,Math.round(state[F.nextStreak]-state[F.streak]));return`${left} to +${dollars(state[F.nextReward])}`;
@@ -472,19 +486,8 @@
     if(celebrate)playCue(stars===5?'perfect':stars>=4?'good':'bad');
     announce(`${stars} ${stars===1?'star':'stars'}. ${accuracy} percent fill accuracy.${state[F.isMix]===1?' '+Math.floor(state[F.mixAccuracy])+' percent mix accuracy.':''} Net ${signedMoney(state[F.lastNet])}. ${streak} good ${streak===1?'pour':'pours'} in a row.`);
   }
-  function startHandoff(){
-    if(reducedMotion||!canvas.animate)return;
-    const host=canvas.parentElement,old=host.querySelector('.served-drink');if(old)old.remove();
-    draw(false);
-    const copy=document.createElement('canvas'),rect=canvas.getBoundingClientRect(),parent=host.getBoundingClientRect();
-    copy.width=canvas.width;copy.height=canvas.height;copy.className='served-drink';copy.setAttribute('aria-hidden','true');
-    Object.assign(copy.style,{position:'absolute',left:(rect.left-parent.left)+'px',top:(rect.top-parent.top)+'px',width:rect.width+'px',height:rect.height+'px',pointerEvents:'none',zIndex:'6'});
-    const copyContext=copy.getContext('2d');if(!copyContext)return;copyContext.drawImage(canvas,0,0);host.appendChild(copy);
-    const animation=copy.animate([{opacity:1,transform:'translate(0,0) scale(1)'},{opacity:0,transform:'translate(65px,-20px) scale(.92)'}],{duration:320,easing:'cubic-bezier(.22,.68,.34,1)',fill:'forwards'});
-    animation.finished.then(()=>copy.remove(),()=>copy.remove());
-  }
   function nextOrder(){
-    if(mode!=='finished')return;startHandoff();clearInput();engine.next_order();refreshState();saveCareer();if(externalSave)return;
+    if(mode!=='finished')return;clearInput();engine.next_order();refreshState();saveCareer();if(externalSave)return;
     if(state[0]===2){showSummary(true);return;}
     renderOrder();setMode(activePlayMode(),state[F.selectedSoda]<4?'pour-button':'base-0');announce(recipeDescription()+(state[F.isMix]===1?' Pour the highlighted soda first.':''));
   }
@@ -518,24 +521,12 @@
       const status=maxed?(i===4||i===5?(state[i===4?F.helperActive:F.specialistActive]?'ON DUTY':'STARTS TOMORROW'):'FULLY BUILT'):prerequisite||(!affordable?`${dollars(Math.max(0,cost-state[F.spendable]))} to go`:state[F.canBuy]!==1?'Finish your cup first':'READY');
       const icon=window.PourStoreArt.upgradeIcon?window.PourStoreArt.upgradeIcon(i,level):'✦';
       const timing=!maxed?([4,5].includes(i)?'Starts next day':[1,6,7,8].includes(i)?'Capacity next day':''):'';
-      return `<article data-upgrade-index="${i}" class="upgrade-card${maxed?' maxed':''}${prerequisite?' locked':''}"><div class="upgrade-icon" aria-hidden="true">${icon}</div><div class="upgrade-copy"><span class="upgrade-level">${item.unit} · ${level}/${item.max}</span><h3>${item.name}</h3><div class="upgrade-effect">${maxed?item.owned(level):item.effect(level)}</div>${timing?'<span class="upgrade-timing">'+timing+'</span>':''}</div><button class="buy-button" data-item="${i}" ${canBuy?'':'disabled'} aria-label="${maxed?item.name+' fully owned':(i===4||i===5?'Hire ':'Build ')+item.name+' for '+dollars(cost)}">${maxed?'✓ OWNED':`${i===4||i===5?'HIRE':'BUILD'} <strong>${dollars(cost)}</strong>`}</button><span class="upgrade-status">${status}</span><details class="upgrade-info" name="upgrade-info"><summary aria-label="About ${item.name}" title="About ${item.name}"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 11v6m0-11v1"/></svg></summary><div class="upgrade-info-panel"><strong>${item.name}</strong><p>${item.description}</p><p>${level?'Current: '+item.owned(level):'Next: '+item.effect(level)}</p></div></details></article>`;
+      return `<article class="upgrade-card${maxed?' maxed':''}${prerequisite?' locked':''}"><div class="upgrade-icon" aria-hidden="true">${icon}</div><div class="upgrade-copy"><span class="upgrade-level">${item.unit} · ${level}/${item.max}</span><h3>${item.name}</h3><div class="upgrade-effect">${maxed?item.owned(level):item.effect(level)}</div>${timing?'<span class="upgrade-timing">'+timing+'</span>':''}</div><button class="buy-button" data-item="${i}" ${canBuy?'':'disabled'} aria-label="${maxed?item.name+' fully owned':(i===4||i===5?'Hire ':'Build ')+item.name+' for '+dollars(cost)}">${maxed?'✓ OWNED':`${i===4||i===5?'HIRE':'BUILD'} <strong>${dollars(cost)}</strong>`}</button><span class="upgrade-status">${status}</span><details class="upgrade-info" name="upgrade-info"><summary aria-label="About ${item.name}" title="About ${item.name}"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 11v6m0-11v1"/></svg></summary><div class="upgrade-info-panel"><strong>${item.name}</strong><p>${item.description}</p><p>${level?'Current: '+item.owned(level):'Next: '+item.effect(level)}</p></div></details></article>`;
     }).join('');
     text('upgrade-page',(upgradePage+1)+' / '+pages);
     $('upgrade-page').setAttribute('aria-label',`Page ${upgradePage+1} of ${pages}. Upgrades ${first+1} to ${last} of ${upgrades.length}.`);
     $('upgrade-page').title=`Upgrades ${first+1}–${last} of ${upgrades.length}`;
     $('upgrade-prev').disabled=upgradePage===0;$('upgrade-next').disabled=upgradePage===pages-1;
-    highlightUpgrade(first);
-  }
-  function highlightUpgrade(index){
-    const key=upgradeParts[index];
-    $('store-art').querySelectorAll('[data-upgrade-part]').forEach(part=>part.classList.toggle('upgrade-focused',part.dataset.upgradePart===key));
-  }
-  function animateUpgrade(index){
-    const key=upgradeParts[index];highlightUpgrade(index);
-    if(reducedMotion)return;
-    $('store-art').querySelectorAll('[data-upgrade-part="'+key+'"]').forEach(part=>{
-      part.animate?.([{opacity:.45,filter:'brightness(1.65)'},{opacity:1,filter:'brightness(1)'}],{duration:650,easing:'ease-out'});
-    });
   }
   function changeUpgradePage(direction){
     if(!ready||mode!=='store')return;
@@ -571,7 +562,7 @@
     if(mode!=='store'||!Number.isInteger(index)||index<0||index>=upgrades.length)return;
     if(engine.buy(index)!==1){toast('That upgrade needs more cash or another building first.');return;}
     refreshState();saveCareer();if(externalSave)return;renderStore();playCue('purchase');
-    animateUpgrade(index);
+    if(!reducedMotion)$('store-art').animate?.([{filter:'brightness(1)'},{filter:'brightness(1.12)',offset:.35},{filter:'brightness(1)'}],{duration:500,easing:'ease-out'});
     toast((index===4||index===5)?`${upgrades[index].name} joins tomorrow.`:[1,6,7,8].includes(index)?`${upgrades[index].name} built. New capacity starts tomorrow.`:`${upgrades[index].name} upgraded.`);
     const replacement=$('upgrade-grid').querySelector(`[data-item="${index}"]`);if(replacement&&!replacement.disabled)replacement.focus({preventScroll:true});else $('store-back').focus({preventScroll:true});
   }
@@ -598,7 +589,7 @@
     }catch(_){}
   }
   function playCue(name,options){if(settings.sound&&audio.context&&!document.hidden&&document.hasFocus())window.PerfectPourSounds?.cue(name,options);}
-  function startPourSound(){if(settings.sound&&audio.context)window.PerfectPourSounds?.startPour(state?state[F.activeSoda]??(state[F.selectedSoda]<4?state[F.selectedSoda]:0):0);}
+  function startPourSound(){if(settings.sound&&audio.context)window.PerfectPourSounds?.startPour(state?state[F.activeSoda]??(state[F.selectedSoda]<4?state[F.selectedSoda]:0):0,state?.[F.selectedIce]||0,state?.[F.pressure]??1);}
   function stopPourSound(){window.PerfectPourSounds?.stopPour();}
   function soundToggle(){
     settings.sound=!settings.sound;saveSettings();updateSoundButton();window.PerfectPourSounds?.setEnabled(settings.sound);
@@ -623,7 +614,7 @@
   let cachedCup=-1,geometry=null;
   function cupGeometry(index){
     if(cachedCup===index)return geometry;
-    const original=cups[index],cup={...original,height:original.height*1.1,top:original.top*1.1,bottom:original.bottom*1.1,curve:original.curve*1.1},bottom=393,top=bottom-cup.height,n=240,volume=[0];let sum=0;
+    const original=cups[index],cup={...original,height:original.height*1.2,top:original.top*1.2,bottom:original.bottom*1.2,curve:original.curve*1.2},bottom=380,top=bottom-cup.height,n=240,volume=[0];let sum=0;
     const width=y=>cup.bottom+(cup.top-cup.bottom)*y+cup.curve*Math.sin(Math.PI*y);
     for(let i=1;i<=n;i++){const w=width((i-.5)/n);sum+=w*w;volume.push(sum);}
     for(let i=1;i<=n;i++)volume[i]/=sum;
@@ -638,24 +629,13 @@
     ctx.closePath();
   }
   function roundedRect(x,y,w,h,r){ctx.beginPath();ctx.roundRect(x,y,w,h,r);}
-  function drawCupMark(g){
-    // A small metal medallion, carrying the established pictorial logo only.
-    const y=g.bottom-52,r=20,metal=ctx.createLinearGradient(242,y-19,277,y+20);
-    metal.addColorStop(0,'#f7dfa0');metal.addColorStop(.32,'#d5ab58');metal.addColorStop(.64,'#b98537');metal.addColorStop(1,'#e2c079');
-    ctx.save();ctx.beginPath();ctx.arc(260,y,r,0,Math.PI*2);ctx.fillStyle=metal;ctx.fill();
-    ctx.strokeStyle='rgba(75,50,20,.65)';ctx.lineWidth=.8;ctx.stroke();ctx.beginPath();ctx.arc(260,y,r-2,0,Math.PI*2);ctx.strokeStyle='rgba(255,235,173,.65)';ctx.lineWidth=.65;ctx.stroke();
-    ctx.translate(260-26*.55,y-30*.55);ctx.scale(.55,.55);ctx.lineCap='round';ctx.lineJoin='round';ctx.strokeStyle='#523e21';ctx.lineWidth=2.5;
-    ctx.beginPath();ctx.moveTo(10,18);ctx.lineTo(42,18);ctx.lineTo(37,52);ctx.lineTo(15,52);ctx.closePath();ctx.stroke();
-    ctx.beginPath();ctx.moveTo(8,18);ctx.lineTo(44,18);ctx.moveTo(16,27);ctx.lineTo(36,27);ctx.moveTo(29,18);ctx.lineTo(35,5);ctx.lineTo(45,5);ctx.stroke();
-    ctx.fillStyle='#523e21';ctx.beginPath();ctx.arc(23,34,1.7,0,Math.PI*2);ctx.arc(31,39,1.7,0,Math.PI*2);ctx.fill();ctx.beginPath();ctx.moveTo(21,44);ctx.quadraticCurveTo(26,49,31,44);ctx.stroke();ctx.restore();
-  }
-  function draw(showGuides=true){
+  function draw(dt=0){
     if(!ctx)return;
     const r=canvas.getBoundingClientRect(),dpr=Math.min(window.devicePixelRatio||1,2),pixelW=Math.round(r.width*dpr),pixelH=Math.round(r.height*dpr);
     if(canvas.width!==pixelW||canvas.height!==pixelH){canvas.width=pixelW;canvas.height=pixelH;}
     ctx.setTransform(1,0,0,1,0,0);ctx.clearRect(0,0,pixelW,pixelH);
-    const scale=Math.min(pixelW/420,pixelH/440),screenScale=Math.max(.1,scale/dpr);
-    ctx.setTransform(scale,0,0,scale,(pixelW-420*scale)/2-50*scale,(pixelH-440*scale)/2);
+    const scale=Math.min(pixelW/520,pixelH/430);
+    ctx.setTransform(scale,0,0,scale,(pixelW-520*scale)/2,(pixelH-430*scale)/2);
     const s=state||[0,1,0,0,.65,280,0,0,0],mix=s[F.isMix]===1,firstIndex=s[F.selectedSoda]<4?s[F.selectedSoda]:s[2],rawSoda=sodas[mix?s[F.activeSoda]:firstIndex],soda={...rawSoda,color:window.PourRecipeArt.tint(rawSoda.color,s[F.selectedBlend]??1,s[F.selectedSyrup]||0),light:window.PourRecipeArt.tint(rawSoda.light,s[F.selectedBlend]??1,s[F.selectedSyrup]||0)},g=cupGeometry(s[3]),t=visualTime;
     let drink=soda;
     if(mix){
@@ -663,29 +643,22 @@
       drink={color:window.PourRecipeArt.mixColor(tint(first.color),tint(second.color),share),light:window.PourRecipeArt.mixColor(tint(first.light),tint(second.light),share)};
     }
     const fill=clamp(s[6]/s[5],0,1),foam=clamp(s[7]/s[5],0,1),liquidY=g.level(fill),foamY=g.level(fill+foam),targetY=g.level(s[4]);
-    const drop=garnishFlight?{...garnishFlight,progress:clamp(garnishFlight.elapsed/.48,0,1)}:null;
-    pourVisuals.draw(ctx,{geometry:g,path:cupPath,fill,foam,spillMl:s[8],drink,soda,time:t,pouring:pouring&&mode==='playing',
-      drawInside:()=>window.PourRecipeArt.drawInside(ctx,{geometry:g,liquidY,cherries:s[F.selectedCherries]||0,lime:s[F.selectedLime]||0,syrup:s[F.selectedSyrup]||0,blend:s[F.selectedBlend]??1,time:t,reducedMotion,drop}),
-      drawMark:()=>drawCupMark(g),
-      drawRim:()=>window.PourRecipeArt.drawRim(ctx,{geometry:g,lime:s[F.selectedLime]||0,time:t,reducedMotion,drop})});
-    if(showGuides){
+    window.BarLiquid.draw(ctx,{
+      g,cupIndex:s[3],fill,foam,soda,drink,pouring,mode,time:t,dt,reducedMotion,
+      pressure:s[F.pressure]||0,cherries:s[F.selectedCherries]||0,
+      lime:s[F.selectedLime]||0,syrup:s[F.selectedSyrup]||0,ice:s[F.selectedIce]||0,fizzMultiplier:s[F.iceFizzMultiplier]||1,
+      spillMl:s[8]||0,customerKey:[s[F.day]||1,s[1]||1,s[3]].join(':'),stars:s[12]||0
+    });
     // Dashed requested level, mapped from volume (not a naïve cup-height percent).
     const currentTarget=mix?s[F.activeTarget]:s[4],currentY=g.level(currentTarget);
-    const guide=(y,color,active)=>{ctx.save();ctx.setLineDash(active?[6,4]:[3,5]);ctx.strokeStyle=color;ctx.globalAlpha=active?1:.65;ctx.shadowColor='#061f1e';ctx.shadowBlur=3;ctx.lineWidth=active?2.5:1.5;ctx.beginPath();ctx.moveTo(260-g.cup.top/2-24,y);ctx.lineTo(260+g.cup.top/2+27,y);ctx.stroke();ctx.restore();};
+    const guide=(y,color,active)=>{ctx.save();ctx.setLineDash(active?[6,4]:[3,5]);ctx.strokeStyle=color;ctx.globalAlpha=active?1:.6;ctx.lineWidth=active?2.5:1.5;ctx.beginPath();ctx.moveTo(260-g.cup.top/2-24,y);ctx.lineTo(260+g.cup.top/2+27,y);ctx.stroke();ctx.restore();};
     if(mix){
       const firstY=g.level(s[4]*s[F.firstShare]),firstActive=s[F.pourPart]===0;
       guide(firstY,sodas[s[2]].color,firstActive);guide(targetY,sodas[s[F.orderedSecondSoda]].color,!firstActive);
-      const quietY=firstActive?targetY:firstY,quietLabel=firstActive?'2 · '+percent(s[4])+'%':'1',quietFont=Math.max(13,10.5/screenScale),quietHeight=Math.max(24,quietFont+10);
-      ctx.font='bold '+quietFont+'px system-ui';
-      const quietWidth=Math.max(firstActive?67:27,ctx.measureText(quietLabel).width+14),quietX=Math.max(54,260-g.cup.top/2-25-quietWidth);
-      roundedRect(quietX,quietY-quietHeight/2,quietWidth,quietHeight,7);ctx.fillStyle='#fffaf0e8';ctx.fill();ctx.strokeStyle=firstActive?sodas[s[F.orderedSecondSoda]].color:sodas[s[2]].color;ctx.lineWidth=1.5;ctx.stroke();ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillStyle='#174b49';ctx.fillText(quietLabel,quietX+quietWidth/2,quietY);
-    }else{ctx.save();ctx.setLineDash([5,5]);ctx.strokeStyle='#fff0bc';ctx.shadowColor='#062c2b';ctx.shadowBlur=3;ctx.lineWidth=1.8;ctx.beginPath();ctx.moveTo(260-g.cup.top/2-24,targetY);ctx.lineTo(260+g.cup.top/2+27,targetY);ctx.stroke();ctx.restore();}
-    // Keep the exact engine-mapped guide Y, but keep its label readable on short phones.
-    const targetLabel=targetText(currentTarget)+'%',targetFont=Math.max(targetLabel.length>5?15:19,12/screenScale),tagHeight=Math.max(36,targetFont+14);
-    ctx.font='bold '+targetFont+'px system-ui';
-    const tagWidth=Math.max(61,ctx.measureText(targetLabel).width+18),tagX=Math.min(260+g.cup.top/2+24,466-tagWidth);
-    roundedRect(tagX,currentY-tagHeight/2,tagWidth,tagHeight,10);ctx.fillStyle='#fffaf0';ctx.fill();ctx.strokeStyle=mix?soda.color:'#174b49';ctx.lineWidth=mix?2.5:1.5;ctx.stroke();ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillStyle='#174b49';ctx.fillText(targetLabel,tagX+tagWidth/2,currentY);
-    }
+      const quietY=firstActive?targetY:firstY,quietWidth=firstActive?67:27,quietX=260-g.cup.top/2-25-quietWidth;
+      roundedRect(quietX,quietY-12,quietWidth,24,7);ctx.fillStyle='#fffaf0e8';ctx.fill();ctx.strokeStyle=firstActive?sodas[s[F.orderedSecondSoda]].color:sodas[s[2]].color;ctx.lineWidth=1.5;ctx.stroke();ctx.textAlign='center';ctx.fillStyle='#174b49';ctx.font='bold 13px Trebuchet MS';ctx.fillText(firstActive?'2 · '+percent(s[4])+'%':'1',quietX+quietWidth/2,quietY+4);
+    }else{ctx.save();ctx.setLineDash([5,5]);ctx.strokeStyle='#174b49c4';ctx.lineWidth=1.6;ctx.beginPath();ctx.moveTo(260-g.cup.top/2-24,targetY);ctx.lineTo(260+g.cup.top/2+27,targetY);ctx.stroke();ctx.restore();}
+    const tagX=260+g.cup.top/2+24,targetLabel=targetText(currentTarget)+'%';roundedRect(tagX,currentY-18,61,36,10);ctx.fillStyle='#fffaf0';ctx.fill();ctx.strokeStyle=mix?soda.color:'#174b49';ctx.lineWidth=mix?2.5:1.5;ctx.stroke();ctx.textAlign='center';ctx.fillStyle='#174b49';ctx.font='bold '+(targetLabel.length>5?20:23)+'px Trebuchet MS';ctx.fillText(targetLabel,tagX+30.5,currentY+.5);
     if(mode==='finished'&&s[12]===5&&window.PourFinish)window.PourFinish.draw(ctx,{top:g.top,bottom:g.bottom,widthAt:g.width,centerX:260,time:finishElapsed,reducedMotion});
   }
 
@@ -695,7 +668,7 @@
     const elapsed=simulationClock?clamp((now-simulationClock)/1000,0,3):0;simulationClock=now;
     if(ready&&!document.hidden&&((['preparing','playing'].includes(mode)&&state[0]===0)||(['settling','finished','result'].includes(mode)&&state[0]===1))){
       let remaining=elapsed;while(remaining>.000001){const step=Math.min(remaining,.1);engine.step(step,0);remaining-=step;}refreshState();
-      if(state[8]>lastSpill+.03){spillFlash=1.2;if(lastSpill<.1){document.querySelector('.pour-area').classList.add('has-spill');playCue('spill');}}
+      if(state[8]>lastSpill+.03){spillFlash=1.2;if(lastSpill<.1)playCue('spill');}
       lastSpill=state[8];spillFlash=Math.max(0,spillFlash-elapsed);
     }
   }
@@ -704,23 +677,16 @@
     if(ready&&!document.hidden){
       if(mode==='settling'){settlingElapsed+=dt;if(settlingElapsed>=.8&&state[7]/state[5]<=VISIBLE_FOAM)showFinishedCup(true);}
       if(mode==='finished')finishElapsed+=dt;
-      const effectsVisible=['preparing','playing','settling','finished'].includes(mode);
-      if(effectsVisible){
-        const effectsWereActive=pourVisuals.isAnimating();
-        pourVisuals.update(dt,{geometry:cupGeometry(state[3]),fill:state[6]/state[5],foam:state[7]/state[5],spillMl:state[8],pouring:pouring&&mode==='playing'});
-        if(effectsWereActive&&!pourVisuals.isAnimating())sceneDirty=true;
-        if(garnishFlight){garnishFlight.elapsed+=dt;if(garnishFlight.elapsed>=.48){garnishFlight=null;sceneDirty=true;}}
-      }
-      const effects=effectsVisible&&(pourVisuals.isAnimating()||garnishFlight!==null);
       const physical=mode==='playing'&&(pouring||state[7]/state[5]>VISIBLE_FOAM)||mode==='settling';
       const shine=mode==='finished'&&state[12]===5&&!reducedMotion&&finishElapsed<6;
-      if((physical||shine||effects)&&!reducedMotion)visualTime+=dt;
+      const barActive=['preparing','playing','settling','finished'].includes(mode)&&!reducedMotion;
+      if(barActive)visualTime+=dt;
       const serving=['preparing','playing'].includes(mode)&&(state[F.prepStarted]||state[F.attempted]);
       if(physical||serving){updateMeter();if(now-lastUi>120){updateLiveFeedback();lastUi=now;}}
       if((pouring||serving)&&now-lastAutosave>500){saveCareer();if(externalSave)return;lastAutosave=now;}
-      const fizzAudible=document.hasFocus()&&(mode==='settling'||mode==='playing'&&!pouring);
+      const fizzAudible=document.hasFocus()&&(mode==='settling'||mode==='playing');
       window.PerfectPourSounds?.updateFoam(state[7]/state[5],state[F.activeSoda]??(state[F.selectedSoda]<4?state[F.selectedSoda]:state[2]),fizzAudible);
-      if(mode!=='store'&&(sceneDirty||physical||shine||effects)){draw();sceneDirty=false;}
+      if(mode!=='store'&&(sceneDirty||physical||shine||barActive)){draw(barActive?dt:0);sceneDirty=false;}
     }else if(sceneDirty&&!document.hidden){draw();sceneDirty=false;}
     requestAnimationFrame(frame);
   }
@@ -798,8 +764,11 @@
   $('base-options').addEventListener('click',event=>{const button=event.target.closest('button[data-base]');if(button&&!button.disabled){changeRecipe('base',Number(button.dataset.base));focusPourAfterPointer(event);}});
   $('ingredient-options').addEventListener('click',event=>{
     const button=event.target.closest('button[data-ingredient]');if(!button||button.disabled)return;
-    const kind=button.dataset.ingredient,field={cherries:F.selectedCherries,lime:F.selectedLime,syrup:F.selectedSyrup}[kind],max=kind==='lime'?1:2;
-    changeRecipe(kind,(state[field]+1)%(max+1));openAudio();playCue('ingredient',{kind:kind==='cherries'?'cherry':kind});focusPourAfterPointer(event);
+    const kind=button.dataset.ingredient,field={cherries:F.selectedCherries,lime:F.selectedLime,syrup:F.selectedSyrup,ice:F.selectedIce}[kind],max=kind==='lime'?1:2;
+    if(field===undefined)return;
+    const next=(state[field]+1)%(max+1);
+    if(kind==='ice')changeIce(next);else changeRecipe(kind,next);
+    openAudio();playCue('ingredient',{kind:kind==='cherries'?'cherry':kind});focusPourAfterPointer(event);
   });
   $('blend-options').addEventListener('click',event=>{const button=event.target.closest('button[data-blend]');if(button&&!button.disabled){changeRecipe('blend',Number(button.dataset.blend));focusPourAfterPointer(event);}});
   $('sound-button').addEventListener('click',soundToggle);$('music-button').addEventListener('click',musicToggle);$('pause-button').addEventListener('click',pause);$('resume-button').addEventListener('click',resume);$('help-button').addEventListener('click',showHelp);$('close-help').addEventListener('click',closeHelp);
@@ -809,9 +778,12 @@
   $('hardcore-mode').addEventListener('click',event=>{changeDifficulty(true);focusPourAfterPointer(event);});
   $('easy-mode').addEventListener('click',event=>{changeDifficulty(false);focusPourAfterPointer(event);});
   ['pressure-gentle','pressure-classic','pressure-rush'].forEach((id,index)=>$(id)?.addEventListener('click',event=>{changePressure(index);focusPourAfterPointer(event);}));
+  $('pressure-dial')?.addEventListener('input',event=>changePressure(Math.round(Number(event.target.value))));
+  // Return pointer users to the primary control only after the knob gesture
+  // finishes; arrow-key edits retain focus on the native accessible range.
+  $('pressure-dial')?.addEventListener('click',focusPourAfterPointer);
   for(const [id,key,module] of [['music-volume','musicVolume','PourMusic'],['sound-volume','soundVolume','PerfectPourSounds']]){const slider=$(id);if(slider){slider.value=settings[key]*100;slider.addEventListener('input',()=>{settings[key]=clamp(Number(slider.value)/100,0,1);window[module]?.setVolume(settings[key]);saveSettings();});}}
   $('upgrade-grid').addEventListener('click',event=>{const button=event.target.closest('button[data-item]');if(button&&!button.disabled)buyUpgrade(Number(button.dataset.item));});
-  for(const event of ['pointerover','focusin'])$('upgrade-grid').addEventListener(event,e=>{const card=e.target.closest('[data-upgrade-index]');if(card)highlightUpgrade(Number(card.dataset.upgradeIndex));});
   $('upgrade-prev').addEventListener('click',()=>changeUpgradePage(-1));$('upgrade-next').addEventListener('click',()=>changeUpgradePage(1));
   $('export-save').addEventListener('click',exportSave);$('import-save').addEventListener('click',()=>$('import-file').click());$('import-file').addEventListener('change',importSave);
   $('reset-business').addEventListener('click',requestRestart);$('confirm-restart').addEventListener('click',resetBusiness);$('cancel-restart').addEventListener('click',cancelRestart);

@@ -1,9 +1,9 @@
 {
-  "version": "1.04",
-  "saveVersion": 104,
+  "version": "1.06",
+  "saveVersion": 106,
   "snapshot": {
     "type": "f32",
-    "length": 134,
+    "length": 136,
     "fields": {
       "phase": 0,
       "order": 1,
@@ -138,7 +138,9 @@
       "firstBeverageMl": 130,
       "mixAccuracy": 131,
       "mixStars": 132,
-      "isMix": 133
+      "isMix": 133,
+      "selectedIce": 134,
+      "iceFizzMultiplier": 135
     },
     "notes": [
       "Fields0..97 retain indexes. flowRate is selected pressure flow; shiftNet is signed revenue minus operating costs and wages, excluding upgrades.",
@@ -155,7 +157,8 @@
       "attempted remains a cup-wide lock for recipes, mode, pressure and purchases. partAttempted controls the current hold budget. Hardcore end_pour advances the first part with no payment; final release serves. Easy serve advances the first part and serves the last; each part requires an attempt.",
       "activeTarget is a fraction of total cup capacity: target*firstShare on the first mix part and target on the final part. firstBeverageMl excludes foam gas and accounts for proportional overflow losses. It is fixed after the final score.",
       "mixAccuracy=clamp(100-200*abs(first retained beverage/total retained beverage-firstShare),0,100). Empty mixed cups score0 for mix; singles report100. mixStars uses fill-grade thresholds. Overall stars are the minimum of fill, recipe and mix grades.",
-      "Mixed orders begin on customer6, initially half/half. Subsequent orders mix about one in three; quarter shares appear after12 completed manual customers. Mixed requests use at most one simple add-in and regular water blend. Their first base is preselected without starting prep time."
+      "Mixed orders begin on customer6, initially half/half. Subsequent orders mix about one in three; quarter shares appear after12 completed manual customers. Mixed requests use at most one simple add-in and regular water blend. Their first base is preselected without starting prep time.",
+      "Fields134..135 append optional ice: selectedIce0/1/2 scoops renders0/3/6 cubes. iceFizzMultiplier=1+scoops*(0.08+0.12/(1+pouredMl/90)) multiplies foam gas expansion only, initially1/1.2/1.4. The effect declines as ice is wetted by cumulative poured volume; pauses/reloads cannot reset it. No-ice liquid, mix, cost, capacity and target behavior is unchanged."
     ]
   },
   "save": {
@@ -266,20 +269,22 @@
       "firstLiquid": 101,
       "firstFoam": 102,
       "firstFoamBeverage": 103,
-      "firstPouredMl": 104
+      "firstPouredMl": 104,
+      "selectedIce": 105
     },
     "reserved": [
-      105,
+      106,
       119
     ],
     "notes": [
-      "Version104 stores120 doubles. Legacy101 uses80 values, zero-padded to120;102 and103 use their original120 values. Legacy current cups remain single-soda and preserve their original payments and recipes.",
-      "save_ptr refreshes buffer from live state: call once, write all120 doubles, then restore_save. Validation is atomic; reserved105..119 must be zero for104, while original reserved ranges are enforced for legacy versions.",
+      "Version106 stores120 doubles with ice in formerly reserved slot105. Imports101 (80 values zero-padded),102,103 and104 (120 original values) preserve their historical validation and default ice to0.",
+      "save_ptr refreshes buffer from live state: call once, write all120 doubles, then restore_save. Validation is atomic. V106 requires integral ice0..2 at105 and zero reserved106..119. V104 still requires reserved105..119 zero; earlier original reserved ranges remain enforced.",
       "V101/V102 current orders migrate as plain recipes with their original soda selected and no retroactive garnish charges. V103 current recipes and every original124 snapshot field preserve released restore behavior.",
-      "For104, attempted remains cup-global and partAttempted belongs to pourPart. Interrupted Hardcore first-part saves advance to the untouched second part without paying; untouched second-part saves survive repeat reloads; interrupted final-part saves commit once. Single-soda102/103/104 Hardcore holds retain their one-time commit behavior.",
+      "For104 and106, attempted remains cup-global and partAttempted belongs to pourPart. Interrupted Hardcore first-part saves advance to the untouched second part without paying; untouched second-part saves survive repeat reloads; interrupted final-part saves commit once. Single-soda102/103/104/106 Hardcore holds retain their one-time commit behavior.",
       "An unfinished Easy cup restores stopped in Easy, keeps its current part, and returns to Hardcore after the cup. Unpoured preparation restores without consuming a hold. Paid cups serialize settled beverage and never replay sales.",
       "Fields101..103 store first-soda physical pools, and104 stores total first-soda input for ingredient cost. First and second foam retain their own soda settling rates. Paid mixed cups store the committed first beverage in101 and zero foam in102/103.",
-      "lastScoredHardcore locks receipt mode premium even when the next selected mode changes. Mixed menu prices use requested base proportions plus60 cents; actual input volumes set supply costs; selected add-ins charge once at final service."
+      "lastScoredHardcore locks receipt mode premium even when the next selected mode changes. Mixed menu prices use requested base proportions plus60 cents; actual input volumes set supply costs; selected add-ins charge once at final service.",
+      "Ice is retained for preparation, interrupted single/mixed pours and paid results. It resets to0 on each new order. Nonzero ice requires prepStarted, and set_ice locks on first attempt in both modes. Paid replay and interrupted-hold semantics remain unchanged. V106 exports require the V1.06 engine; preserve original files and legacy browser keys when migrating older saves."
     ]
   },
   "phases": {
@@ -303,7 +308,8 @@
     "save_len": "()->u32",
     "restore_save": "()->u32",
     "set_pressure": "(pressure:u32)->u32",
-    "set_recipe": "(soda:u32,cherries:u32,lime:u32,syrup:u32,blend:u32)->u32"
+    "set_recipe": "(soda:u32,cherries:u32,lime:u32,syrup:u32,blend:u32)->u32",
+    "set_ice": "(scoops:u32)->u32"
   },
   "upgrades": [
     {

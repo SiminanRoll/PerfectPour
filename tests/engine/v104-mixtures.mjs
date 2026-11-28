@@ -41,7 +41,7 @@ const ledgerNames=['cash','shiftGross','completed','lifetimeCustomers','rating',
 const ledger=()=>Object.fromEntries(ledgerNames.map(name=>[name,value(name)]));
 const checks=[];
 
-assert.equal(e.state_len(),134);assert.equal(e.save_len(),120);assert.equal(contract.saveVersion,104);
+assert.equal(e.state_len(),136);assert.equal(e.save_len(),120);assert.equal(contract.saveVersion,106);
 for(const [name,index] of Object.entries({orderedSecondSoda:124,firstShare:125,pourPart:126,partAttempted:127,
   activeSoda:128,activeTarget:129,firstBeverageMl:130,mixAccuracy:131,mixStars:132,isMix:133}))
   assert.equal(I[name],index,`Stable appended snapshot field ${name}`);
@@ -151,12 +151,12 @@ for(const name of ['preparing','partial-hardcore','partial-easy','paid','staffed
   assert.equal(restore(legacy.engine),1,name);
   assert.deepEqual(state().slice(0,124),legacy.expectedRestoreSnapshot,`${name}: all 124 released snapshot fields are preserved`);
   assert.equal(value('isMix'),0);assert.equal(value('orderedSecondSoda'),4);assert.equal(value('firstShare'),1);
-  const migrated=capture(),migratedLedger=ledger();assert.equal(migrated[0],104);
+  const migrated=capture(),migratedLedger=ledger();assert.equal(migrated[0],106);
   assert.equal(restore(migrated),1);assert.deepEqual(ledger(),migratedLedger);
 }
-checks.push('five genuine released 103 fixtures preserve all 124 historical snapshot fields, current recipes and ledger state while migrating to 104 without retroactive mixtures');
+checks.push('five genuine released 103 fixtures preserve all 124 historical snapshot fields, current recipes and ledger state while migrating to 106 without retroactive mixtures');
 
-for(const [index,badValue] of [[97,5],[97,introductory[3]],[98,0],[98,.4],[98,1],[99,2],[99,1],[100,1],[101,1],[102,1],[103,1],[104,1],[105,1],[119,1]]){
+for(const [index,badValue] of [[97,5],[97,introductory[3]],[98,0],[98,.4],[98,1],[99,2],[99,1],[100,1],[101,1],[102,1],[103,1],[104,1],[106,1],[119,1]]){
   const corrupt=[...introductory];corrupt[index]=badValue;const before=state();
   assert.equal(restore(corrupt),0,`Malformed mixture field${index}=${badValue} rejects`);assert.deepEqual(state(),before);
 }

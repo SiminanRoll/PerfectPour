@@ -89,11 +89,12 @@
     source.start(now);
     return voice;
   }
-  function startPour(sodaIndex = 0) {
+  function startPour(sodaIndex = 0, iceScoops = 0, pressure = 1) {
     if (!available()) return false;
     if (pour) return true;
     const soda = clamp(Math.trunc(Number(sodaIndex) || 0), 0, 3);
-    pour = loop('lowpass', 950 + soda * 200, .11 + soda * .01);
+    const ice=clamp(Number(iceScoops)||0,0,2),force=clamp(Number(pressure)||0,0,2);
+    pour = loop('lowpass', (950 + soda * 200)*(1+(force-1)*.12)+ice*110, .11 + soda * .01+ice*.009);
     return true;
   }
   function stopPour() {
@@ -134,7 +135,15 @@
     if (!available()) return false;
     switch (name) {
       case 'ingredient':
-        note(options.kind==='lime'?76:options.kind==='syrup'?60:67,0,.11,.055,'sine'); break;
+        if(options.kind==='ice'){
+          [[94,0],[89,.045],[97,.1]].forEach(([pitch,at])=>note(pitch,at,.095,.05,'sine'));
+        }else{
+          note(options.kind==='lime'?70:options.kind==='syrup'?55:61,0,.09,.055,'sine');
+          note(43,.025,.075,.025,'sine');
+        }
+        break;
+      case 'knob':
+        note(72,0,.035,.032,'triangle');note(48,0,.025,.02,'triangle');break;
       case 'perfect':
         [[72,0],[76,.09],[79,.18],[84,.32]].forEach(([pitch,at]) => note(pitch,at,.38,.14));
         break;

@@ -112,7 +112,9 @@ function pitchesFor(cue,options){
 }
 const good=pitchesFor('good'),perfect=pitchesFor('perfect'),bad=pitchesFor('bad'),purchase=pitchesFor('purchase');
 assert.equal(good.length,2);assert.equal(perfect.length,4);assert.equal(bad.length,2);assert.equal(purchase.length,3);
-assert.equal(pitchesFor('ingredient',{kind:'cherry'}).length,1);
+assert.equal(pitchesFor('ingredient',{kind:'cherry'}).length,2);
+assert.equal(pitchesFor('ingredient',{kind:'ice'}).length,3,'Scooped ice has a short, bounded clink sequence');
+assert.equal(pitchesFor('knob').length,2,'A detent makes one short paired click');
 assert.notDeepEqual(pitchesFor('ingredient',{kind:'lime'}),pitchesFor('ingredient',{kind:'syrup'}),'Preparation feedback distinguishes fruit and syrup');
 assert.notDeepEqual(good,bad);assert.ok(Math.max(...perfect)>Math.max(...good));
 const shortStreak=pitchesFor('streak',{streak:3}),longStreak=pitchesFor('streak',{streak:8});

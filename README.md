@@ -1,12 +1,18 @@
-# Perfect Pour — V1.05
+# Perfect Pour — V1.06
 
-**[Play Perfect Pour online](https://perfect-pour.pretty-scarf-0591.chatgpt.site/)** · [Source repository](https://github.com/SiminanRoll/PerfectPour)
+An illustrated soda-counter game, evolving the V1.04.2 gameplay. Turn the machine's
+pressure knob, choose a soda at the dispenser, and take ingredients from the
+counter. Fruit drops into the cup and reacts to the drink; ice floats and adds
+an extra burst of fizz. Overflow leaves a visible mess beneath the glass.
 
-Craft a custom soda, make the pour, earn a review, and grow a neighborhood soda bar. V1.05 brings a photographic customer cast and bar environment, realistic dynamic glass and carbonation, visible spills, and a more detailed shop. The intro features a matching photographic soda. Simple icons and short contextual controls keep the drink central.
+The original hold/release controls, Easy serving action, business economy and
+customer progression remain. Existing V1.01–V1.05 businesses continue through
+a read-only migration into the new V106 save key. Read [the release notes](docs/V106_RELEASE.md)
+for ice rules, the counter presentation and save compatibility.
 
-The glass uses the actual liquid, foam, and spilled volume from the game: the stream meets the surface, foam settles, overflow runs down the outside, and a puddle remains on the counter. Customer mood changes keep the same image in place. A finished drink stays until **Next customer**. The prior touch-input fix and direct-hold controls remain. See [V1.05 release notes](docs/V105_RELEASE.md) and [acceptance evidence](docs/qa/V105_ACCEPTANCE.md).
-
-**`dist/index.html` is the complete game:** a self-contained HTML file with the Rust/WebAssembly engine, interface, graphics, and synthesized music and effects. It is designed for offline play without an account, frontend server, or runtime downloads. Rust, Python, and Node are development tools; players do not need them.
+`dist/index.html` is the self-contained offline game, including Rust/WebAssembly,
+illustrated artwork, UI, music and sound effects. Build it with
+`python3 scripts/build.py`.
 
 ## Start your shop
 
@@ -88,7 +94,7 @@ Poor pours can lose money through ingredients and cleanup. Severe failures earn 
 
 ## Build the business
 
-The storefront illustrates the business as it grows. Upgrade cards lead with an illustration, the next measurable benefit, and the price. An information control opens the longer description and current effect. Prerequisites, wages, and next-day activation stay visible where they affect the purchase. Selecting an upgrade highlights its location; a successful purchase briefly animates that object. Upper lounge, catering, and training tiers have distinct appearances. Reduced-motion preferences suppress decorative animation. **Business tools** opens Export, Import, and Reset while the autosave status remains visible.
+The storefront illustrates the business as it grows. Upgrade cards lead with an illustration, the next measurable benefit, and the price. An information control opens the longer description and current effect. Prerequisites, wages, and next-day activation stay visible where they affect the purchase. A successful purchase briefly highlights the storefront; reduced-motion preferences suppress that animation. **Business tools** opens Export, Import, and Reset while the autosave status remains visible.
 
 All twelve upgrade types have implemented effects. Prices are per level.
 
@@ -113,13 +119,18 @@ Payroll is reserved before purchases and charged once at closing. Receipts and d
 
 ## Sound, appearance, and saves
 
-Eight fictional photographic customers keep the same SVG, image element, image source, and arrival wrapper while expressions change. Their three expression crops are preloaded and avoid the disappearance caused by replacing artwork at release. Pouring and fizz use smoother audio release transitions. Music and effects have independent toggles and volumes in **Help & settings**.
+Customers keep the same SVG while expressions change, avoiding the disappearance caused by replacing their artwork at release. Pouring and fizz use smoother audio release transitions. Music and effects have independent toggles and volumes in **Help & settings**.
 
 **Help & settings → Download app icon** exports a **512 × 512 PNG** suitable for a shortcut. It is included in the standalone game; downloading an icon does not install an app automatically.
 
-V1.05 retains save version **104**, the **120-value** save buffer, and the **134-field** runtime snapshot. It imports **101, 102, 103, and 104**. Existing cash, upgrades, reputation, and paid cups survive. V101/V102 current orders stay plain without retroactive recipe costs. V103 current recipes remain single-soda; new mixed requests can begin with later customers. Legacy longer days finish their existing goal before returning to 12 customers. The graphics update does not change the Rust engine, scoring, prices, or save format.
+V1.06 writes save version **106**, the **120-value** save buffer, and a
+**136-field** runtime snapshot. It explicitly imports **101, 102, 103, 104,
+and 106**. Existing money, upgrades, reputation and paid cups survive.
+Older businesses begin with zero ice; original recipe and mixture migration
+rules remain. Ice adds optional foam behavior to the Rust engine while
+zero-ice pours preserve the released physics and economy.
 
-Autosave preserves preparation and active pours. Restoring an interrupted first Hardcore mixed part advances to the untouched second part without payment; restoring an interrupted final part commits once. An interrupted single-soda Hardcore pour retains its one-time commit behavior. Unfinished Easy resumes stopped on its current part. Paid cups return to settling or the inline review without paying again. V1.05 uses the existing V104 browser storage key, and a stale second tab pauses rather than overwriting a newer save. Use **Build → Business tools → Export** for a portable backup. Browser storage availability may vary, especially for directly opened files.
+Autosave preserves preparation and active pours. Restoring an interrupted first Hardcore mixed part advances to the untouched second part without payment; restoring an interrupted final part commits once. An interrupted single-soda Hardcore pour retains its one-time commit behavior. Unfinished Easy resumes stopped on its current part. Paid cups return to settling or the inline review without paying again. V1.06 writes `perfect-pour-business-v106` and restores existing V104, V103, V102 or V101 businesses when no current save exists. Legacy keys are retained unchanged; a stale second tab pauses rather than overwriting a newer save. Use **Build → Business tools → Export** for a portable backup. Browser storage availability may vary, especially for directly opened files.
 
 ## Build and verify
 
@@ -130,13 +141,12 @@ cargo test --manifest-path engine/Cargo.toml
 node tests/engine/wasm-smoke.mjs
 node tests/engine/v103-recipes.mjs
 node tests/engine/v104-mixtures.mjs
+node tests/engine/v106-ice.mjs
 node tests/engine/v102-balance.mjs
 node tests/browser/v101-business-acceptance.mjs
 node tests/browser/v102-ui-contract.mjs
 node tests/browser/v103-control-flow.mjs
 node tests/browser/v1032-menu.mjs
-node tests/browser/v105-pour-visuals.mjs
-node tests/browser/v105-customers.mjs
 node tests/audio/music-lifecycle.mjs
 node tests/audio/game-sounds.mjs
 node tests/browser/verify-offline-selftest.mjs
@@ -144,6 +154,14 @@ python3 scripts/build.py
 node tests/browser/verify_offline.mjs dist/index.html
 ```
 
-Historical filenames also exercise the current game. The suites cover **52 native tests**, 6,048 single-soda catalog/mode fixtures, 3,024 native Gentle mixture cases, 216 compiled-Wasm mixture mode-parity pours, 48 synthetic careers, **104 UI aliases**, production pointer/keyboard handlers, and startup/save/menu behavior against the shipped Wasm. Five genuine V103 fixtures preserve all 124 original snapshot fields when restored by the new engine. UI harnesses are not browser playtests, and simulated careers are not measured player performance. Direct-file portability is packaging-verified; narrow browser layouts do not certify physical phones, and audio lifecycle tests are not a subjective listening pass.
+Historical filenames also exercise the current game. The V1.06 engine passes **58 native tests**, including 448 iced Gentle catalog cases, plus the compiled-Wasm recipe, mixture, and ice suites. A direct comparison with the V1.04.2 engine preserved all original 134 fields across **1,624 snapshots from 288 zero-ice orders**. The release also checks production pointer/keyboard handlers, one-time payments, interrupted pours, legacy migration, stale-tab protection, and audio lifecycle. UI harnesses are not browser playtests, and simulated careers are not measured player performance. Direct-file portability is packaging-verified; narrow browser layouts do not certify physical phones, and audio lifecycle tests are not a subjective listening pass.
 
-See [V1.05 acceptance evidence](docs/qa/V105_ACCEPTANCE.md), [V1.04.2 touch-input evidence](docs/qa/V1042_ACCEPTANCE.md), [V1.04.1 acceptance evidence](docs/qa/V1041_ACCEPTANCE.md), [engine integration](engine/README.md), and [release identity](docs/release-manifest.json). [V1.04 notes](docs/V104_RELEASE.md), [V1.04 acceptance evidence](docs/qa/V104_ACCEPTANCE.md), [V1.03.2 notes](docs/V1032_RELEASE.md), [V1.03.1 notes](docs/V1031_RELEASE.md), [V1.03 notes](docs/V103_RELEASE.md), [V1.02 notes](docs/V102_RELEASE.md), and their acceptance records are retained as historical records. GitHub CI and deployment records establish the final release status.
+See [V1.06 release notes](docs/V106_RELEASE.md), [engine integration](engine/README.md), and [release identity](docs/release-manifest.json). [V1.04.1 acceptance evidence](docs/qa/V1041_ACCEPTANCE.md), [V1.04 notes](docs/V104_RELEASE.md), [V1.04 acceptance evidence](docs/qa/V104_ACCEPTANCE.md), and the earlier release records are retained as historical evidence. The prior V1.06 preview acceptance record is retained as historical visual evidence. Production migration and publication are documented separately.
+
+## Release workflow
+
+Approved releases go to `SiminanRoll/PerfectPour` on `main` and the existing
+public Perfect Pour Site at https://perfect-pour.pretty-scarf-0591.chatgpt.site/.
+Use local/internal previews for verification. Do not create separate private
+release Sites unless the user explicitly requests one. Keep the production
+Site ID in `.openai/hosting.json` and preserve existing player saves.

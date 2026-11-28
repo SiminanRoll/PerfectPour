@@ -1,4 +1,4 @@
-# Perfect Pour engine — V1.04
+# Perfect Pour engine — V1.06
 
 The dependency-free Rust crate owns recipe preparation, single- and two-soda physics, input attempts, scoring, money, staff, progression, and save validation. The compiled Wasm has zero imports. JavaScript supplies input, rendering, audio, and persistence. [contract.json](contract.json) is the authoritative index/export mapping; [the game README](../README.md) describes the player-facing controls.
 
@@ -12,11 +12,12 @@ python3 engine/build_engine.py
 node tests/engine/wasm-smoke.mjs
 node tests/engine/v103-recipes.mjs
 node tests/engine/v104-mixtures.mjs
+node tests/engine/v106-ice.mjs
 node tests/browser/v101-business-acceptance.mjs
 node tests/engine/v102-balance.mjs
 ```
 
-The build helper runs native Cargo tests, compiles an optimized `wasm32-unknown-unknown` module, and copies it to `engine/perfect_pour_engine.wasm`. It uses Cargo from PATH or the isolated project toolchain at `engine/.toolchain` when available, configuring that toolchain's Cargo/Rustup directories itself. A missing `cargo` command on PATH does not imply that this fallback is unavailable. The current workspace's existing isolated Rust 1.100.0 toolchain includes the Wasm target; V1.04 was built with it and all **52 native tests passed**. `python3 scripts/build.py` embeds the compiled module in `dist/index.html`.
+The build helper runs native Cargo tests, compiles an optimized `wasm32-unknown-unknown` module, and copies it to `engine/perfect_pour_engine.wasm`. It uses Cargo from PATH or the isolated project toolchain at `engine/.toolchain` when available, configuring that toolchain's Cargo/Rustup directories itself. A missing `cargo` command on PATH does not imply that this fallback is unavailable. The current workspace's existing isolated Rust 1.100.0 toolchain includes the Wasm target; V1.06 was built with it and all **58 native tests passed**, including 448 iced catalog cases. `python3 scripts/build.py` embeds the compiled module in `dist/index.html`.
 
 The retained `v101-business-acceptance.mjs`, `v102-balance.mjs`, and `v103-recipes.mjs` filenames check the current engine. Balance `--write` refreshes [balance-report.json](balance-report.json), including the engine hash and method. The existing 6,048 single-soda catalog/mode fixtures exercise four bases, four cups, seven targets, three tap levels, three pressures, three blends, and two modes. Native mixture coverage adds **3,024 Gentle cases**: twelve ordered base pairs, three proportions, four cups, seven targets, and three tap levels. Each retains a five-star fill and mix solution with visible foam. Career simulations use synthetic timing errors; they are sensitivity scenarios, not measured player performance. These checks do not simulate browser focus, rendering, mobile hardware, or audio.
 
@@ -42,6 +43,14 @@ Customer **six** is the first mixed order and requests half of each soda. Subseq
 
 The ordered recipe sets the quoted premium: 40 cents per cherry, 35 cents for lime, 50 cents per syrup pump, 25 cents for a nonregular water blend, and **60 cents for a two-soda mix**. A mix's base price weights the two requested soda prices by their requested shares. Selected add-ins cost 8, 10, and 12 cents respectively, charged once at final service. Each soda's actual poured volume sets its liquid ingredient cost, including wasted beverage; the 15-cent cup/supply charge also occurs only once. Water-blend gas multipliers remain 1.08 / 1 / 0.92 and liquid cost multipliers remain 0.9 / 1 / 1.15. These are game tuning values. Garnishes do not displace liquid or secretly change the fill target.
 
+## Optional ice
+
+`set_ice(0|1|2)` chooses zero, one or two free scoops before the first accepted hold. A scoop renders three cubes. Ice is an optional player choice, not a new requested ingredient: it does not affect recipe accuracy, price, ingredient costs, capacity or target geometry. There is no melting, temperature or stock-management system in this release. The first changed ice choice starts the existing preparation clock; a repeated unchanged selection does not. Ice locks for the complete cup in both modes, including between mixed-soda parts. New orders and legacy imports default to zero ice.
+
+Ice multiplies actual foam **gas expansion** by `1 + scoops * (0.08 + 0.12 / (1 + pouredMl / 90))`. The initial 1.2/1.4 response declines as poured volume wets the cubes, while remaining visibly fizzy. The same actual liquid and entrained beverage enter the cup; only gas expansion changes. No-ice follows the released calculations exactly. Cumulative poured volume makes the response deterministic across pauses, top-ups and saved-game restoration.
+
+V106 stores the selected scoop count at formerly reserved save index 105. Save length stays 120 doubles; V101–104 imports are accepted with their original reserved ranges intact. V106 exports need V1.06 to resume them. The browser adapter migrates existing production saves into its V106 key while retaining the original V104–V101 keys unchanged.
+
 ## Input and simulation
 
 `set_pressure(0|1|2)` selects Gentle, Classic, or Rush before the first hold. `begin_pour()` returns 1 only when input is accepted. Single-soda `end_pour()` still releases and scores immediately in Hardcore. Easy uses `serve()` after releasing or topping up. `set_mode(0|1)` changes difficulty between cups and clears the current streak; mode changes remain allowed before a cup's first attempt.
@@ -58,7 +67,7 @@ Patience starts at the first changed recipe selection or first hold. New request
 
 ## Scores and accounting
 
-Read **134 `f32` values** from `state_ptr()`. Indices 0–123 retain their locations and meanings. The appended fields describe the two-part pour:
+Read **136 `f32` values** from `state_ptr()`. Indices 0–123 retain their locations and meanings. The appended fields describe the two-part pour:
 
 | Index | Field | Meaning |
 | --- | --- | --- |
@@ -72,6 +81,8 @@ Read **134 `f32` values** from `state_ptr()`. Indices 0–123 retain their locat
 | 131 | `mixAccuracy` | Proportion score; `100` for a single soda |
 | 132 | `mixStars` | Mix grade using the fill-grade thresholds |
 | 133 | `isMix` | Whether this order has two sodas |
+| 134 | `selectedIce` | Optional scoops: 0, 1, 2, rendered as 0, 3, 6 cubes |
+| 135 | `iceFizzMultiplier` | Current ice gas-expansion multiplier, initially 1, 1.2, 1.4 |
 
 `accuracy` is still fill accuracy only. Recipe accuracy starts at 100 and deducts 60 for a wrong first base, 15 per cherry difference, 20 for lime, 20 per syrup difference, and 20 per water-blend step, clamped to zero. Recipe grade is exact recipe = 5, 80+ = 4, 60+ = 3, 40+ = 2, lower = 1.
 
@@ -83,7 +94,7 @@ Operating costs never create debt or spend reserved payroll. Current and cumulat
 
 ## Save compatibility
 
-The writable save buffer contains **120 `f64` values**, version **104**. Version 101 uses its original 80 values, zero-padded to 120. Versions 102 and 103 use their original 120 values. Call `save_ptr()` once before writing, since each call refreshes the buffer from the live game.
+The writable save buffer contains **120 `f64` values**, version **106**. Slot 105 stores ice, and slots 106–119 remain reserved zero. V104 imports keep their original reserved 105–119 validation and default to no ice. Version 101 uses its original 80 values, zero-padded to 120. Versions 102, 103 and 104 use their original 120 values. Call `save_ptr()` once before writing, since each call refreshes the buffer from the live game.
 
 ```js
 const pointer = game.save_ptr();
@@ -110,6 +121,6 @@ V104 keeps recipe data at indices 83–96 and uses eight formerly reserved value
 | 103 | `firstFoamBeverage` |
 | 104 | `firstPouredMl` |
 
-Reserved **105–119** must remain zero. Legacy versions retain their original reserved-range validation. Current-part state, total/first-component consistency, volume bounds, owned ingredients, and paid grades are checked before any live state changes. Paid mixed saves canonicalize first and total beverage to their committed settled amounts, keeping ratio, fill, and receipts fixed during the final foam animation. The browser writes V104 to a distinct storage key so older tabs cannot replace new-format progress.
+V106 stores optional ice at **105**. Reserved **106–119** must remain zero; V104 imports still require **105–119** to be zero. Legacy versions retain their original reserved-range validation. Current-part state, total/first-component consistency, volume bounds, owned ingredients, and paid grades are checked before any live state changes. Paid mixed saves canonicalize first and total beverage to their committed settled amounts, keeping ratio, fill, and receipts fixed during the final foam animation. The production adapter writes V106 to `perfect-pour-business-v106`. It may read older production keys for migration but never modifies them. Importing an older export does not modify the original file.
 
 This local save format prevents accidental duplicate payments and malformed imports. It is not server authentication or anti-cheat protection.
