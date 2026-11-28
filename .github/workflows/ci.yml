@@ -44,6 +44,12 @@ jobs:
       - name: Test UI and save adapter contracts
         run: node tests/browser/v102-ui-contract.mjs
 
+      - name: Test physical glass and bounded pour effects
+        run: node tests/browser/v105-pour-visuals.mjs
+
+      - name: Test stable photographic customer reactions
+        run: node tests/browser/v105-customers.mjs
+
       - name: Test startup menu and saved career safety
         run: node tests/browser/v1032-menu.mjs
 

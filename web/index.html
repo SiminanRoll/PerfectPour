@@ -5,9 +5,10 @@
   <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
   <meta name="theme-color" content="#124c4c">
   <meta name="description" content="A little soda shop. A perfect pour. An offline soda-pouring and shop-building game. One pour, happy customers, and a business of your own.">
-  <title>Perfect Pour V1.04.2 · Your soda story</title>
+  <title>Perfect Pour V1.05 · Your soda story</title>
   <link rel="icon" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA2NCA2NCI+PHJlY3Qgd2lkdGg9IjY0IiBoZWlnaHQ9IjY0IiByeD0iMTUiIGZpbGw9IiMxNzRiNDkiLz48cGF0aCBkPSJNMTggMTdoMzBsLTQgMzZIMjJ6IiBmaWxsPSIjZmZjYzZjIi8+PHBhdGggZD0iTTM0IDE4IDM5IDhoMTFNMTYgMTdoMzQiIGZpbGw9Im5vbmUiIHN0cm9rZT0iI2ZmZmFmMCIgc3Ryb2tlLXdpZHRoPSI0IiBzdHJva2UtbGluZWNhcD0icm91bmQiLz48Y2lyY2xlIGN4PSIyOCIgY3k9IjM1IiByPSIyIiBmaWxsPSIjMTc0YjQ5Ii8+PGNpcmNsZSBjeD0iMzkiIGN5PSIzNSIgcj0iMiIgZmlsbD0iIzE3NGI0OSIvPjxwYXRoIGQ9Ik0yOCA0NHE2IDYgMTEgMCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjMTc0YjQ5IiBzdHJva2Utd2lkdGg9IjMiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIvPjwvc3ZnPg==">
   <!-- STYLE -->
+  <!-- ASSET_STYLE -->
 </head>
 <body data-game-mode="intro" data-difficulty="hardcore">
     <div class="utility global-utility">
@@ -54,7 +55,7 @@
 
     <section class="pour-area" aria-label="Soda pouring station">
       <details class="pressure-control" id="pressure-controls"><summary><span>Pressure</span><strong id="pressure-summary">Classic</strong></summary><div role="group" aria-label="Tap pressure"><div class="pressure-heading"><span>PRESSURE</span><span id="pressure-note">Classic flow</span></div><div class="pressure-buttons"><button id="pressure-gentle" aria-pressed="false"><span class="pressure-art gentle" aria-hidden="true">▂</span><strong>Gentle</strong><small>Less fizz</small></button><button id="pressure-classic" class="active" aria-pressed="true"><span class="pressure-art classic" aria-hidden="true">▂▅</span><strong>Classic</strong><small>Balanced</small></button><button id="pressure-rush" aria-pressed="false"><span class="pressure-art rush" aria-hidden="true">▂▅▇</span><strong>Rush</strong><small>Faster</small></button></div></div></details>
-      <div class="tap-machine" aria-hidden="true"><div class="tap-badge"><span class="tap-dot"></span><span id="tap-name">SUNSET ORANGE</span></div><div class="tap-neck"></div><div class="tap-nozzle"></div></div>
+      <div class="tap-machine" aria-hidden="true"><div class="tap-mount"><i></i><i></i></div><div class="tap-support"></div><div class="tap-badge"><span class="tap-dot"></span><span id="tap-name">SUNSET ORANGE</span></div><div class="tap-neck"></div><div class="tap-nozzle"></div></div>
       <div class="station-target"><span>TARGET</span><strong id="station-target">65%</strong></div>
       <canvas id="game-canvas" width="420" height="440" aria-label="Cup showing the soda level, foam, and requested fill line"></canvas>
       <div class="live-message" id="live-message">Leave room for fizz</div><div id="milestone-badge" class="milestone-badge" hidden></div>
@@ -103,7 +104,7 @@
     <div class="store-hero">
       <div class="store-intro"><div class="modal-eyebrow">YOUR NEIGHBORHOOD FAVORITE</div><h1>Your soda bar.</h1><p id="store-description">Your next chapter starts here.</p></div>
       <div class="business-goal-card"><div><span class="goal-symbol" aria-hidden="true">✦</span><strong id="business-goal">A sign with personality</strong></div><div class="business-progress-track" aria-hidden="true"><i id="business-progress"></i></div><p id="staff-activity">A one-person dream, for now.</p></div>
-      <div id="store-art" class="store-art" aria-label="Your illustrated soda bar"></div>
+      <div id="store-art" class="store-art" aria-label="Your soda bar"></div>
       <div class="store-scoreboard"><div><span aria-label="Cash available to spend">SPENDABLE</span><strong id="store-spendable">$0.00</strong></div><div><span aria-label="Wages set aside">WAGES HELD</span><strong id="store-reserve">$0.00</strong></div><div><span>TOTAL SALES</span><strong id="store-lifetime">$0.00</strong></div></div>
     </div>
     <div class="store-management">
@@ -130,65 +131,9 @@
       <button class="title-start" id="intro-start"><span class="start-spark" aria-hidden="true">✦</span><span>START</span><span class="start-spark" aria-hidden="true">✦</span></button>
     </div>
     <div class="intro-art" aria-hidden="true">
-      <svg class="title-soda" viewBox="0 0 620 650" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <defs>
-          <linearGradient id="intro-glass" x1="170" y1="190" x2="440" y2="530" gradientUnits="userSpaceOnUse"><stop stop-color="#fff8d7" stop-opacity=".38"/><stop offset=".45" stop-color="#ecf9dc" stop-opacity=".07"/><stop offset="1" stop-color="#d4efd6" stop-opacity=".3"/></linearGradient>
-          <linearGradient id="intro-soda" x1="315" y1="280" x2="315" y2="565" gradientUnits="userSpaceOnUse"><stop stop-color="#ffcb68"/><stop offset=".38" stop-color="#f9a63d"/><stop offset="1" stop-color="#ee793e"/></linearGradient>
-          <linearGradient id="intro-medal" x1="261" y1="387" x2="358" y2="475" gradientUnits="userSpaceOnUse"><stop stop-color="#fff7c8"/><stop offset="1" stop-color="#efc26d"/></linearGradient>
-          <clipPath id="intro-cup-clip"><path d="M185 187Q314 212 443 187L400 540Q314 558 229 540Z"/></clipPath>
-        </defs>
-        <circle class="intro-halo" cx="312" cy="333" r="235" fill="#4e8b72" fill-opacity=".31"/>
-        <circle cx="312" cy="333" r="206" stroke="#b3d6ab" stroke-opacity=".22" stroke-width="2" stroke-dasharray="3 16"/>
-        <ellipse class="intro-ground-shadow" cx="315" cy="590" rx="190" ry="23" fill="#062f31" fill-opacity=".55"/>
-        <ellipse cx="315" cy="581" rx="148" ry="11" fill="#add4a6" fill-opacity=".14"/>
-        <g class="intro-cherry">
-          <path d="M89 399Q107 350 151 339M117 412Q120 361 151 339" stroke="#b8d6a1" stroke-width="8" stroke-linecap="round"/>
-          <path d="M143 348Q141 318 175 319Q174 343 143 348Z" fill="#89ba6d" stroke="#174e46" stroke-width="3"/>
-          <circle cx="82" cy="421" r="30" fill="#de6d79" stroke="#153f3e" stroke-width="4"/>
-          <circle cx="126" cy="432" r="31" fill="#d84c66" stroke="#153f3e" stroke-width="4"/>
-          <path d="M65 409Q68 400 79 400M109 418Q111 411 121 410" stroke="#ffbac1" stroke-width="6" stroke-linecap="round"/>
-        </g>
-        <g class="intro-lime">
-          <path d="M492 215L559 282A94 94 0 0 1 425 282Z" fill="#b6d777" stroke="#153f3e" stroke-width="5" stroke-linejoin="round"/>
-          <path d="M492 231L545 283A77 77 0 0 1 439 283Z" fill="#f1ecc0" stroke="#7eaa58" stroke-width="4"/>
-          <path d="m492 240 34 45m-34-45 0 59m0-59-34 45" stroke="#96b966" stroke-width="4" stroke-linecap="round"/>
-        </g>
-        <g class="intro-glass-group">
-          <path d="M346 362 397 98 464 77" stroke="#133f3e" stroke-width="22" stroke-linecap="round" stroke-linejoin="round"/>
-          <path d="M346 362 397 98 464 77" stroke="#f58d7b" stroke-width="14" stroke-linecap="round" stroke-linejoin="round"/>
-          <path d="m382 166 12 3m-18 29 12 3m-18 29 12 3m20-131 9 11m17-20 9 11" stroke="#fff0cc" stroke-width="8"/>
-          <path d="M177 177Q313 149 451 177L407 548Q315 574 222 548Z" fill="url(#intro-glass)" stroke="#123d3a" stroke-width="6"/>
-          <g clip-path="url(#intro-cup-clip)">
-            <g class="intro-liquid">
-              <path d="M151 302Q211 287 270 301T389 299T507 301V579H151Z" fill="url(#intro-soda)"/>
-              <path d="M154 298Q175 285 192 295Q209 281 227 294Q249 279 269 293Q289 280 312 293Q334 277 355 291Q376 279 397 293Q419 281 440 293Q463 278 486 293L490 311Q421 320 355 310T225 312T154 310Z" fill="#fff4c7"/>
-              <path d="M150 318Q214 304 277 318T403 316T504 317" stroke="#ffda89" stroke-width="7" stroke-opacity=".7"/>
-              <g class="intro-fizz fizz-one" fill="#ffe9a8"><circle cx="256" cy="485" r="6"/><circle cx="336" cy="456" r="4"/><circle cx="383" cy="510" r="7"/></g>
-              <g class="intro-fizz fizz-two" fill="#fff0bd"><circle cx="284" cy="518" r="4"/><circle cx="363" cy="477" r="5"/><circle cx="236" cy="445" r="3"/></g>
-              <g class="intro-fizz fizz-three" stroke="#ffeeb1" stroke-width="2"><circle cx="307" cy="490" r="7"/><circle cx="394" cy="418" r="5"/><circle cx="272" cy="396" r="4"/></g>
-            </g>
-          </g>
-          <path d="M177 177Q313 149 451 177Q314 211 177 177Z" fill="#fff5cf" fill-opacity=".22" stroke="#b6d5bc" stroke-width="5"/>
-          <path d="M192 202 233 531M430 203 393 528" stroke="#fff6d7" stroke-opacity=".43" stroke-width="7" stroke-linecap="round"/>
-          <path d="M210 229 222 333" stroke="#fff9dc" stroke-opacity=".5" stroke-width="13" stroke-linecap="round"/>
-          <path d="M228 548Q315 568 402 548" stroke="#d7e5bc" stroke-width="6" stroke-linecap="round"/>
-          <g class="intro-cup-mark">
-            <circle cx="313" cy="424" r="46" fill="url(#intro-medal)" stroke="#174e46" stroke-width="3"/>
-            <circle cx="313" cy="424" r="39" stroke="#dba250" stroke-width="1.5"/>
-            <path d="M292 408h42l-5 39h-32Z" fill="#f8c866" stroke="#174e46" stroke-width="3.5" stroke-linejoin="round"/>
-            <path d="M289 408h48m-25 0 7-14h14" stroke="#174e46" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/>
-            <circle cx="306" cy="423" r="2.5" fill="#174e46"/><circle cx="320" cy="423" r="2.5" fill="#174e46"/>
-            <path d="M306 434q7 7 14 0" stroke="#174e46" stroke-width="3.5" stroke-linecap="round"/>
-          </g>
-          <path class="intro-glint" d="m403 237 5 18 18 5-18 5-5 18-5-18-18-5 18-5Z" fill="#fff5c5"/>
-        </g>
-        <g class="intro-spark spark-one" fill="#f7c96c"><path d="m142 201 6 20 20 6-20 6-6 20-6-20-20-6 20-6Z"/></g>
-        <g class="intro-spark spark-two" fill="#f1d992"><path d="m481 445 5 15 15 5-15 5-5 15-5-15-15-5 15-5Z"/></g>
-        <g class="intro-spark spark-three" fill="#d5e7b8"><path d="m234 93 4 12 12 4-12 4-4 12-4-12-12-4 12-4Z"/></g>
-        <g class="intro-air-bubbles" stroke="#b5d3ac" stroke-width="3"><circle cx="171" cy="325" r="9"/><circle cx="453" cy="362" r="7"/><circle cx="105" cy="270" r="5"/><circle cx="506" cy="176" r="7"/><circle cx="366" cy="73" r="4"/></g>
-      </svg>
+      <div class="title-soda hero-soda" role="presentation"></div>
     </div>
-    <span class="title-version">V1.04.2</span>
+    <span class="title-version">V1.05</span>
   </section>
 </div>
 
@@ -204,7 +149,7 @@
         <button class="menu-action menu-settings" id="menu-settings"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M4 17h16"/><circle cx="9" cy="7" r="3"/><circle cx="15" cy="17" r="3"/></svg><span>SETTINGS</span></button>
       </nav>
     </div>
-    <span class="title-version">V1.04.2</span>
+    <span class="title-version">V1.05</span>
   </section>
 </div>
 <p id="boot-error" class="title-boot-error" role="alert" hidden></p>
@@ -251,6 +196,7 @@
 <!-- CUP_FINISH_SCRIPT -->
 <!-- RECIPE_ART -->
 <!-- CONTROL_FLOW -->
+<!-- POUR_VISUALS -->
 <!-- GAME_SCRIPT -->
 </body>
 </html>

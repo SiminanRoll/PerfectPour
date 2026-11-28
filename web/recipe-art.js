@@ -1,4 +1,4 @@
-/* Original, dependency-free ingredients for Perfect Pour V1.04. */
+/* Original, dependency-free ingredients for Perfect Pour V1.05. */
 (() => {
   'use strict';
   const ink='#174b49', cream='#fff4d9';
@@ -85,11 +85,15 @@
   }
 
   function drawCherry(ctx,x,y,r,turn) {
-    ctx.save();ctx.translate(x,y);ctx.rotate(turn);
-    ctx.lineCap='round';ctx.lineJoin='round';
-    ctx.beginPath();ctx.moveTo(0,-r*.6);ctx.quadraticCurveTo(r*.9,-r*1.7,r*.35,-r*2.2);ctx.strokeStyle='#597d48';ctx.lineWidth=2.3;ctx.stroke();
-    ctx.beginPath();ctx.moveTo(0,-r*.7);ctx.bezierCurveTo(-r*.65,-r*1.3,-r*1.3,-r*.2,-r*.95,r*.5);ctx.bezierCurveTo(-r*.4,r*1.35,r*.35,r*1.3,r*.95,r*.45);ctx.bezierCurveTo(r*1.3,-r*.25,r*.65,-r*1.3,0,-r*.7);ctx.fillStyle='#c95167';ctx.fill();ctx.strokeStyle='#753c49';ctx.lineWidth=1.4;ctx.stroke();
-    ctx.beginPath();ctx.ellipse(-r*.42,-r*.22,r*.19,r*.35,.35,0,Math.PI*2);ctx.fillStyle='#ffb1af';ctx.fill();ctx.restore();
+    ctx.save();ctx.translate(x,y);ctx.rotate(turn);ctx.lineCap='round';ctx.lineJoin='round';
+    ctx.beginPath();ctx.moveTo(0,-r*.6);ctx.quadraticCurveTo(r*.9,-r*1.7,r*.35,-r*2.2);ctx.strokeStyle='#4e6332';ctx.lineWidth=1.25;ctx.stroke();
+    const skin=ctx.createRadialGradient(-r*.4,-r*.48,r*.08,r*.15,r*.25,r*1.2);
+    skin.addColorStop(0,'#fa6663');skin.addColorStop(.26,'#d8313f');skin.addColorStop(.65,'#9e132a');skin.addColorStop(1,'#4f0b1d');
+    ctx.beginPath();ctx.moveTo(0,-r*.7);ctx.bezierCurveTo(-r*.65,-r*1.3,-r*1.3,-r*.2,-r*.95,r*.5);ctx.bezierCurveTo(-r*.4,r*1.35,r*.35,r*1.3,r*.95,r*.45);ctx.bezierCurveTo(r*1.3,-r*.25,r*.65,-r*1.3,0,-r*.7);ctx.fillStyle=skin;ctx.fill();
+    ctx.strokeStyle='#66122170';ctx.lineWidth=.6;ctx.stroke();
+    ctx.beginPath();ctx.ellipse(-r*.42,-r*.3,r*.13,r*.27,.45,0,Math.PI*2);ctx.fillStyle='#fff5dfba';ctx.fill();
+    ctx.beginPath();ctx.ellipse(-r*.2,-r*.58,r*.08,r*.04,-.3,0,Math.PI*2);ctx.fillStyle='#fffaf4';ctx.fill();
+    ctx.beginPath();ctx.ellipse(r*.25,r*.64,r*.4,r*.13,-.3,0,Math.PI*2);ctx.fillStyle='#f84a4235';ctx.fill();ctx.restore();
   }
 
   // Caller clips this layer to the same cup path used for liquid. Garnishes do
@@ -120,20 +124,30 @@
       const r=9.2,y=g.bottom-42-i*3;
       const height=g.cup?.height||g.bottom-g.top;
       const offset=Math.min(36,g.width((g.bottom-y)/height)/2-r*1.35-3);
-      drawCherry(ctx,260+(i===0?-offset:offset),y,r,i===0?-.16:.2);
+      const falling=options.drop?.kind==='cherries'&&i===options.drop.count-1;
+      const lift=falling?42*(1-clamp(options.drop.progress,0,1))**2:0;
+      drawCherry(ctx,260+(i===0?-offset:offset),y-lift,r,i===0?-.16:.2);
     }
     ctx.restore();
   }
 
   function drawRim(ctx,options={}) {
     const g=options.geometry;if(!g||!ctx||!count(options.lime,1))return;
-    const x=260+g.width(1)*.43,y=g.top+2,r=20;
-    ctx.save();ctx.translate(x,y);ctx.rotate(-.6);ctx.lineJoin='round';
-    ctx.beginPath();ctx.moveTo(-r,0);ctx.arc(0,0,r,Math.PI,0,false);ctx.closePath();ctx.fillStyle='#79ad57';ctx.strokeStyle='#376e45';ctx.lineWidth=2.2;ctx.fill();ctx.stroke();
-    ctx.beginPath();ctx.moveTo(-r+4,-1);ctx.arc(0,-1,r-4,Math.PI,0,false);ctx.closePath();ctx.fillStyle='#d9ed9d';ctx.fill();
-    ctx.strokeStyle='#98c06b';ctx.lineWidth=1.6;ctx.beginPath();ctx.moveTo(0,-2);ctx.lineTo(-11,-11);ctx.moveTo(0,-2);ctx.lineTo(0,-16);ctx.moveTo(0,-2);ctx.lineTo(11,-11);ctx.stroke();
-    ctx.strokeStyle='#f2f5c4';ctx.lineWidth=2.2;ctx.beginPath();ctx.moveTo(-15,-2);ctx.lineTo(15,-2);ctx.stroke();
-    ctx.restore();
+    const lift=options.drop?.kind==='lime'?35*(1-clamp(options.drop.progress,0,1))**2:0;
+    const x=260+g.width(1)*.43,y=g.top+2-lift,r=21;
+    ctx.save();ctx.translate(x,y);ctx.rotate(-.55);ctx.lineJoin='round';
+    const peel=ctx.createLinearGradient(-r,-r,r,2);peel.addColorStop(0,'#a2ba34');peel.addColorStop(.4,'#698a20');peel.addColorStop(1,'#334c14');
+    ctx.beginPath();ctx.moveTo(-r,0);ctx.arc(0,0,r,Math.PI,0,false);ctx.closePath();ctx.fillStyle=peel;ctx.fill();ctx.strokeStyle='#d1db7d';ctx.lineWidth=.7;ctx.stroke();
+    ctx.beginPath();ctx.moveTo(-r+2,-.5);ctx.arc(0,-.5,r-2,Math.PI,0,false);ctx.closePath();ctx.fillStyle='#e4e5b5';ctx.fill();
+    const flesh=ctx.createRadialGradient(-7,-13,1,0,-1,r);flesh.addColorStop(0,'#faf0b6');flesh.addColorStop(.35,'#d5d783');flesh.addColorStop(1,'#9eaf44');
+    ctx.beginPath();ctx.moveTo(-r+4,-1);ctx.arc(0,-1,r-4,Math.PI,0,false);ctx.closePath();ctx.fillStyle=flesh;ctx.fill();
+    for(let i=1;i<6;i++){
+      const a=Math.PI+i*Math.PI/6;ctx.beginPath();ctx.moveTo(0,-1.5);ctx.lineTo(Math.cos(a)*(r-4),Math.sin(a)*(r-4)-1);ctx.strokeStyle='#f7f0c8d9';ctx.lineWidth=1;ctx.stroke();
+    }
+    for(let i=0;i<26;i++){
+      const a=Math.PI+((i*1.618)%1)*Math.PI,rr=4+(i*13%11);ctx.beginPath();ctx.ellipse(Math.cos(a)*rr,Math.sin(a)*rr-1,.4,1.1,a+.2,0,Math.PI*2);ctx.fillStyle=i%3?'#fffce97a':'#63762045';ctx.fill();
+    }
+    ctx.beginPath();ctx.moveTo(-r+2,-.6);ctx.lineTo(r-2,-.6);ctx.strokeStyle='#f4efc8';ctx.lineWidth=1.3;ctx.stroke();ctx.restore();
   }
 
   window.PourRecipeArt=Object.freeze({icon,tint,mixColor,renderRatioOrder,drawInside,drawRim});
