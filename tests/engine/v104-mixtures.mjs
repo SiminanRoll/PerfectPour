@@ -156,7 +156,7 @@ for(const name of ['preparing','partial-hardcore','partial-easy','paid','staffed
 }
 checks.push('five genuine released 103 fixtures preserve all 124 historical snapshot fields, current recipes and ledger state while migrating to 106 without retroactive mixtures');
 
-for(const [index,badValue] of [[97,5],[97,introductory[3]],[98,0],[98,.4],[98,1],[99,2],[99,1],[100,1],[101,1],[102,1],[103,1],[104,1],[106,1],[119,1]]){
+for(const [index,badValue] of [[97,5],[97,introductory[3]],[98,0],[98,.4],[98,1],[99,2],[99,1],[100,1],[101,1],[102,1],[103,1],[104,1],[115,1],[119,1]]){
   const corrupt=[...introductory];corrupt[index]=badValue;const before=state();
   assert.equal(restore(corrupt),0,`Malformed mixture field${index}=${badValue} rejects`);assert.deepEqual(state(),before);
 }

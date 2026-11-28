@@ -673,7 +673,7 @@ fn malformed_mix_states_and_paid_ratio_grades_are_rejected() {
     pour_part_ml(&mut g, amount); let waiting = g.save();
     for (index, value) in [(97, 0.0), (97, 5.0), (98, 1.0), (98, 0.4), (99, 0.0), (99, 2.0),
         (100, 2.0), (101, -1.0), (101, waiting[6] + 1.0), (102, waiting[7] + 1.0),
-        (103, waiting[8] + 1.0), (104, waiting[55] + 1.0), (104, 0.0), (106, 1.0), (83, 2.0), (86, 0.0)] {
+        (103, waiting[8] + 1.0), (104, waiting[55] + 1.0), (104, 0.0), (115, 1.0), (83, 2.0), (86, 0.0)] {
         let mut bad = waiting; bad[index] = value; assert!(Game::restore(&bad).is_none(), "mix field {index}");
     }
     pour_part_ml(&mut g, amount); let paid = g.save(); assert_eq!(g.stars, 5);
@@ -813,7 +813,7 @@ fn iced_mixed_pours_conserve_both_sodas_and_share_physics_between_modes() {
 fn ice_saves_preserve_preparation_resume_and_one_time_payment() {
     let mut preparing = Game::new(106);
     assert!(preparing.set_ice(2));
-    let saved = preparing.save(); assert_eq!(saved[0], 106.0); assert_eq!(saved[105], 2.0);
+    let saved = preparing.save(); assert_eq!(saved[0], 107.0); assert_eq!(saved[105], 2.0);
     let restored = Game::restore(&saved).unwrap(); assert_eq!(restored.selected_ice, 2); assert!(!restored.attempted);
     let mut hard = mixed(0,3,0.5); assert!(hard.set_ice(1)); assert!(hard.begin_ready()); advance(&mut hard,0.5,120);
     let mut restored = Game::restore(&hard.save()).unwrap();
