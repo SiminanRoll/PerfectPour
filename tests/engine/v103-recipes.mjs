@@ -68,6 +68,6 @@ for(const name of ['untouched','paid','partial-hardcore','partial-easy']){
 }
 checks.push('Four genuine102 fixtures match every original98 snapshot field on restore; migration adds no retroactive recipe costs or duplicate payments');
 
-e.reset(99);perfect();const committed=save();for(const [index,badValue]of [[83,3],[84,1],[85,1],[87,5],[92,2],[96,12],[106,1],[88,0]]){const bad=[...committed];bad[index]=badValue;const before=s();assert.equal(restore(bad),0,`invalid recipe field${index}`);assert.deepEqual(s(),before);}
+e.reset(99);perfect();const committed=save();for(const [index,badValue]of [[83,3],[84,1],[85,1],[87,5],[92,2],[96,12],[115,1],[88,0]]){const bad=[...committed];bad[index]=badValue;const before=s();assert.equal(restore(bad),0,`invalid recipe field${index}`);assert.deepEqual(s(),before);}
 checks.push('Malformed recipe/import data rejects atomically, including inconsistent paid recipe grades');
 console.log(JSON.stringify({result:'PASS',version:contract.version,snapshotFields:148,saveFields:120,checks},null,2));
