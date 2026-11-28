@@ -56,6 +56,9 @@ jobs:
       - name: Test music scheduling and mute lifecycle
         run: node tests/audio/music-lifecycle.mjs
 
+      - name: Test ice wall contact, bounded rotation and float
+        run: node tests/browser/v106-ice-motion.mjs
+
       - name: Test pour, fizz, and feedback effects
         run: node tests/audio/game-sounds.mjs
 
