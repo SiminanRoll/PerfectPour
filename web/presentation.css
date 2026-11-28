@@ -1,0 +1,260 @@
+/* V1.05 · A photographic soda bar. The aiming stage never reflows mid-pour. */
+:root{--ink:#1b3b35;--deep:#102d29;--muted:#69766f;--paper:#fcfbf7;--cream:#f1eee5;--mint:#d8e0d9;--yellow:#e8ba69;--line:#183c3424;--shadow:0 12px 40px #082c2918;font-family:Avenir,"Segoe UI",Arial,sans-serif}
+html,body{background:#102c28;color:var(--ink)}
+.game-shell{background:var(--paper)}
+.topbar{background:#153b35;color:#f5f5e9;border-bottom:1px solid #e8c78328}
+.brand-icon{filter:drop-shadow(0 2px 3px #00191644)}
+.brand-period{color:#e6b65d}.hud-item strong{font-weight:650;letter-spacing:-.5px}.hud-item strong small{color:#c5d1c9}.star-icon{color:#e8bd70}
+.global-utility{color:#e5ece5}.global-utility .icon-button:hover:not(:disabled){background:#ffffff15;border-color:#ffffff20}.global-utility .icon-button:disabled{opacity:.4}
+.shop-rail{background:#f2f3ed;border-bottom:1px solid #193f3522;box-shadow:0 2px 12px #123b3011}
+.view-tabs{background:#dfe6dd;border:1px solid #d9e0d5}.view-tabs button{border-radius:8px;font-weight:650}.view-tabs button.active{background:#234d40;box-shadow:0 2px 5px #153f3028}.mode-switch button{border-radius:8px}.mode-switch button.active{background:#e4d7b8;border-color:#cab98d;box-shadow:none}
+.playfield{background:#bac6ba;grid-template-columns:minmax(190px,.8fr) minmax(260px,1.45fr) minmax(230px,.85fr);gap:18px;padding:14px 26px 0}
+.wall-pattern{z-index:-5;background-image:linear-gradient(90deg,#122e2b12,#d1d9b936 52%,#102c2a35),var(--bar-photo,linear-gradient(#819589,#d6d8bc));background-position:center,center 58%;background-size:cover;filter:saturate(.82)}
+.playfield:after{content:"";position:absolute;inset:0;z-index:-4;pointer-events:none;background:radial-gradient(ellipse at 50% 56%,#ecf3db57 0,#d7dfcd16 32%,transparent 63%),linear-gradient(#152d2420,transparent 34%,#122c2510)}
+.counter-scenery{display:block;z-index:-3;opacity:.75;pointer-events:none;overflow:hidden}.counter-scenery>svg{width:100%;height:100%;display:block}
+.shop-sign,.shelf,.scene-caption{display:none!important}
+.customer-area{padding-top:26px;z-index:3}
+.order-bubble,.finish-review{border:1px solid #ffffffb0;border-radius:15px;background:#fcfbf2f2;box-shadow:0 6px 22px #17372920;backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px)}
+.order-bubble:after,.finish-review:after{display:none}
+.customer-name{font-weight:650}.customer-name>span+span{color:#7a8379;font-size:11px;text-transform:uppercase;letter-spacing:.5px}.order-bubble p{font-weight:500}#order-line strong{font-weight:750}
+.customer-patience{color:#6c7d70}.patience-meter{background:#dadfd6}.patience-meter i{background:#77946c}
+.customer-art,.customer-area .customer-art{display:block;left:50%;bottom:24px;height:min(310px,calc(100% - 155px));width:auto;aspect-ratio:4/5;max-width:100%;filter:drop-shadow(4px 8px 8px #112e2526)}
+.customer-art svg{overflow:visible}
+.pour-area,body[data-control-stage="prep"] .pour-area{--cup-clearance:84px;--cup-bottom:24px}
+.pour-area canvas,.pour-area .tap-machine{--cup-height:min(510px,max(64px,calc(100cqh - var(--cup-clearance))),calc(100cqw * 1.047619))}
+.pour-area canvas,body[data-control-stage="prep"] .pour-area canvas{bottom:var(--cup-bottom);filter:drop-shadow(0 1px 1px #233c2c0a)}
+.tap-machine,body[data-control-stage="prep"] .tap-machine{display:block;width:156px;height:72px;top:auto;bottom:calc(var(--cup-bottom) + var(--cup-height) * .943182);z-index:4;filter:drop-shadow(3px 4px 4px #0d271f30)}
+.tap-mount{position:absolute;left:calc(50% + 9px);top:5px;width:90px;height:45px;border:1px solid #3c4d45;border-radius:6px;background:linear-gradient(90deg,#32443c,#6b8070 8%,#d0d4c0 14%,#617165 28%,#2a4036 90%,#b6bdac);box-shadow:inset 0 1px 0 #f7f2d390,0 2px 2px #0d261d44}
+.tap-mount i{position:absolute;right:6px;top:6px;width:4px;height:4px;border-radius:50%;background:#b7ba9c;border:1px solid #283f34;box-shadow:0 1px 0 #e5e4ce}.tap-mount i+i{top:auto;bottom:6px}
+.tap-support{position:absolute;top:18px;left:50%;height:19px;width:92px;border:1px solid #5f6f5d;border-radius:20px;background:linear-gradient(#253b31,#ecf0d1 16%,#b5bda9 36%,#4d5a4a 64%,#1b3028 82%,#84937c);box-shadow:0 4px 6px #0b251e3d}
+.tap-badge{display:flex;position:absolute;left:calc(50% + 34px);top:11px;width:49px;height:32px;min-height:0;padding:0;border:1px solid #bba976;border-radius:3px;box-shadow:inset 0 1px 0 #f6efc590;background:linear-gradient(130deg,#e1d0a0,#ae9561 46%,#f1e4b9);color:#263b2e}
+.tap-badge #tap-name{display:none}.tap-dot{width:16px;height:16px;border:1px solid #6a745a;box-shadow:inset 2px 1px 3px #fff7c780,0 1px 0 #fff9d966;background:radial-gradient(circle at 30% 22%,#fff1c9,var(--soda) 53%,#403b2160)}
+.tap-neck{position:absolute;left:calc(50% - 13px);top:12px;width:26px;height:48px;margin:0;border:1px solid #3d5143;border-radius:9px 9px 5px 5px;background:linear-gradient(90deg,#2e433a,#abb9a1 17%,#eff3d6 30%,#b9c2aa 44%,#40584a 77%,#a1b29a);box-shadow:inset 0 1px 0 #fff9dd}
+.tap-nozzle{left:calc(50% - 17px);bottom:0;width:34px;height:19px;border:1px solid #3d5143;border-radius:4px 4px 10px 10px;background:linear-gradient(90deg,#273d33,#9caa91 19%,#dce2c5 36%,#5a6e58 69%,#273a30);box-shadow:inset 0 3px 0 #c9d1b38c,inset 0 -3px 0 #1b2c22}
+.tap-machine:after{left:calc(50% - 7px);right:auto;top:-10px;width:14px;height:35px;border:1px solid #483b25;border-radius:6px;background:linear-gradient(90deg,#9a6d37,#e8c281 31%,#dfbb7c 56%,#725535);box-shadow:inset 0 1px 0 #fff0ba,1px 1px 2px #26342455;transform-origin:50% 88%;transition:transform .12s ease-out}
+.tap-machine.pouring:after{transform:rotate(-22deg) translateY(1px)}.tap-machine.pouring .tap-dot{box-shadow:inset 1px 1px 2px #fff8d7,0 0 12px var(--soda)}
+.pressure-control{width:185px;top:0;border:1px solid #ffffff7a;background:#f5f4e9ee;box-shadow:0 2px 8px #1a362a14}.pressure-control>summary{min-height:40px;border-radius:8px;background:transparent}.pressure-control[open]{background:#fbfbf3;box-shadow:0 8px 22px #0b2a2340}.pressure-buttons{background:#e9ede2;border:0;box-shadow:none}.pressure-buttons button.active{border-color:#7d967a;background:#fffef8}
+.live-message{background:#f9faf0ee;border-color:#ffffff9c;box-shadow:0 2px 9px #1b38251c;border-radius:9px;color:#455e4c;font-size:13px;padding:4px 10px}
+.live-message.warning{background:#fbecdceF;border-color:#d4a16c;color:#8b4529}.live-message.ready{background:#f0f5e5;border-color:#9bb688}
+.milestone-badge{background:#ecd08b;border:1px solid #d4ad68;box-shadow:0 5px 16px #263a2433;transform:translateX(-50%);border-radius:7px;color:#624c29}
+.counter-back,body[data-control-stage="prep"] .counter-back{display:block;bottom:22px;height:30px;z-index:0;border-top:1px solid #f3edcb70;border-bottom:1px solid #273328;background:linear-gradient(#6d6753,#b6ac8b 12%,#827b61 55%,#5d5c47);box-shadow:0 -3px 9px #172a211c;transform:none}
+.counter-front,body[data-control-stage="prep"] .counter-front{display:block;bottom:0;height:24px;border-top:1px solid #e2d2aa;background:repeating-linear-gradient(2deg,transparent 0 3px,#d2b47b09 4px,transparent 5px 9px),linear-gradient(#725036,#442e24);box-shadow:inset 0 3px 6px #221b1a88;z-index:1}
+.staff-strip{bottom:2px;left:20px;padding:0;font-size:11px;color:#ecdfc4;max-width:30%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;box-shadow:none;background:transparent}
+.staff-strip>span,.staff-chip{font-size:11px;padding:3px 6px;background:#172f27dc;color:#f1e6c6;border:1px solid #ad997e4a;box-shadow:none;border-radius:6px}
+.order-ticket,body[data-control-stage="prep"] .order-ticket{height:min(292px,calc(100% - 24px));margin-bottom:24px;padding:14px;border:1px solid #ffffffae;border-radius:16px;background:#fcfbf4f2;box-shadow:0 8px 25px #17322624;backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px)}
+.order-ticket>.recipe-workbench{background:transparent}.ticket-top{color:#788376;letter-spacing:.3px}.ticket-top strong{color:#244536;font-size:17px}.recipe-workbench>.recipe-heading>strong{font-size:13px;color:#53684f}
+.recipe-workbench .base-option,.recipe-workbench .ingredient-option,.blend-options button{background:#f4f5ed;border:1px solid #dbe1d2;border-radius:9px;box-shadow:0 1px 2px #283d2210}
+.recipe-workbench .base-option[aria-pressed="true"],.recipe-workbench .ingredient-option.selected{background:#eaf0df;border-color:#77936a;box-shadow:inset 0 0 0 1px #77936a,0 3px 5px #293e2212}
+.recipe-workbench .base-option svg{width:32px;height:38px;filter:drop-shadow(1px 2px 1px #233a251c)}.ingredient-picture svg{filter:drop-shadow(1px 2px 1px #233a251c)}
+.recipe-chip,.ratio-chip{border-color:#d9dfce;background:#f8f9ee}.ratio-chip.is-active{box-shadow:inset 0 -2px 0 var(--ratio-color);background:var(--ratio-wash)}
+.pour-gauge{border-top-style:solid;border-color:#dfe3d7}.level-track{border-color:#bac6b4;background:#dfe5d7;border-radius:10px;box-shadow:inset 0 1px 3px #31462920}.level-track>span{background:linear-gradient(#ffffff22,transparent 35%),var(--soda);border-radius:8px}.level-track #foam-track{background:radial-gradient(circle at 3px 3px,#fffcdf 1px,transparent 2px) 0 0/6px 5px,linear-gradient(#fffbe5,#dac99c);border-left-color:#e5c68c;border-radius:0 7px 7px 0}.level-track>i{background:#173c2f}.level-readings{color:#5e725d}.level-readings strong{color:#294f3a}.fizz-row{color:#698063}.fizz-meter i.on{background:#a7aa6a}.target-row{color:#365741}
+.control-deck{background:#f8faf3;border-top:1px solid #d8dfd2;box-shadow:0 -4px 18px #152f2312}
+.primary-action,.pour-button{background:linear-gradient(#f3d99d,#eac47b);border:1px solid #b68a48;box-shadow:0 3px 0 #89724b,0 5px 14px #735d2530;border-radius:12px;color:#253f30;min-height:54px}
+.primary-action span,.pour-button span{font-weight:750;letter-spacing:.45px}.primary-action small,.pour-button small{color:#5d694b;font-weight:500}
+.pour-button:hover:not(:disabled){background:linear-gradient(#fbe5b0,#f0d18d)}.pour-button.pressed,.pour-button:active:not(:disabled){box-shadow:0 1px 0 #7c6946,0 2px 5px #735d2526;transform:translateY(2px)}
+.pour-button:disabled{border-color:#b9c5ae;background:linear-gradient(#edf2e7,#dce5d3);color:#73836c;box-shadow:0 2px 0 #bdc9b2}
+.easy-action{border-color:#adbe9c;box-shadow:0 2px 0 #a8b698;background:#e9efdc;color:#365737}.combo-strip strong{color:#38583b}.combo-strip span{color:#718069}.combo-strip.hot strong{color:#906c2e}.progress-dots i{background:#dce3d2}.progress-dots i.done{background:#819b72}
+.finish-review{background:#fafbf0f5;border-color:#c7d4b3}.finish-stars{color:#c59b4e}.finish-stars .empty{color:#cdd5c4}.finish-earned{color:#305b3a;font-weight:750}.finish-review h2{color:#375b3e}.finish-details{border-color:#d9e0cc;background:#f0f3e5;color:#53704b;box-shadow:none}
+body[data-control-stage="finished"] .pour-gauge{opacity:.78}
+
+/* The shop is the protagonist of Build; the selected upgrade is a compact tray. */
+.storefront-view{background:#e9eee4;grid-template-columns:minmax(0,1.3fr) minmax(300px,.85fr)}
+.store-hero{position:relative;display:grid;grid-template-columns:minmax(0,1fr);grid-template-rows:auto minmax(0,1fr) auto auto;gap:8px;padding:20px 24px 18px;background:radial-gradient(ellipse at 48% 30%,#f2f5e9,#dce7dc 75%);border-right:1px solid #cad7c9}
+.store-intro{grid-row:1;display:block;text-align:left}.store-intro h1{font-weight:650;font-size:26px;letter-spacing:-.6px}.store-intro .modal-eyebrow{display:none}
+.store-art{grid-row:2;grid-column:1;position:relative;display:grid;place-items:center;align-self:stretch;min-height:0;width:100%;height:100%;margin:0;filter:drop-shadow(0 9px 10px #133a2525)}.store-art>svg{display:block;width:100%;height:100%;max-height:none;object-fit:contain;overflow:visible}
+.business-goal-card{grid-row:3;grid-column:1;max-width:none;padding:8px 12px;background:#f9faf2bd;border:1px solid #cfdbcb;box-shadow:none;border-radius:9px}.business-goal-card>div:first-child{gap:8px}.business-goal-card strong{font-size:14px;font-weight:650}.business-goal-card p{margin:5px 0 0;font-size:12px}.goal-symbol{display:none}.business-progress-track{margin-top:5px;height:4px;background:#dce5d4}.business-progress-track>i{background:#779574}
+.store-scoreboard{grid-row:4;grid-column:1;margin:0;padding-top:6px}.store-scoreboard strong{font-size:23px;font-weight:650;color:#274d37}.store-scoreboard span{font-size:11px;letter-spacing:.5px;color:#748270}.store-scoreboard>div+div{border-color:#c5d2c0}
+.store-management{padding:18px;grid-template-rows:44px 20px minmax(0,1fr) 44px 44px;gap:7px;background:#f5f7f0}.store-heading h2{font-size:23px;letter-spacing:-.4px;font-weight:650}.store-heading .primary-button{background:#2e5942;border:1px solid #2e5942;box-shadow:none;border-radius:9px;min-height:44px}.store-rule{color:#798471;font-size:12px}
+.upgrade-grid{align-self:center;max-height:340px;width:100%;grid-auto-rows:minmax(0,1fr)}
+.upgrade-grid[data-page-size="4"]{max-height:none;align-self:stretch}
+.upgrade-card{border:1px solid #d0dcc6;border-radius:14px;background:#fffef8;box-shadow:0 4px 14px #233b2010;grid-template-columns:70px minmax(0,1fr);grid-template-rows:minmax(0,1fr) 44px auto;padding:14px;gap:10px 12px}
+.upgrade-card .upgrade-icon{width:70px;height:76px;background:radial-gradient(#e7e9d9,transparent 72%);border-radius:12px}.upgrade-card .upgrade-icon svg{width:68px;height:68px;filter:drop-shadow(2px 3px 2px #1a321d1c)}
+.upgrade-copy h3{font-size:18px;font-weight:650;color:#2a4a32;letter-spacing:-.35px}.upgrade-level{font-size:12px;color:#84907b}.upgrade-effect{font-size:14px;padding:8px 9px;border:0;border-radius:7px;background:#edf2e5;color:#3e5c39;line-height:1.35}.upgrade-timing{color:#87927e}
+.buy-button{min-height:44px;border:1px solid #b4975e;border-radius:9px;background:linear-gradient(#ead59c,#dfbf79);color:#34482e;box-shadow:0 2px 0 #a39061;font-size:13px}.buy-button strong{font-weight:750}.buy-button:disabled{border-color:#d0dac7;background:#e8eede;color:#88957e;box-shadow:none}.upgrade-status{color:#85907a;font-size:12px}.upgrade-card.maxed{background:#edf3e6;border-color:#bed1b3}.upgrade-card.maxed .buy-button{color:#587d45;background:#dfead2}
+.upgrade-info>summary{background:#f0f3e7;color:#67815b}.upgrade-info[open]>summary{background:#dce7ce}.upgrade-info-panel{border-color:#c1d0b2;background:#fafcf3;box-shadow:0 5px 14px #304a2226}.upgrade-info-panel>strong{color:#375c35}.upgrade-info-panel>p{color:#627457}
+.upgrade-pager .icon-button{border:1px solid #cbd6bf;background:#f7f9f0;border-radius:10px;color:#426538}.upgrade-pager #upgrade-page{font-size:13px;color:#738568}.business-tools{border-color:#d6dec9}.business-tools>summary{color:#6d815e}.business-tools>.business-tools-panel{background:#fbfcf4;border-color:#becfad}.business-tools .text-button{background:#eef4e4;border-color:#cedbc0}
+.store-art [data-upgrade-part]{transition:filter .18s;transform-box:fill-box;transform-origin:center}
+.store-art [data-upgrade-part].upgrade-focused{filter:drop-shadow(0 0 5px #e7b650bb)}
+.store-art [data-upgrade-part].upgrade-installed{animation:upgrade-install .6s ease-out both}
+@keyframes upgrade-install{0%{opacity:.25;transform:translateY(-5px);filter:brightness(1.2)}70%{opacity:1;transform:translateY(1px);filter:brightness(1.14)}100%{opacity:1;transform:none;filter:none}}
+
+/* A photographic introduction with the same warm light as the live counter. */
+.title-overlay{background:#102b27}.title-intro{padding:5vh 6vw 6vh;background:radial-gradient(ellipse at 80% 45%,#395c40,#102c28 70%);color:#f9f4df}
+.title-grain{display:none}.title-orbit{opacity:.3}.title-intro:after{border-color:#cbd7ba25;border-radius:22px}
+.intro-copy{gap:34px;padding-left:3vw}.title-wordmark{transform:none;animation:premium-wordmark-in .7s ease-out both;filter:none}.title-wordmark>span{font-weight:500;font-size:clamp(30px,4.4vw,65px);color:#c1d1b2;letter-spacing:.13em}.title-wordmark>strong{font-size:clamp(82px,11.5vw,165px);font-weight:750;letter-spacing:-.07em;color:#fbefd0;text-shadow:0 2px 0 #d8be86,0 5px 18px #071b1666}
+.title-start{transform:none;background:linear-gradient(#eed7a2,#d9b66d);color:#263e2d;border:1px solid #efdfb8;border-radius:12px;box-shadow:0 3px 0 #957441,0 14px 28px #061c1866;font-size:18px;letter-spacing:1.5px;animation:premium-start-in .7s .25s ease-out both}.title-start:before{border-color:#fff5d566;border-radius:8px}.title-start:not(:disabled):hover{transform:translateY(-1px);background:linear-gradient(#f9e6b7,#e8cb86);box-shadow:0 4px 0 #957441,0 14px 30px #061c1866}.title-start:not(:disabled):active{transform:translateY(3px);box-shadow:0 0 0 #957441}.start-spark{font-size:15px;color:#a17d40}
+.intro-art{height:min(90vh,920px);width:min(100%,650px);border-radius:45% 45% 30% 30%;overflow:hidden;animation:premium-photo-in .9s .1s ease-out both;mask-image:radial-gradient(ellipse at 50% 50%,#000 45%,#000b 63%,transparent 77%);-webkit-mask-image:radial-gradient(ellipse at 50% 50%,#000 45%,#000b 63%,transparent 77%)}
+.hero-soda{width:100%;height:100%;background:var(--hero-photo) center/contain no-repeat;animation:hero-breathe 9s ease-in-out infinite;transform-origin:center 70%}
+.title-version{color:#b7c6a77a}.title-menu{background:radial-gradient(ellipse at 30% 40%,#edf1e1,#d3dfcf);color:#254b36}.title-menu:before{border-color:#a4b69a6e}.menu-sun{background:#d4c286;opacity:.45;box-shadow:0 0 0 28px #e4d7a324,0 0 0 57px #cad6b824}.menu-world-orbit,.menu-world-spark{display:none}.menu-store-art{filter:drop-shadow(0 12px 14px #173d2b30)}
+.menu-wordmark{transform:none}.menu-wordmark>span{font-weight:500;letter-spacing:.12em;color:#65845e}.menu-wordmark>strong{font-weight:700;color:#234d39;text-shadow:0 2px 0 #a7b795,0 5px 13px #1b3f2c18}.menu-save-info{color:#6c8260}.menu-action{font-weight:650;border:1px solid #bdcdb1;background:#f4f6eb;box-shadow:0 2px 0 #becbb1;border-radius:10px;letter-spacing:.7px;color:#3b5e35}.menu-settings{border-color:transparent;background:transparent;box-shadow:none;color:#6f865f}
+#welcome-overlay[data-has-save="false"] .menu-new,#welcome-overlay[data-has-save="true"] .menu-continue{background:linear-gradient(#efd8a0,#dfbf79);border-color:#c0a36b;box-shadow:0 3px 0 #a18e5e;color:#314c30}
+@keyframes premium-wordmark-in{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none}}
+@keyframes premium-start-in{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+@keyframes premium-photo-in{from{opacity:0;transform:translateY(10px) scale(.97)}to{opacity:1;transform:none}}
+@keyframes hero-breathe{0%,100%{transform:scale(1)}50%{transform:scale(1.025)}}
+
+@media(min-width:801px) and (max-width:1100px){
+ .playfield{grid-template-columns:minmax(165px,.8fr) minmax(220px,1.25fr) minmax(225px,.9fr);gap:12px;padding-left:17px;padding-right:17px}.customer-area{padding-top:22px}.customer-art,.customer-area .customer-art{height:min(260px,calc(100% - 145px))}.order-ticket,body[data-control-stage="prep"] .order-ticket{height:min(286px,calc(100% - 24px))}.storefront-view{grid-template-columns:minmax(0,1.2fr) minmax(290px,.9fr)}.store-management{padding:14px}.store-hero{padding:16px}.upgrade-card{grid-template-columns:58px minmax(0,1fr);padding:12px;gap:8px}.upgrade-card .upgrade-icon{width:58px;height:62px}.upgrade-card .upgrade-icon svg{width:56px;height:56px}.upgrade-copy h3{font-size:17px}
+}
+
+@media(max-width:800px){
+ :root{--header-height:54px;--rail-height:46px}
+ .topbar{padding-left:10px;padding-right:105px}.shop-rail{padding-top:1px;padding-bottom:1px}.view-tabs button{font-weight:650}.global-utility{color:#f1f2df}
+ .playfield,body[data-control-stage="prep"] .playfield{grid-template-columns:minmax(0,1fr);grid-template-rows:105px minmax(0,1fr) 74px;grid-template-areas:"customer" "station" "gauge";gap:0;padding:8px 12px 0}
+ .wall-pattern{background-position:center,50% 48%;background-size:cover;background-image:linear-gradient(#16453622,#b5c5a42e 48%,#15382722),var(--bar-photo,linear-gradient(#889b83,#d4d6b8))}
+ .counter-scenery{display:block;opacity:.65}.counter-scenery>svg{width:100%;height:100%;object-fit:cover}.shop-sign,.shelf,.scene-caption{display:none!important}
+ .customer-area{padding:0 0 0 91px;height:100%;align-items:flex-start;z-index:6}.customer-art,.customer-area .customer-art{display:block;left:38px;bottom:0;width:91px;height:112px;max-width:none;filter:drop-shadow(3px 5px 5px #12372a29);mask-image:linear-gradient(#000 85%,transparent 100%);-webkit-mask-image:linear-gradient(#000 85%,transparent 100%)}
+ .order-bubble{padding:8px 10px;border-radius:12px;background:#fbfbf2f2;box-shadow:0 3px 13px #102b1f20}.customer-name{font-size:14px}.order-bubble p{font-size:14px}.customer-name>span+span{display:none}
+ .pour-area,body[data-control-stage="prep"] .pour-area{--cup-clearance:56px;--cup-bottom:22px;z-index:3}
+ .tap-machine,body[data-control-stage="prep"] .tap-machine{display:block;width:126px;height:44px;bottom:calc(var(--cup-bottom) + var(--cup-height) * .943182);top:auto}
+ .tap-mount{left:calc(50% + 6px);top:3px;width:69px;height:29px;border-radius:4px}.tap-mount i{right:4px;top:4px;width:3px;height:3px}.tap-mount i+i{top:auto;bottom:4px}
+ .tap-support{left:50%;top:12px;width:72px;height:13px}.tap-badge{display:flex;left:calc(50% + 32px);top:7px;width:30px;height:20px}.tap-dot{width:11px;height:11px}.tap-neck{top:5px;left:calc(50% - 11px);width:22px;height:29px;border-radius:5px}.tap-nozzle{left:calc(50% - 14px);bottom:0;width:28px;height:15px;border-radius:3px 3px 7px 7px}.tap-machine:after{top:-10px;left:calc(50% - 5px);width:10px;height:25px;border-radius:5px}
+ .pressure-control{width:160px;max-width:48%;left:0;top:2px;transform:none;box-shadow:0 2px 8px #143d2026}.pressure-control>summary{font-size:12px;padding:6px 8px;gap:4px;min-height:36px}.pressure-control[open]{left:0;transform:none;max-width:100%;width:310px;top:0}.pressure-buttons button{min-height:44px}
+ .live-message{font-size:12px;bottom:0;padding:4px 8px;background:#f8f8ebf2;max-width:100%}.milestone-badge{top:2px;font-size:12px}
+ .order-ticket,body[data-control-stage="prep"] .order-ticket{position:static;display:contents!important;box-shadow:none;background:transparent;backdrop-filter:none;-webkit-backdrop-filter:none;height:auto;max-height:none;margin:0;padding:0;border:0}
+ .order-ticket>.recipe-workbench{position:absolute;top:auto;bottom:0;left:12px;right:12px;max-height:min(176px,calc(100% - 112px));padding:7px 8px;background:#fafcf3f5;border:1px solid #c7d4bd;border-bottom:0;border-radius:13px 13px 0 0;box-shadow:0 -5px 15px #18352226;backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px)}
+ .recipe-workbench .base-option{min-height:44px}.recipe-workbench .base-option svg{height:36px;width:32px}.recipe-workbench .ingredient-option{min-height:44px}.recipe-workbench>.recipe-heading>strong{font-size:12px}
+ .order-ticket>.pour-gauge,body[data-control-stage="prep"] .order-ticket>.pour-gauge{display:grid;position:relative;grid-area:gauge;grid-template-rows:24px 22px 18px;height:74px;left:auto;right:auto;bottom:auto;top:auto;margin:0 -12px;padding:5px 12px;background:#f4f7ed;border-top:1px solid #c0cfb4;box-shadow:0 -2px 9px #14321f15;backdrop-filter:none}
+ .order-ticket>.pour-gauge .level-track{height:12px;margin:6px 0 4px}.pour-gauge .fizz-row{font-size:11px}.pour-gauge .fizz-row>strong{font-size:11px}.pour-gauge .target-row>strong{font-size:23px;font-weight:650}.pour-gauge .target-row>span{font-size:11px}.pour-gauge .level-readings,.level-readings strong{font-size:13px}.target-row small{font-size:13px}
+ .counter-back,body[data-control-stage="prep"] .counter-back{display:block;bottom:92px;height:27px}.counter-front,body[data-control-stage="prep"] .counter-front{display:block;bottom:74px;height:20px;border-top-width:1px}
+ .staff-strip{display:flex;left:15px;bottom:76px;max-width:42%;font-size:10px;z-index:4}.staff-chip{font-size:10px;background:#243d29c7;padding:2px 5px}
+ .finish-review{padding:8px 10px;border-radius:12px;background:#fbfcf1f5}.finish-review h2{font-size:14px}.finish-stars{font-size:18px}.finish-earned{font-size:19px}.finish-body{gap:5px;margin-top:4px}.finish-details{width:44px;height:44px;min-height:44px}.finish-scores,.finish-scores strong{font-size:12px}
+ .control-deck{grid-template-rows:52px 16px;gap:5px;padding:6px 12px max(8px,env(safe-area-inset-bottom))}.primary-action,.pour-button{min-height:52px;border-radius:11px}.primary-action span,.pour-button span{font-size:14px}.primary-action small,.pour-button small{font-size:12px}.combo-strip strong,.combo-strip span{font-size:12px}
+ .storefront-view{grid-template-columns:minmax(0,1fr);grid-template-rows:minmax(170px,.95fr) minmax(300px,1fr)}
+ .store-hero{display:grid;grid-template-columns:minmax(0,1fr);grid-template-rows:minmax(0,1fr) auto auto;gap:4px;padding:8px 12px 8px;border-right:0;border-bottom:1px solid #becfba;background:radial-gradient(ellipse at 50% 20%,#f0f2e2,#d8e2d3)}
+ .store-intro{display:none}.store-art{grid-column:1;grid-row:1;width:100%;height:100%;min-height:0;margin:0;filter:drop-shadow(0 5px 6px #22452e26)}.store-art>svg{width:100%;height:100%;max-height:none;object-fit:contain}
+ .business-goal-card{grid-column:1;grid-row:2;display:block;padding:5px 8px;border-radius:7px;border:0;background:#f5f7eacc;max-width:none}.business-goal-card strong{font-size:12px}.business-goal-card p{display:none}.business-progress-track{margin-top:4px;height:3px}
+ .store-scoreboard{grid-column:1;grid-row:3;padding-top:4px}.store-scoreboard>div{padding:0 5px}.store-scoreboard span{font-size:10px;letter-spacing:.35px}.store-scoreboard strong{font-size:19px;margin-top:3px}
+ .store-management{padding:9px 12px 10px;grid-template-rows:40px 18px minmax(0,1fr) 42px 40px;gap:4px}.store-heading h2{font-size:21px}.store-heading .primary-button{min-height:40px;font-size:12px;padding:8px 10px}.store-rule{font-size:12px;line-height:1.2}
+ .upgrade-grid{grid-template-columns:minmax(0,1fr);max-height:none;align-self:stretch}.upgrade-card{grid-template-columns:64px minmax(0,1fr);grid-template-rows:minmax(0,1fr) 44px auto;padding:9px 11px;gap:6px 10px}.upgrade-card .upgrade-icon{width:64px;height:64px}.upgrade-card .upgrade-icon svg{width:62px;height:62px}.upgrade-copy h3{font-size:17px;margin-bottom:4px}.upgrade-level{font-size:11px;margin-bottom:3px}.upgrade-effect{font-size:13px;line-height:1.2;margin-top:4px;padding:6px 7px}.upgrade-timing{font-size:11px;line-height:1.1;margin-top:3px}.upgrade-status{font-size:11px}.buy-button{min-height:44px;padding:7px 10px;font-size:12px}.buy-button strong{font-size:19px}.upgrade-info>summary{top:3px;right:3px}.upgrade-pager{gap:12px}.upgrade-pager .icon-button{height:40px;min-height:40px}.business-tools,.business-tools>summary{height:40px;min-height:40px}.business-tools>summary{font-size:12px}.business-tools #save-status{font-size:11px}
+}
+
+@media(max-width:450px){
+ .topbar{padding-left:8px;padding-right:101px}.hud{gap:5px}.hud-item strong{font-size:16px}.hud-item strong small{font-size:11px}.global-utility{right:5px}.order-bubble{padding:7px 9px}.customer-area{padding-left:84px}.customer-art,.customer-area .customer-art{left:36px;width:88px;height:110px}.finish-review{padding:7px 9px}.recipe-ticket{gap:3px}
+ .title-intro{padding:30px 20px 50px}.title-wordmark>span{font-size:29px}.title-wordmark>strong{font-size:91px}.intro-copy{display:contents}.intro-art{height:100%;width:100%;max-width:440px;border-radius:28%;margin:0}.title-start{min-height:52px;width:min(245px,100%);font-size:17px}.title-menu{padding:24px 27px 42px}.menu-wordmark>span{font-size:25px}.menu-wordmark>strong{font-size:69px}
+}
+
+@media(max-width:360px){
+ .topbar{padding-right:100px;gap:4px}.hud-item strong{font-size:15px}.hud-item strong small{font-size:10px}.hud-symbol{width:12px}.brand-icon{width:23px}.shop-rail{padding-left:8px;padding-right:8px}.view-tabs button{min-width:44px}.view-tabs .nav-label{display:none}
+ .playfield,body[data-control-stage="prep"] .playfield{padding-left:9px;padding-right:9px;grid-template-rows:100px minmax(0,1fr) 70px}.customer-area{padding-left:70px}.customer-art,.customer-area .customer-art{left:29px;width:75px;height:98px}.order-bubble{padding:7px 8px}.customer-name{font-size:13px}.order-bubble p{font-size:13px}#order-line strong{font-size:15px}.recipe-chip svg{width:20px;height:21px}.recipe-chip b{font-size:11px}.customer-patience strong{font-size:11px}
+ .pour-area,body[data-control-stage="prep"] .pour-area{--cup-clearance:46px;--cup-bottom:21px}.pressure-control{max-width:43%;width:135px}.pressure-control>summary{min-height:36px;padding:5px 7px;font-size:11px}.tap-machine,body[data-control-stage="prep"] .tap-machine{width:112px}.tap-mount{width:56px}.tap-support{width:60px}.tap-badge{left:calc(50% + 24px);width:27px}
+ .order-ticket>.pour-gauge,body[data-control-stage="prep"] .order-ticket>.pour-gauge{height:70px;margin-left:-9px;margin-right:-9px;padding:4px 10px;grid-template-rows:23px 21px 18px}.order-ticket>.pour-gauge .level-track{margin-top:5px;margin-bottom:4px}.pour-gauge .target-row>strong{font-size:21px}.pour-gauge .fizz-row{gap:4px}.pour-gauge .level-readings,.level-readings strong{font-size:12px}.counter-back,body[data-control-stage="prep"] .counter-back{bottom:88px}.counter-front,body[data-control-stage="prep"] .counter-front{bottom:70px}.staff-strip{bottom:73px;left:11px;max-width:38%}
+ .order-ticket>.recipe-workbench{left:9px;right:9px;padding:6px}.finish-review{padding:6px 8px}.finish-stars{font-size:16px;letter-spacing:.4px}.finish-earned{font-size:18px}.finish-scores,.finish-scores strong{font-size:11px}.finish-review h2{font-size:13px}.control-deck{padding-left:10px;padding-right:10px}.combo-strip strong,.combo-strip span{font-size:11px}
+ .storefront-view{grid-template-rows:minmax(125px,.75fr) minmax(302px,1fr)}.store-hero{padding:6px 10px;gap:3px}.store-scoreboard strong{font-size:17px}.store-scoreboard span{font-size:10px}.business-goal-card{padding:4px 7px}.business-goal-card strong{font-size:11px}.store-management{padding:8px 10px;grid-template-rows:38px 17px minmax(0,1fr) 40px 38px;gap:3px}.store-heading h2{font-size:20px}.store-heading .primary-button{min-height:38px}.upgrade-card{grid-template-columns:48px minmax(0,1fr);gap:5px 8px;padding:8px 9px}.upgrade-card .upgrade-icon{width:48px;height:52px}.upgrade-card .upgrade-icon svg{width:47px;height:47px}.upgrade-copy h3{font-size:16px}.upgrade-effect{font-size:13px;padding:5px 6px;line-height:1.2}.upgrade-status,.upgrade-level,.upgrade-timing{font-size:11px}.buy-button{font-size:12px}.buy-button strong{font-size:18px}.business-tools,.business-tools>summary{min-height:38px;height:38px}
+ .title-wordmark>span{font-size:26px}.title-wordmark>strong{font-size:81px}.menu-wordmark>span{font-size:23px}.menu-wordmark>strong{font-size:60px}
+}
+
+@media(max-height:650px) and (max-width:800px) and (min-height:521px){
+ :root{--header-height:50px;--rail-height:44px}.global-utility{top:3px}.shop-rail{padding-top:0;padding-bottom:0}.view-tabs button,.mode-switch button{min-height:38px}.playfield,body[data-control-stage="prep"] .playfield{padding-top:6px;grid-template-rows:100px minmax(0,1fr) 70px}.pour-area,body[data-control-stage="prep"] .pour-area{--cup-clearance:44px}.order-ticket>.pour-gauge,body[data-control-stage="prep"] .order-ticket>.pour-gauge{height:70px;grid-template-rows:23px 21px 18px;padding-top:4px;padding-bottom:4px}.counter-back,body[data-control-stage="prep"] .counter-back{bottom:88px}.counter-front,body[data-control-stage="prep"] .counter-front{bottom:70px}.control-deck{grid-template-rows:48px 15px;gap:4px;padding-top:5px;padding-bottom:7px}.primary-action,.pour-button{min-height:48px}.staff-strip{bottom:73px}
+ .storefront-view{grid-template-rows:minmax(135px,.6fr) minmax(292px,1fr)}.store-management{grid-template-rows:36px 16px minmax(0,1fr) 38px 38px;gap:3px;padding-top:7px;padding-bottom:7px}.store-heading .primary-button{min-height:36px}.upgrade-card{grid-template-rows:minmax(0,1fr) 40px auto;gap:4px;padding:8px 10px}.buy-button{min-height:40px}.upgrade-card .upgrade-icon{width:52px;height:55px}.upgrade-card .upgrade-icon svg{width:51px;height:51px}.upgrade-card{grid-template-columns:52px minmax(0,1fr)}.upgrade-copy h3{font-size:16px}.upgrade-effect{padding:4px 6px;font-size:13px}.upgrade-pager .icon-button{height:38px;min-height:38px}.business-tools,.business-tools>summary{height:38px;min-height:38px}
+}
+
+/* Short landscape uses the same steady three-column station, with fewer chrome details. */
+@media(min-width:520px) and (max-width:1000px) and (max-height:520px){
+ :root{--header-height:46px;--rail-height:42px}.global-utility{top:1px}.topbar{padding-top:2px;padding-bottom:2px}.shop-rail{padding-top:0;padding-bottom:0}.view-tabs button,.mode-switch button{min-height:36px}
+ .playfield,body[data-control-stage="prep"] .playfield{grid-template-columns:minmax(130px,.8fr) minmax(145px,1.15fr) minmax(190px,1fr);grid-template-rows:minmax(0,1fr);grid-template-areas:"customer station ticket";gap:8px;padding:7px 12px 0}
+ .customer-area{display:block;padding:0;height:100%}.order-bubble{padding:6px 8px;max-width:none;margin:0}.customer-art,.customer-area .customer-art{display:block;left:50%;bottom:14px;width:auto;height:min(125px,calc(100% - 110px));max-width:100%;mask-image:linear-gradient(#000 85%,transparent);-webkit-mask-image:linear-gradient(#000 85%,transparent)}.customer-name{font-size:13px}.order-bubble p{font-size:13px}.customer-patience{margin-top:4px}.recipe-ticket{gap:3px;flex-wrap:wrap}.recipe-chip{min-height:22px}.recipe-chip svg{height:20px;width:20px}
+ .pour-area,body[data-control-stage="prep"] .pour-area{--cup-clearance:51px;--cup-bottom:20px}.tap-machine,body[data-control-stage="prep"] .tap-machine{height:40px}.tap-mount{height:26px;width:58px}.tap-support{width:59px;height:12px}.tap-badge{left:calc(50% + 25px);width:26px;height:17px}.tap-neck{height:27px}.tap-nozzle{height:13px}.tap-machine:after{height:22px;top:-8px}.pressure-control{left:0;top:0;max-width:65%;width:125px}.pressure-control>summary{font-size:11px;min-height:32px;padding:4px 6px}.pressure-control[open]{width:300px;max-width:100%;left:0;transform:none}.live-message{font-size:11px;max-width:100%;padding:3px 6px}.milestone-badge{top:0;font-size:11px}
+ .order-ticket,body[data-control-stage="prep"] .order-ticket{position:relative;display:block!important;grid-area:ticket;height:calc(100% - 15px);max-height:calc(100% - 15px);align-self:center;max-width:none;margin:0 0 15px;padding:8px;border:1px solid #ffffff9c;border-radius:11px;background:#fbfcf2f2;box-shadow:0 4px 15px #1433211f;overflow:hidden;backdrop-filter:blur(8px)}
+ .order-ticket>.ticket-top{position:absolute;top:8px;left:9px;right:9px;font-size:11px}.ticket-top strong{font-size:15px}.order-ticket>.recipe-workbench{position:absolute;top:6px;left:8px;right:8px;bottom:auto;max-height:calc(100% - 12px);padding:0;border:0;background:transparent;box-shadow:none;backdrop-filter:none;overflow:auto}.recipe-workbench>.recipe-heading{min-height:16px;margin-bottom:3px}.recipe-workbench>.recipe-heading>strong{display:none}.recipe-workbench .base-option{min-height:40px;padding:3px}.recipe-workbench .base-option svg{height:31px;width:27px}.recipe-workbench .ingredient-option{min-height:40px}.ingredient-picture,.ingredient-picture svg{height:27px}.recipe-workbench .ingredient-options{gap:4px;margin-top:4px}.blend-options button{min-height:34px}.blend-options strong{font-size:12px}.order-ticket>.mixed-recipe:not([hidden]){display:flex!important;top:31px;left:8px;right:8px;max-height:calc(100% - 112px)}
+ .order-ticket>.pour-gauge,body[data-control-stage="prep"] .order-ticket>.pour-gauge{position:absolute;display:grid;grid-area:auto;left:8px;right:8px;top:auto;bottom:8px;height:70px;grid-template-rows:24px 22px 18px;margin:0;padding:6px 0 0;background:none;border-top:1px solid #d4dfc9;box-shadow:none}.pour-gauge .fizz-row>strong{display:none}.pour-gauge .target-row>strong{font-size:22px}.pour-gauge .level-readings,.level-readings strong{font-size:12px}.order-ticket>.pour-gauge .level-track{height:12px;margin:5px 0 4px}
+ .counter-back,body[data-control-stage="prep"] .counter-back{bottom:12px;height:20px}.counter-front,body[data-control-stage="prep"] .counter-front{bottom:0;height:14px}.staff-strip{display:none}.finish-review{padding:6px 8px;margin-top:0}.finish-stars{font-size:16px}.finish-earned{font-size:18px}.finish-body{grid-template-columns:minmax(0,1fr) 44px;gap:4px}.finish-review h2{font-size:13px}.finish-details{width:44px;height:44px}.finish-scores,.finish-scores strong{font-size:11px}
+ .control-deck{grid-template-columns:minmax(0,1fr) minmax(210px,300px) minmax(0,1fr);grid-template-rows:44px;gap:0 12px;padding:5px 12px 8px}.control-deck .main-controls{grid-column:2;grid-row:1}.primary-action,.pour-button{min-height:44px;padding:5px 10px}.primary-action span,.pour-button span{font-size:13px}.combo-strip{grid-column:1;grid-row:1;flex-direction:column;align-items:flex-start;justify-content:center;gap:3px}.combo-strip strong,.combo-strip span{font-size:11px;text-align:left}.shift-progress{grid-column:3;grid-row:1;display:block}.shift-progress>div:first-child strong{font-size:11px}.progress-dots{margin-top:6px}
+ .storefront-view{grid-template-columns:minmax(0,1fr) minmax(280px,1.1fr);grid-template-rows:minmax(0,1fr)}.store-hero{display:grid;grid-template-columns:minmax(0,1fr);grid-template-rows:minmax(0,1fr) auto;gap:3px;padding:6px 10px 50px;border-bottom:0;border-right:1px solid #c9d7c1}.store-art{grid-row:1;width:100%;height:100%;margin:0}.business-goal-card,.store-intro{display:none}.store-scoreboard{grid-row:2;grid-column:1;padding-top:4px}.store-scoreboard strong{font-size:17px}.store-scoreboard span{font-size:10px}.store-management{grid-template-rows:34px 16px minmax(0,1fr) 38px;gap:3px;padding:6px 10px 8px}.store-heading h2{font-size:20px}.store-heading .primary-button{min-height:34px;padding:5px 8px;font-size:12px}.store-rule{font-size:11px}.upgrade-grid{align-self:stretch;max-height:none}.upgrade-card{grid-template-columns:49px minmax(0,1fr);grid-template-rows:minmax(0,1fr) 36px auto;gap:4px 7px;padding:7px 9px}.upgrade-card .upgrade-icon{width:49px;height:51px}.upgrade-card .upgrade-icon svg{width:47px;height:47px}.upgrade-copy h3{font-size:16px;margin-bottom:3px}.upgrade-effect{font-size:13px;line-height:1.15;padding:4px 6px;margin-top:3px}.upgrade-level,.upgrade-timing,.upgrade-status{font-size:11px;line-height:1.1}.buy-button{min-height:36px;padding:4px 8px;font-size:12px}.buy-button strong{font-size:17px}.upgrade-pager .icon-button{min-height:36px;height:36px}
+ .title-intro{padding:20px 5vw 28px}.intro-copy{display:flex;gap:23px;padding-left:0}.title-wordmark>span{font-size:clamp(25px,4vw,43px)}.title-wordmark>strong{font-size:clamp(66px,10vw,108px)}.intro-art{height:100%;width:100%;max-width:420px}.title-start{min-height:46px;width:200px;font-size:16px}.title-menu{padding:18px 5vw 28px 3vw}.menu-world{height:100%}.menu-store-art>svg{max-height:80vh}.menu-wordmark>span{font-size:23px}.menu-wordmark>strong{font-size:58px}
+}
+
+@media(min-width:520px) and (max-width:1000px) and (max-height:360px){
+ :root{--header-height:44px;--rail-height:40px}.topbar{padding-top:1px;padding-bottom:1px}.global-utility .icon-button{height:40px}.playfield,body[data-control-stage="prep"] .playfield{padding-top:5px}.customer-art,.customer-area .customer-art{display:none}.pour-area,body[data-control-stage="prep"] .pour-area{--cup-clearance:45px}.control-deck{grid-template-rows:42px;padding-top:3px;padding-bottom:7px}.primary-action,.pour-button{min-height:42px}.primary-action span{font-size:12px}.primary-action small{font-size:11px}.store-management{grid-template-rows:30px 15px minmax(0,1fr) 34px;padding-top:5px;padding-bottom:6px;gap:3px}.store-heading h2{font-size:18px}.store-heading .primary-button{min-height:30px;font-size:11px}.upgrade-card{grid-template-columns:42px minmax(0,1fr);grid-template-rows:minmax(0,1fr) 32px auto;padding:5px 8px;gap:3px 6px}.upgrade-card .upgrade-icon{width:42px;height:45px}.upgrade-card .upgrade-icon svg{width:42px;height:42px}.upgrade-copy h3{font-size:15px}.upgrade-effect{font-size:12px;line-height:1.15;padding:4px 5px}.upgrade-timing{font-size:10px}.upgrade-card .upgrade-level{position:absolute;clip:rect(0,0,0,0);width:1px;height:1px;overflow:hidden}.buy-button{min-height:32px;font-size:11px}.buy-button strong{font-size:16px}.upgrade-status{font-size:10px}.upgrade-pager .icon-button{height:32px;min-height:32px}.store-hero{padding-bottom:46px}.store-scoreboard strong{font-size:15px}.store-scoreboard span{font-size:9px}
+}
+
+@media(prefers-reduced-motion:reduce){
+ .hero-soda,.title-wordmark,.title-start,.intro-art,.store-art [data-upgrade-part],.tap-machine:after{animation:none!important;transition:none!important}
+ .title-wordmark,.title-start{transform:none}
+}
+
+/* Reserve the richest recipe tray before aiming. It uses one add-in row, not two. */
+@media(max-width:800px) and (min-height:521px){
+ .pour-area,body[data-control-stage="prep"] .pour-area{--cup-clearance:82px;--cup-bottom:44px}
+ .counter-scenery .recipe-station-art{transform:translate(675px,220px) scale(.7);opacity:.72}
+ .counter-scenery [data-upgrade-part="tap"]{transform:translate(-80px,-55px);opacity:.72}
+ .counter-scenery [data-upgrade-part="interior"],.counter-scenery [data-upgrade-part="catering"]{opacity:.5}
+ .order-ticket>.recipe-workbench{max-height:132px;padding-top:6px;padding-bottom:6px}
+ .recipe-workbench:has(#blend-controls:not([hidden])){display:grid;grid-template-columns:minmax(0,.95fr) minmax(0,1.05fr);gap:4px 8px}
+ .recipe-workbench:has(#blend-controls:not([hidden]))>.recipe-heading{grid-column:1/-1;grid-row:1;margin:0;min-height:17px}
+ .recipe-workbench:has(#blend-controls:not([hidden]))>.base-options,.recipe-workbench:has(#blend-controls:not([hidden]))>.mix-prep-sequence{grid-column:1/-1;grid-row:2;margin:0}
+ .recipe-workbench:has(#blend-controls:not([hidden]))>.ingredient-options{grid-column:1;grid-row:3;gap:4px;margin:0;flex-wrap:nowrap}
+ .recipe-workbench:has(#blend-controls:not([hidden])) .ingredient-option{flex:1 1 0;width:auto;max-width:none;min-width:0;min-height:44px;padding:3px 2px}
+ .recipe-workbench:has(#blend-controls:not([hidden])) .ingredient-option strong,.recipe-workbench:has(#blend-controls:not([hidden])) .ingredient-availability{display:none}
+ .recipe-workbench:has(#blend-controls:not([hidden])) .ingredient-picture svg{width:29px;height:29px}
+ .recipe-workbench:has(#blend-controls:not([hidden]))>.blend-controls{grid-column:2;grid-row:3;margin:0}
+ .recipe-workbench:has(#blend-controls:not([hidden])) .blend-options{gap:4px;height:44px}
+ .recipe-workbench:has(#blend-controls:not([hidden])) .blend-options button{min-height:44px;height:44px;min-width:0;padding:2px;gap:1px;flex-direction:column}
+ .recipe-workbench:has(#blend-controls:not([hidden])) .blend-options svg{width:21px;height:23px}
+ .recipe-workbench:has(#blend-controls:not([hidden])) .blend-options strong{font-size:11px;line-height:1}
+}
+@media(max-width:800px) and (min-height:521px) and (max-height:650px){
+ .pour-area,body[data-control-stage="prep"] .pour-area{--cup-clearance:72px;--cup-bottom:44px}
+}
+
+/* On portrait screens, Build gives its complete upper pane to the shop.
+   Cash is already in the persistent HUD; the selected card explains each benefit. */
+@media(max-width:800px) and (min-height:521px){
+ .storefront-view .store-hero{display:block;position:relative;min-width:0;min-height:0;width:100%;height:100%;padding:0;overflow:hidden}
+ .storefront-view .store-hero>.store-intro,.storefront-view .store-hero>.business-goal-card,.storefront-view .store-hero>.store-scoreboard{display:none!important}
+ .storefront-view .store-hero>.store-art{position:absolute;inset:7px 10px;display:block;grid-area:auto;width:calc(100% - 20px);height:calc(100% - 14px);min-width:0;min-height:0;max-width:none;max-height:none;margin:0;padding:0;overflow:hidden}
+ .storefront-view .store-hero>.store-art>svg{display:block;width:100%;height:100%;max-width:100%;max-height:100%;overflow:hidden}
+}
+
+/* Short portrait uses the order above as its only mixture sequence.
+   These selectors depend on the order, never the interaction phase. */
+@media(max-width:450px) and (min-height:521px) and (max-height:700px){
+ :root{--header-height:48px;--rail-height:42px}
+ .topbar{padding-top:2px;padding-bottom:2px}.global-utility{top:calc(env(safe-area-inset-top) + 2px)}
+ .shop-rail{padding-top:0;padding-bottom:0}.view-tabs button,.mode-switch button{min-height:38px;padding-top:5px;padding-bottom:5px}
+ .playfield,body[data-control-stage="prep"] .playfield{grid-template-rows:88px minmax(0,1fr) 64px;padding-top:5px}
+ .customer-area{height:88px;padding-left:76px}.customer-name{display:none}
+ .customer-art,.customer-area .customer-art{left:32px;bottom:0;width:80px;height:97px}
+ .order-bubble{padding:6px 8px}.order-bubble p{margin-top:0}.customer-patience{margin-top:3px}.recipe-ticket{margin-top:3px}
+ .finish-review{padding:6px 8px}.finish-body{margin-top:3px}.finish-stars{font-size:17px}.finish-earned{font-size:18px}
+ .pour-area,body[data-control-stage="prep"] .pour-area{--cup-clearance:60px;--cup-bottom:40px}
+ .playfield:has(#order-line.has-ratio) .pour-area,body[data-control-stage="prep"] .playfield:has(#order-line.has-ratio) .pour-area{--cup-clearance:34px;--cup-bottom:16px}
+ .playfield:has(#order-line.has-ratio) .tap-machine{height:34px}
+ .playfield:has(#order-line.has-ratio) .tap-neck{height:25px;top:0}
+ .playfield:has(#order-line.has-ratio) .tap-mount{top:1px;height:26px}
+ .playfield:has(#order-line.has-ratio) .tap-support{top:10px}
+ .playfield:has(#order-line.has-ratio) .tap-badge{top:5px;height:19px}
+ .playfield:has(#order-line.has-ratio) .tap-machine:after{height:22px;top:-9px}
+ #mix-prep-sequence{display:none!important}
+ .playfield:has(#order-line.has-ratio) .order-ticket>.recipe-workbench{max-height:82px}
+ .playfield:has(#order-line.has-ratio) .recipe-workbench>.recipe-heading{min-height:16px;margin-bottom:3px}
+ .playfield:has(#order-line.has-ratio) .recipe-workbench .ingredient-options{margin-top:0}
+ .order-ticket>.pour-gauge,body[data-control-stage="prep"] .order-ticket>.pour-gauge{height:64px;grid-template-rows:21px 19px 16px;padding-top:4px;padding-bottom:4px}
+ .pour-gauge .target-row>strong{font-size:20px;line-height:1}.pour-gauge .target-row>span{font-size:11px}
+ .order-ticket>.pour-gauge .level-track{height:11px;margin-top:5px;margin-bottom:3px}
+ .pour-gauge .level-readings,.level-readings strong{font-size:12px;line-height:1}
+ .counter-back,body[data-control-stage="prep"] .counter-back{bottom:82px;height:23px}
+ .counter-front,body[data-control-stage="prep"] .counter-front{bottom:64px;height:20px}
+ .staff-strip{bottom:67px;max-width:38%}
+ .control-deck{grid-template-rows:48px 12px;gap:3px;padding-top:5px;padding-bottom:max(7px,env(safe-area-inset-bottom))}
+ .combo-strip{min-height:12px}.combo-strip strong,.combo-strip span{font-size:11px;line-height:1}
+ .primary-action,.pour-button{min-height:48px}
+}
+@media(max-width:360px) and (min-height:521px) and (max-height:700px){
+ .customer-area{padding-left:65px}.customer-art,.customer-area .customer-art{left:27px;width:71px;height:94px}
+ .recipe-ticket{gap:2px}.recipe-chip{padding-left:2px;padding-right:2px}
+ .finish-stars{font-size:16px}.finish-earned{font-size:17px}
+}
+
+/* Final small-screen polish: artwork and actions each keep their own space. */
+@media(max-width:800px) and (orientation:portrait){
+ .staff-strip{display:none!important}
+}
+@media(min-width:361px) and (max-width:450px) and (min-height:521px) and (max-height:700px){
+ .storefront-view{grid-template-rows:minmax(0,1fr) minmax(334px,1.12fr)}
+ .upgrade-copy h3{margin-bottom:3px}
+ .upgrade-effect{margin-top:3px;padding-top:5px;padding-bottom:5px}
+}
+@media(min-width:520px) and (max-width:1000px) and (max-height:360px){
+ body[data-game-mode="finished"] .order-ticket>.mixed-recipe:not([hidden]),body[data-game-mode="result"] .order-ticket>.mixed-recipe:not([hidden]){display:none!important}
+}
