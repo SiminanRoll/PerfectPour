@@ -171,8 +171,19 @@ See [V1.07 release notes](docs/V107_RELEASE.md), [engine integration](engine/REA
 
 ## Release workflow
 
-Approved releases go to `SiminanRoll/PerfectPour` on `main` and the existing
-public Perfect Pour Site at https://perfect-pour.pretty-scarf-0591.chatgpt.site/.
-Use local/internal previews for verification. Do not create separate private
-release Sites unless the user explicitly requests one. Keep the production
-Site ID in `.openai/hosting.json` and preserve existing player saves.
+**Owner's standing release instruction:** merge every approved change to
+`SiminanRoll/PerfectPour` `main`, then **publish that exact tested build to the
+existing production ChatGPT Site** at
+https://perfect-pour.pretty-scarf-0591.chatgpt.site/. A passing GitHub Action
+and updated `dist/index.html` are **not** a site deployment.
+
+The public site is managed by **ChatGPT Sites**, not GitHub Actions. Publish an
+existing site's saved version through Sites/Work, using the existing project
+ID in `.openai/hosting.json`; never create a replacement URL or private
+release Site without a specific instruction. Verify the live version and
+gameplay on the original URL, protecting existing player saves. If the Sites
+publish action isn't accessible, report the blocker and current GitHub SHA.
+**Never claim "live", "deployed", or "release complete" from a GitHub push.**
+
+See [the mandatory release checklist](docs/RELEASE_PROCESS.md) and
+[repository agent instructions](AGENTS.md).
