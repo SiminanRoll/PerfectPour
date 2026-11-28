@@ -267,6 +267,10 @@
           // that collision response in the drink, with only a small protrusion.
           if (p.y < highestBob) { p.y = highestBob; p.vy = Math.max(0, p.vy) * .3; }
         }
+        // A buoyant correction above can change the local glass width.
+        // Clamp again at the final y so edge cubes cannot protrude.
+        const finalHalf = Math.max(p.r + 2, wallAt(g, p.y) - p.r - 5);
+        p.x = clamp(p.x, CENTER - finalHalf, CENTER + finalHalf);
         if (p.type === 'ice') {
           // Float and bob, but only rock gently. The spring returns each
           // cube toward a small resting tilt, even after crowd collisions.
