@@ -18,7 +18,7 @@ assert(js.includes("function updateTycoonUi()"));
 assert(js.includes("if(regular<regulars.length)tycoonBits.push"),'Review acknowledges loyalty');
 assert(js.includes("'Regular thank-you'"),'Receipt includes regular bonuses');
 assert(js.includes("'Daily special'"),'Receipt includes special bonuses');
-for(const label of ['data.lounge','data.patio','data.awning','data.catering','data.team']){
+for(const label of ['dataset.lounge','dataset.patio','dataset.awning','dataset.catering','dataset.team']){
   assert(js.includes(label),'All purchased shop growth states reach the counter: '+label);
 }
 for(const label of ['data-lounge="1"','data-lounge="2"','data-lounge="3"','data-sign="3"','data-tap="2"']){
