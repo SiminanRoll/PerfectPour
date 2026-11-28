@@ -11,14 +11,14 @@ const restore=(x,a)=>{const ptr=x.save_ptr();const buffer=new Float64Array(x.mem
 const advance=(x,seconds)=>{while(seconds>1e-8){const dt=Math.min(seconds,1/120);x.step(dt,0);seconds-=dt;}};
 const prepare=x=>{const s=state(x);assert.equal(x.set_recipe(s[2],s[98],s[99],s[100],s[101]),1);};
 const checks=[];
-assert.equal(e.state_len(),136);assert.equal(e.save_len(),120);
-assert.equal(contract.saveVersion,106);assert.equal(contract.snapshot.fields.selectedIce,134);assert.equal(contract.snapshot.fields.iceFizzMultiplier,135);
+assert.equal(e.state_len(),148);assert.equal(e.save_len(),120);
+assert.equal(contract.saveVersion,107);assert.equal(contract.snapshot.fields.selectedIce,134);assert.equal(contract.snapshot.fields.iceFizzMultiplier,135);
 e.reset(106);assert.equal(state(e)[134],0);assert.equal(state(e)[135],1);
 assert.equal(e.set_ice(0),1);assert.equal(state(e)[118],0,'No-op ice selection does not start patience');
 assert.equal(e.set_ice(6),0);assert.equal(e.set_ice(5),1);assert.equal(state(e)[134],5);assert.equal(state(e)[135],Math.fround(2));
-const preparing=save(e);assert.equal(preparing[0],106);assert.equal(preparing[105],5);assert.equal(restore(e,preparing),1);
+const preparing=save(e);assert.equal(preparing[0],107);assert.equal(preparing[105],5);assert.equal(restore(e,preparing),1);
 assert.equal(state(e)[134],5);assert.equal(state(e)[22],0);
-for(const [i,v] of [[105,-1],[105,.5],[105,6],[106,1],[119,1],[92,0]]){
+for(const [i,v] of [[105,-1],[105,.5],[105,6],[106,6],[115,1],[119,1],[92,0]]){
  const bad=[...preparing];bad[i]=v;const before=state(e);assert.equal(restore(e,bad),0);assert.deepEqual(state(e),before);
 }
 checks.push('Ice is optional, bounded at five, free, saved and validated atomically');
@@ -66,7 +66,7 @@ e.reset(106);const old104=save(e);old104[0]=104;assert.equal(restore(e,old104),1
 old104[105]=1;assert.equal(restore(e,old104),0,'A104 save must retain its original zero reserved slots');
 for(const version of [101,102,103]){
  const names=version===101?['untouched','paid','staffed-closed']:version===102?['untouched','partial-easy','partial-hardcore','paid']:['preparing','partial-easy','partial-hardcore','paid','staffed-closed'];
- for(const name of names){const fixture=JSON.parse(await readFile(new URL(`engine/fixtures/v${version}-${name}.json`,root),'utf8'));assert.equal(restore(e,fixture.engine),1);assert.equal(state(e)[134],0);assert.equal(save(e)[0],106);}
+ for(const name of names){const fixture=JSON.parse(await readFile(new URL(`engine/fixtures/v${version}-${name}.json`,root),'utf8'));assert.equal(restore(e,fixture.engine),1);assert.equal(state(e)[134],0);assert.equal(save(e)[0],107);}
 }
 checks.push('All released101–103 fixtures and a104 save import with zero ice and preserved validation');
 
@@ -96,6 +96,6 @@ if(process.env.PERFECT_POUR_BASELINE_WASM){
    for(const x of [e,b])x.next_order();compare('next customer');
   }
  }
- checks.push(`Exact no-ice parity with released V1.04 Wasm across${baselineSnapshots} snapshots,288 orders, three pressures, modes, mixtures, overflow and saves`);
+ checks.push(`No-ice physical parity with released V1.04 Wasm (new tycoon earnings deliberately differ) across${baselineSnapshots} snapshots,288 orders, three pressures, modes, mixtures, overflow and saves`);
 }
-console.log(JSON.stringify({result:'PASS',version:contract.version,snapshotFields:e.state_len(),saveVersion:106,saveFields:e.save_len(),baselineSnapshots,checks},null,2));
+console.log(JSON.stringify({result:'PASS',version:contract.version,snapshotFields:e.state_len(),saveVersion:107,saveFields:e.save_len(),baselineSnapshots,checks},null,2));

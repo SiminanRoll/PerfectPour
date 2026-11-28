@@ -44,6 +44,12 @@ jobs:
       - name: Test ice fizz, locking, and save compatibility
         run: node tests/engine/v106-ice.mjs
 
+      - name: Test V1.07 regular loyalty, daily specials, and migration
+        run: node tests/engine/v107-tycoon.mjs
+
+      - name: Test V1.07 storefront, board and mobile UI contract
+        run: node tests/browser/v107-tycoon-ui.mjs
+
       - name: Test the primary control flow
         run: node tests/browser/v103-control-flow.mjs
 
@@ -78,6 +84,6 @@ jobs:
           if ! git diff --cached --quiet; then
             git config user.name "Perfect Pour Release Bot"
             git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-            git commit -m "Build V1.06.1 engine and standalone game"
+            git commit -m "Build V1.07 engine and standalone game"
             git push origin HEAD:main
           fi

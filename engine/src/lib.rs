@@ -1,9 +1,9 @@
 //! Perfect Pour V1.06: deterministic, dependency-free game and business rules.
 //! The browser renders the snapshot. Rust owns every scored and paid action.
 
-const SNAPSHOT_LEN: usize = 136;
+const SNAPSHOT_LEN: usize = 148;
 const SAVE_LEN: usize = 120;
-const SAVE_VERSION: f64 = 106.0;
+const SAVE_VERSION: f64 = 107.0;
 const MAX_CENTS: u32 = 1_000_000_000;
 const MAX_COUNT: u32 = 1_000_000;
 const CAPACITIES: [f64; 4] = [280.0, 360.0, 460.0, 330.0];
@@ -52,6 +52,10 @@ pub struct Game {
     second_soda: usize, first_share: f64, pour_part: u32, part_attempted: bool,
     first_liquid: f64, first_foam: f64, first_foam_liquid: f64, first_poured: f64,
     scored_beverage: f64, scored_first_beverage: f64,
+    // Permanent regular relationships and today's finite promotion.
+    loyalty: [u32; 4], special_hits: u32,
+    last_regular_tip: u32, last_special_tip: u32,
+    shift_regular_tips: u32, shift_special_tips: u32,
     snapshot: [f32; SNAPSHOT_LEN],
 }
 
@@ -86,6 +90,9 @@ impl Game {
             second_soda: 4, first_share: 1.0, pour_part: 0, part_attempted: false,
             first_liquid: 0.0, first_foam: 0.0, first_foam_liquid: 0.0, first_poured: 0.0,
             scored_beverage: 0.0, scored_first_beverage: 0.0,
+            loyalty: [0; 4], special_hits: 0,
+            last_regular_tip: 0, last_special_tip: 0,
+            shift_regular_tips: 0, shift_special_tips: 0,
             snapshot: [0.0; SNAPSHOT_LEN],
         }
     }
@@ -165,6 +172,15 @@ impl Game {
         self.refresh();
     }
 
+    // Three familiar faces visit per shift from day 2 onward. The identity
+    // is derived from day and customer number, not RNG or current UI state.
+    fn regular_id(&self) -> usize {
+        let slot = if self.phase == 0 { self.completed } else { self.completed.saturating_sub(1) };
+        if self.day >= 2 && slot < self.goal && slot % 4 == 2 {
+            ((self.day - 2 + slot / 4) % 4) as usize
+        } else { 4 }
+    }
+    fn special_soda(&self) -> usize { ((self.day - 1) % 4) as usize }
     fn is_mix(&self) -> bool { self.second_soda < 4 }
     fn first_soda(&self) -> usize { if self.selected_soda < 4 { self.selected_soda } else { self.soda } }
     fn actual_soda(&self) -> usize { if self.is_mix() && self.pour_part == 1 { self.second_soda } else { self.first_soda() } }
@@ -372,7 +388,26 @@ impl Game {
         self.last_service_tip = if self.stars >= 4 {
             self.speed_tip() + 10 * self.order_awning + if self.active_helper { 30 } else { 0 }
         } else { 0 };
-        self.payout = self.last_base + self.last_combo + self.last_milestone + self.last_perfect_tip + self.last_service_tip;
+        // No rewards on poor grades. Regulars build trust over repeat visits,
+        // while the daily chalkboard special pays for at most three cups.
+        self.last_regular_tip = 0; self.last_special_tip = 0;
+        let patron = self.regular_id();
+        if patron < self.loyalty.len() {
+            if self.stars >= 4 {
+                let before = self.loyalty[patron];
+                self.loyalty[patron] = (before + 1).min(5);
+                self.last_regular_tip = 20 + 10 * before
+                    + if before == 4 { 80 } else { 0 };
+            } else { self.loyalty[patron] = self.loyalty[patron].saturating_sub(1); }
+        }
+        if self.stars >= 4 && self.soda == self.special_soda() && self.special_hits < 3 {
+            self.special_hits += 1;
+            self.last_special_tip = if self.special_hits == 3 { 150 } else { 25 };
+        }
+        self.shift_regular_tips = add_money(self.shift_regular_tips, self.last_regular_tip);
+        self.shift_special_tips = add_money(self.shift_special_tips, self.last_special_tip);
+        self.payout = self.last_base + self.last_combo + self.last_milestone + self.last_perfect_tip
+            + self.last_service_tip + self.last_regular_tip + self.last_special_tip;
         self.credit(self.payout);
         let unit_costs = [0.10, 0.12, 0.13, 0.16];
         let liquid_cost = if self.is_mix() { self.first_poured * unit_costs[self.first_soda()]
@@ -526,6 +561,8 @@ impl Game {
         self.last_refund = 0; self.last_net = 0; self.shift_ingredients = 0;
         self.shift_cleanup = 0; self.shift_refunds = 0; self.shift_sign = 0;
         self.shift_service = 0; self.staff_orders = 0; self.missed_customers = 0;
+        self.special_hits = 0; self.last_regular_tip = 0; self.last_special_tip = 0;
+        self.shift_regular_tips = 0; self.shift_special_tips = 0;
         self.cleanup_saved = 0.0; self.staff_work = 0.0;
         self.prepare_order(); self.refresh(); true
     }
@@ -596,11 +633,18 @@ impl Game {
             self.part_attempted as u32 as f32, self.actual_soda() as f32, self.active_target() as f32,
             self.first_beverage_ml() as f32, self.mix_accuracy() as f32, self.mix_stars() as f32,
             self.is_mix() as u32 as f32, self.selected_ice as f32, self.ice_fizz() as f32,
+            self.regular_id() as f32,
+            (if self.regular_id() < 4 { self.loyalty[self.regular_id()] } else { 0 }) as f32,
+            self.special_soda() as f32, self.special_hits as f32,
+            self.last_regular_tip as f32, self.last_special_tip as f32,
+            self.shift_regular_tips as f32, self.shift_special_tips as f32,
+            self.loyalty[0] as f32, self.loyalty[1] as f32,
+            self.loyalty[2] as f32, self.loyalty[3] as f32,
         ];
     }
     pub fn state(&self) -> &[f32; SNAPSHOT_LEN] { &self.snapshot }
 
-    /// V106 preserves ice in the formerly reserved slot105, alongside V104 mix pools.
+    /// V107 appends regular relationships and special bonuses to reserved slots106..114.
     /// Restore consumes only the interrupted Hardcore part. Paid cups stay paid.
     pub fn save(&self) -> [f64; SAVE_LEN] {
         let active = self.phase == 0;
@@ -642,6 +686,11 @@ impl Game {
             if self.is_mix() { if active { self.first_liquid } else { self.first_beverage_ml() } } else { 0.0 },
             if active { self.first_foam } else { 0.0 }, if active { self.first_foam_liquid } else { 0.0 },
             self.first_poured, self.selected_ice as f64,
+            self.loyalty[0] as f64, self.loyalty[1] as f64,
+            self.loyalty[2] as f64, self.loyalty[3] as f64,
+            self.special_hits as f64, self.last_regular_tip as f64,
+            self.last_special_tip as f64, self.shift_regular_tips as f64,
+            self.shift_special_tips as f64,
         ];
         s[..data.len()].copy_from_slice(&data); s
     }
@@ -651,7 +700,8 @@ impl Game {
         let v102 = s[0] == 102.0;
         let v103 = s[0] == 103.0;
         let v104 = s[0] == 104.0;
-        if s.iter().any(|v| !v.is_finite()) || (!legacy && !v102 && !v103 && !v104 && s[0] != SAVE_VERSION) { return None; }
+        let v106 = s[0] == 106.0;
+        if s.iter().any(|v| !v.is_finite()) || (!legacy && !v102 && !v103 && !v104 && !v106 && s[0] != SAVE_VERSION) { return None; }
         let integer = |i: usize, min: u32, max: u32| {
             s[i] >= min as f64 && s[i] <= max as f64 && s[i].fract() == 0.0
         };
@@ -708,14 +758,16 @@ impl Game {
             for i in [83, 85, 86, 91] { if !integer(i, 0, 2) { return None; } }
             for i in [84, 92, 93, 94, 95] { if !integer(i, 0, 1) { return None; } }
             // Historical V103/V104 garnishes keep their original limits.
-            let newer = s[0] == SAVE_VERSION;
+            let newer = v106 || s[0] == SAVE_VERSION;
             if !integer(88, 0, if newer { 5 } else { 2 })
                 || !integer(89, 0, if newer { 5 } else { 1 })
                 || !integer(90, 0, if newer { 5 } else { 2 }) { return None; }
             if !integer(87, 0, 4) || !(0.0..=11.0).contains(&s[96])
                 || (v103 && s[97..].iter().any(|v| *v != 0.0))
                 || (v104 && s[105..].iter().any(|v| *v != 0.0))
-                || (!v103 && !v104 && (!integer(105, 0, 5) || s[106..].iter().any(|v| *v != 0.0)))
+                || (!v103 && !v104 && (!integer(105, 0, 5)
+                    || (v106 && s[106..].iter().any(|v| *v != 0.0))
+                    || (!v106 && s[115..].iter().any(|v| *v != 0.0))))
                 || (!v103 && !v104 && s[105] > 0.0 && s[92] != 1.0)
                 || (s[93] == 0.0 && (s[84] > 0.0 || s[89] > 0.0))
                 || (s[94] == 0.0 && (s[85] > 0.0 || s[90] > 0.0))
@@ -749,8 +801,22 @@ impl Game {
                 }
             }
         }
+        // Existing V106 businesses migrate without a reset or retroactive tip.
+        // V107 validates the complete new extension before restoring anything.
+        if s[0] == SAVE_VERSION {
+            for i in 106..110 { if !integer(i, 0, 5) { return None; } }
+            if !integer(110, 0, 3) || !integer(111, 0, 200) || !integer(112, 0, 150)
+                || !integer(113, 0, 2400) || !integer(114, 0, 200) { return None; }
+            if s[114] < s[112] || s[113] < s[111] { return None; }
+        }
         let mut g = Self::empty();
-        if s[0] == SAVE_VERSION { g.selected_ice = s[105] as u32; }
+        if v106 || s[0] == SAVE_VERSION { g.selected_ice = s[105] as u32; }
+        if s[0] == SAVE_VERSION {
+            for i in 0..4 { g.loyalty[i] = s[106 + i] as u32; }
+            g.special_hits = s[110] as u32;
+            g.last_regular_tip = s[111] as u32; g.last_special_tip = s[112] as u32;
+            g.shift_regular_tips = s[113] as u32; g.shift_special_tips = s[114] as u32;
+        }
         g.phase = phase; g.order = s[2] as u32; g.soda = s[3] as usize; g.cup = s[4] as usize;
         g.target = s[5]; g.capacity = capacity; g.liquid = s[6]; g.foam = s[7]; g.foam_liquid = s[8];
         g.spill = s[9]; g.rating = s[10]; g.shift_gross = s[11] as u32; g.accuracy = s[12];

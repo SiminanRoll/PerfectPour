@@ -1,4 +1,4 @@
-# Perfect Pour — V1.06
+# Perfect Pour — V1.07
 
 An illustrated soda-counter game, evolving the V1.04.2 gameplay. Turn the machine's
 pressure knob, choose a soda at the dispenser, and take ingredients from the
@@ -7,7 +7,7 @@ an extra burst of fizz. Overflow leaves a visible mess beneath the glass.
 
 The original hold/release controls, Easy serving action, business economy and
 customer progression remain. Existing V1.01–V1.05 businesses continue through
-a read-only migration into the new V106 save key. Read [the release notes](docs/V106_RELEASE.md)
+a read-only migration into the new V106 save key. Read [the V1.07 release notes](docs/V107_RELEASE.md)
 for ice rules, the counter presentation and save compatibility.
 
 `dist/index.html` is the self-contained offline game, including Rust/WebAssembly,
@@ -93,6 +93,16 @@ Fill accuracy is `clamp(100 − 350 × abs(final_fraction − target_fraction), 
 
 Poor pours can lose money through ingredients and cleanup. Severe failures earn no sale; lesser errors and slow service reduce earnings. Costs cannot create debt or consume reserved wages. Four- and five-star reviews extend streaks, with increasing multipliers and recurring milestones. Difficulty changes reset the current streak while preserving separate records. Hardcore retains its 15% base-pay premium.
 
+## Neighborhood tycoon progression (V1.07)
+
+The built soda bar now feels more established in the active serving scene as you buy sign, tap, patio, awning, lounge, catering and staffing upgrades. Those upgrades retain their **existing real economic effects**, but their illustrations, colors, lamps and equipment are more visible during service. The starter shop remains welcoming.
+
+A small physical chalkboard announces a **daily featured soda**. Each shift rotates to the next soda in the four-drink lineup. The first three drinks ordered with that featured base and served to a 4-star or better standard earn 25¢, 25¢ and a $1.50 finishing bonus. The 0/3 → 3/3 board is visible during play, with a compact progress label on phones. The daily bonus contributes to cash, gross and shift profit; it cannot be claimed twice by reloading a paid cup.
+
+From day 2, guests 3, 7 and 11 are **returning regulars**, drawn from Ruth, Cleo, Maya and Sasha. Their names and illustrated faces stay consistent across visits. Excellent service (4+ stars) earns them one loyalty stamp (max five) and a thank-you tip that grows with loyalty; one poor review loses a stamp. A fifth stamp earns a one-time celebratory bonus. Loyalty survives day changes, imported previous businesses start with no stamps, and result receipts show both loyalty tips and special payouts.
+
+These additions are **between-customer motivation**, not more steps to make a drink. Hardcore/Easy behavior, cup physics, scoring targets, and ingredient controls are unchanged.
+
 ## Build the business
 
 The storefront illustrates the business as it grows. Upgrade cards lead with an illustration, the next measurable benefit, and the price. An information control opens the longer description and current effect. Prerequisites, wages, and next-day activation stay visible where they affect the purchase. A successful purchase briefly highlights the storefront; reduced-motion preferences suppress that animation. **Business tools** opens Export, Import, and Reset while the autosave status remains visible.
@@ -124,14 +134,14 @@ Customers keep the same SVG while expressions change, avoiding the disappearance
 
 **Help & settings → Download app icon** exports a **512 × 512 PNG** suitable for a shortcut. It is included in the standalone game; downloading an icon does not install an app automatically.
 
-V1.06 writes save version **106**, the **120-value** save buffer, and a
-**136-field** runtime snapshot. It explicitly imports **101, 102, 103, 104,
-and 106**. Existing money, upgrades, reputation and paid cups survive.
+V1.07 writes save version **107**, the **120-value** save buffer, and a
+**148-field** runtime snapshot. It explicitly imports **101, 102, 103, 104,
+106, and 107**. Existing money, upgrades, reputation and paid cups survive.
 Older businesses begin with zero ice; original recipe and mixture migration
 rules remain. Ice adds optional foam behavior to the Rust engine while
 zero-ice pours preserve the released physics and economy.
 
-Autosave preserves preparation and active pours. Restoring an interrupted first Hardcore mixed part advances to the untouched second part without payment; restoring an interrupted final part commits once. An interrupted single-soda Hardcore pour retains its one-time commit behavior. Unfinished Easy resumes stopped on its current part. Paid cups return to settling or the inline review without paying again. V1.06 writes `perfect-pour-business-v106` and restores existing V104, V103, V102 or V101 businesses when no current save exists. Legacy keys are retained unchanged; a stale second tab pauses rather than overwriting a newer save. Use **Build → Business tools → Export** for a portable backup. Browser storage availability may vary, especially for directly opened files.
+Autosave preserves preparation and active pours. Restoring an interrupted first Hardcore mixed part advances to the untouched second part without payment; restoring an interrupted final part commits once. An interrupted single-soda Hardcore pour retains its one-time commit behavior. Unfinished Easy resumes stopped on its current part. Paid cups return to settling or the inline review without paying again. V1.07 writes `perfect-pour-business-v107` and restores existing V106, V104, V103, V102 or V101 businesses when no current save exists. Legacy keys are retained unchanged; a stale second tab pauses rather than overwriting a newer save. Use **Build → Business tools → Export** for a portable backup. Browser storage availability may vary, especially for directly opened files.
 
 ## Build and verify
 
@@ -157,7 +167,7 @@ node tests/browser/verify_offline.mjs dist/index.html
 
 Historical filenames also exercise the current game. The V1.06 engine passes **58 native tests**, including 448 iced Gentle catalog cases, plus the compiled-Wasm recipe, mixture, and ice suites. A direct comparison with the V1.04.2 engine preserved all original 134 fields across **1,624 snapshots from 288 zero-ice orders**. The release also checks production pointer/keyboard handlers, one-time payments, interrupted pours, legacy migration, stale-tab protection, and audio lifecycle. UI harnesses are not browser playtests, and simulated careers are not measured player performance. Direct-file portability is packaging-verified; narrow browser layouts do not certify physical phones, and audio lifecycle tests are not a subjective listening pass.
 
-See [V1.06 release notes](docs/V106_RELEASE.md), [engine integration](engine/README.md), and [release identity](docs/release-manifest.json). [V1.04.1 acceptance evidence](docs/qa/V1041_ACCEPTANCE.md), [V1.04 notes](docs/V104_RELEASE.md), [V1.04 acceptance evidence](docs/qa/V104_ACCEPTANCE.md), and the earlier release records are retained as historical evidence. The prior V1.06 preview acceptance record is retained as historical visual evidence. Production migration and publication are documented separately.
+See [V1.07 release notes](docs/V107_RELEASE.md), [engine integration](engine/README.md), and [release identity](docs/release-manifest.json). [V1.04.1 acceptance evidence](docs/qa/V1041_ACCEPTANCE.md), [V1.04 notes](docs/V104_RELEASE.md), [V1.04 acceptance evidence](docs/qa/V104_ACCEPTANCE.md), and the earlier release records are retained as historical evidence. The prior V1.06 preview acceptance record is retained as historical visual evidence. Production migration and publication are documented separately.
 
 ## Release workflow
 

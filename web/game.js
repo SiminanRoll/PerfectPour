@@ -1,4 +1,4 @@
-/* Perfect Pour V1.06 · A tactile soda counter. Simulation and saves are Rust/Wasm. */
+/* Perfect Pour V1.07 · A neighborhood soda bar with regulars and daily specials. */
 (() => {
   'use strict';
   const WASM_BASE64 = '__WASM_BASE64__';
@@ -29,6 +29,7 @@
     {name:'THE WILD CARD',height:219,top:178,bottom:95,curve:-27}
   ];
   const names = ['Jamie','Cleo','Max','Ruth','Finn','Maya','Ollie','Sasha','Ellis','Juniper','Theo','Sunny'];
+  const regulars = [{name:'Ruth',art:3},{name:'Cleo',art:1},{name:'Maya',art:5},{name:'Sasha',art:7}];
   const reviewLines = {
     5:['“That’s exactly my kind of pour!”','“You’ve got the magic touch.”','“Five stars. Every last little bubble.”','“A perfectly fizzy little moment.”'],
     4:['“Lovely! Just a tiny bit off the mark.”','“Pretty close. I’ll be back!”','“A very good little soda.”'],
@@ -37,10 +38,9 @@
     1:['“Oops. That’s not the pour I ordered.”','“Let’s give that another try next time.”','“The bubbles got the better of this one.”']
   };
 
-  const F={cash:20,hardcore:21,attempted:22,holding:23,day:24,goal:25,streak:26,bestStreak:27,combo:28,comboBonus:29,milestone:30,perfectTip:31,serviceTip:32,lifetime:33,owned:34,cost:40,canBuy:46,spendable:47,reserve:48,staffSales:49,wages:50,helperActive:51,specialistActive:52,customers:53,basePay:54,modePay:55,signPay:56,foamScale:57,good:58,net:59,lifetimePerfect:60,bestShift:61,businessLevel:62,previousRating:63,beverageMl:64,pressure:65,waste:66,cleanupSeconds:67,patience:68,patienceLimit:69,menuPrice:70,ingredientCost:71,cleanupCost:72,refund:73,lastNet:74,ingredientTotal:75,cleanupTotal:76,refundTotal:77,signTotal:78,serviceTotal:79,staffOrders:80,staffCapacity:81,demand:82,missed:83,interior:84,catering:85,interiorCost:86,cateringCost:87,nextStreak:88,nextReward:89,hardcoreBest:90,easyBest:91,cleanupSaved:92,training:93,trainingCost:94,tier:95,canPressure:96,speedTip:97,orderedCherries:98,orderedLime:99,orderedSyrup:100,orderedBlend:101,selectedSoda:102,selectedCherries:103,selectedLime:104,selectedSyrup:105,selectedBlend:106,recipeAccuracy:107,recipeLocked:108,canRecipe:109,hasCitrus:110,hasSyrup:111,hasMixer:112,citrusCost:113,syrupCost:114,mixerCost:115,recipePremium:116,selectedAddinCost:117,prepStarted:118,recipeFizz:119,fillStars:120,recipeMistakes:121,prepAllowance:122,orderIsCustom:123,orderedSecondSoda:124,firstShare:125,pourPart:126,partAttempted:127,activeSoda:128,activeTarget:129,firstBeverageMl:130,mixAccuracy:131,mixStars:132,isMix:133,selectedIce:134,iceFizzMultiplier:135};
-  // The review build never reads or overwrites a live business automatically.
-  // Existing businesses can be explicitly imported through Business tools.
-  const SAVE_KEY='perfect-pour-business-v106',LEGACY_SAVE_KEYS=['perfect-pour-business-v104','perfect-pour-business-v103','perfect-pour-business-v102','perfect-pour-business-v101'];
+  const F={cash:20,hardcore:21,attempted:22,holding:23,day:24,goal:25,streak:26,bestStreak:27,combo:28,comboBonus:29,milestone:30,perfectTip:31,serviceTip:32,lifetime:33,owned:34,cost:40,canBuy:46,spendable:47,reserve:48,staffSales:49,wages:50,helperActive:51,specialistActive:52,customers:53,basePay:54,modePay:55,signPay:56,foamScale:57,good:58,net:59,lifetimePerfect:60,bestShift:61,businessLevel:62,previousRating:63,beverageMl:64,pressure:65,waste:66,cleanupSeconds:67,patience:68,patienceLimit:69,menuPrice:70,ingredientCost:71,cleanupCost:72,refund:73,lastNet:74,ingredientTotal:75,cleanupTotal:76,refundTotal:77,signTotal:78,serviceTotal:79,staffOrders:80,staffCapacity:81,demand:82,missed:83,interior:84,catering:85,interiorCost:86,cateringCost:87,nextStreak:88,nextReward:89,hardcoreBest:90,easyBest:91,cleanupSaved:92,training:93,trainingCost:94,tier:95,canPressure:96,speedTip:97,orderedCherries:98,orderedLime:99,orderedSyrup:100,orderedBlend:101,selectedSoda:102,selectedCherries:103,selectedLime:104,selectedSyrup:105,selectedBlend:106,recipeAccuracy:107,recipeLocked:108,canRecipe:109,hasCitrus:110,hasSyrup:111,hasMixer:112,citrusCost:113,syrupCost:114,mixerCost:115,recipePremium:116,selectedAddinCost:117,prepStarted:118,recipeFizz:119,fillStars:120,recipeMistakes:121,prepAllowance:122,orderIsCustom:123,orderedSecondSoda:124,firstShare:125,pourPart:126,partAttempted:127,activeSoda:128,activeTarget:129,firstBeverageMl:130,mixAccuracy:131,mixStars:132,isMix:133,selectedIce:134,iceFizzMultiplier:135,regularId:136,regularLevel:137,specialSoda:138,specialHits:139,regularTip:140,specialTip:141,shiftRegularTips:142,shiftSpecialTips:143,loyalty0:144,loyalty1:145,loyalty2:146,loyalty3:147};
+  // Versioned writes preserve existing V106 careers and historical imports.
+  const SAVE_KEY='perfect-pour-business-v107',LEGACY_SAVE_KEYS=['perfect-pour-business-v106','perfect-pour-business-v104','perfect-pour-business-v103','perfect-pour-business-v102','perfect-pour-business-v101'];
   const upgrades=[
     {name:'Neon identity',max:3,unit:'SIGN',description:'Better prices. More visitors.',effect:l=>`Prices +${l*8}% → +${(l+1)*8}%`,owned:l=>`+${l*8}% prices · +${l*2} daily demand`},
     {name:'Patio seats',max:2,unit:'PATIO',description:'Room for your specialist’s queue.',effect:l=>`Staff capacity +${l*2} → +${(l+1)*2}`,owned:l=>`+${l*2} capacity · +${l*3} demand · +${l}s patience`},
@@ -107,8 +107,8 @@
     return{format:'perfect-pour-business',version:values[0],engine:values};
   }
   function applySave(data){
-    const expected=data?.version===101?80:[102,103,104,106].includes(data?.version)?120:0;
-    if(!data||data.format!=='perfect-pour-business'||!expected||!Array.isArray(data.engine)||data.engine.length!==expected||data.engine[0]!==data.version||!data.engine.every(Number.isFinite))throw new Error('Choose a Perfect Pour V1.01–V1.06 business save.');
+    const expected=data?.version===101?80:[102,103,104,106,107].includes(data?.version)?120:0;
+    if(!data||data.format!=='perfect-pour-business'||!expected||!Array.isArray(data.engine)||data.engine.length!==expected||data.engine[0]!==data.version||!data.engine.every(Number.isFinite))throw new Error('Choose a Perfect Pour V1.01–V1.07 business save.');
     const ptr=engine.save_ptr(),buffer=new Float64Array(engine.memory.buffer,ptr,engine.save_len());buffer.fill(0);buffer.set(data.engine);
     if(engine.restore_save()!==1)throw new Error('The save data is damaged or contains invalid values.');
     refreshState();
@@ -134,7 +134,7 @@
     if(!ready)return;
     const data=captureSave();data.exportedAt=new Date().toISOString();
     const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'}),url=URL.createObjectURL(blob),a=document.createElement('a');
-    a.href=url;a.download=`Perfect_Pour_V106_Day_${Math.round(state[F.day])}_Save.json`;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),5000);toast('Business save exported. Keep it somewhere safe.');
+    a.href=url;a.download=`Perfect_Pour_V107_Day_${Math.round(state[F.day])}_Save.json`;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),5000);toast('Business save exported. Keep it somewhere safe.');
   }
   async function importSave(event){
     const file=event.target.files&&event.target.files[0];event.target.value='';if(!file)return;
@@ -254,7 +254,15 @@
     if(mode==='welcome'&&loadedCareer){requestRestart();return;}
     clearInput();engine.reset(randomSeed());refreshState();careerActive=true;loadedCareer=true;openAudio();saveCareer();if(externalSave)return;renderOrder();setMode(activePlayMode(),state[F.selectedSoda]<4?'pour-button':'base-0');playCue('day');announce('Shop open. Match the recipe, then hold Space or the pour button.');
   }
-  function personIndex(){return(Math.round(state[1])-1+(state[F.day]-1)*3)%names.length;}
+  function regularIndex(){return Math.round(state?.[F.regularId]??4);}
+  function personIndex(){
+    const regular=regularIndex();
+    return regular>=0&&regular<regulars.length?regulars[regular].art:(Math.round(state[1])-1+(state[F.day]-1)*3)%names.length;
+  }
+  function customerName(){
+    const regular=regularIndex();
+    return regular>=0&&regular<regulars.length?regulars[regular].name:names[personIndex()];
+  }
   function setCustomerMood(mood){
     const art=$('customer-art');if(!art||!state)return;
     const key=personIndex()+':'+mood;if(art.dataset.moodKey===key)return;
@@ -266,6 +274,9 @@
   function updateBusinessVisuals(){
     const shop=shopState(),key=JSON.stringify(shop);
     document.body.dataset.tap=shop.tap;document.body.dataset.sign=shop.sign;
+    document.body.dataset.lounge=shop.interior;document.body.dataset.patio=shop.seating;
+    document.body.dataset.awning=shop.awning;document.body.dataset.catering=shop.catering;
+    document.body.dataset.team=Number(shop.helperActive)+Number(shop.specialistActive);
     if(key!==lastSceneKey){
       lastSceneKey=key;
       if($('counter-scenery')&&window.PourStoreArt.counter)$('counter-scenery').innerHTML=window.PourStoreArt.counter(shop);
@@ -363,9 +374,13 @@
   function renderOrder(){
     const soda=sodas[state[2]],cup=cups[state[3]],order=Math.round(state[1]),target=percent(state[4]);
     document.documentElement.style.setProperty('--soda',soda.color);
-    text('customer-name',names[personIndex()]);text('customer-number','GUEST '+String(order).padStart(2,'0'));
+    const regular=regularIndex(),isRegular=regular<regulars.length;
+    text('customer-name',customerName());
+    text('customer-number',isRegular?'★ REGULAR · '+Math.round(state[F.regularLevel])+'/5':'GUEST '+String(order).padStart(2,'0'));
+    $('order-bubble').classList.toggle('is-regular',isRegular);
     $('order-line').innerHTML=soda.name+'<strong>'+target+'%</strong>';
-    text('customer-aside',soda.aside);recipeUiKey='';setCustomerMood('neutral');text('customer-status','YOUR NEXT POUR');
+    text('customer-aside',isRegular?'Welcome back, '+customerName()+'!':soda.aside);
+    recipeUiKey='';setCustomerMood('neutral');text('customer-status',isRegular?'FAMILIAR FACE · WELCOME BACK':'YOUR NEXT POUR');
     text('tap-name',soda.name.toUpperCase());text('drink-name',soda.name);text('drink-flavor',soda.flavor);
     text('fizz-label',soda.fizz);text('fizz-note',soda.note);$('fizz-meter').setAttribute('aria-label',soda.fizz.toLowerCase()+' fizz');
     [...$('fizz-meter').children].forEach((dot,i)=>dot.classList.toggle('on',i<=state[2]));
@@ -405,6 +420,19 @@
     lastFeedback=kind;
     canvas.setAttribute('aria-label',`Cup: ${percent(fill)} percent soda, ${foam>VISIBLE_FOAM&&foam<.005?'less than1':percent(foam)} percent foam. ${mix?'Part '+(state[F.pourPart]+1)+': '+sodas[state[F.activeSoda]].name+'. Active line '+targetText(target)+' percent. Final line ': 'Target '}${percent(state[4])} percent. Soda waste ${Math.round(state[F.waste])} milliliters.`);
   }
+  function updateTycoonUi(){
+    const special=sodas[Math.round(state[F.specialSoda])]?.name||sodas[0].name;
+    const hits=Math.round(state[F.specialHits]),won=hits>=3;
+    const match=state[2]===Math.round(state[F.specialSoda]);
+    text('special-drink',special.toUpperCase());
+    text('special-steps',won?'CHALLENGE COMPLETE':hits+' / 3 HAPPY GUESTS');
+    text('special-stamps','●'.repeat(hits)+'○'.repeat(3-hits));
+    text('special-mobile','✦ '+sodaNames[Math.round(state[F.specialSoda])]+' · '+hits+'/3');
+    const board=$('special-board');
+    board.classList.toggle('is-complete',won);
+    board.setAttribute('aria-label',`Today's special: ${special}. ${hits} of 3 four-star pours served. Earn 25 cents for each of the first two, and a 1 dollar 50 cent bonus on the third.`);
+    $('order-bubble').classList.toggle('special-order',match);
+  }
   function updateHud(){
     if(!state)return;
     const served=Math.round(state[16]),order=Math.round(state[1]),goal=Math.round(state[F.goal]),hard=state[F.hardcore]===1;
@@ -424,7 +452,7 @@
     const milestoneVisible=state[F.milestone]>0&&['finished','result'].includes(mode);
     text('milestone-badge',milestoneVisible?'✦ +'+dollars(state[F.milestone]):'');
     if($('milestone-badge'))$('milestone-badge').hidden=!milestoneVisible;
-    renderRecipe();updateModeUi();updateMeter();updateLiveFeedback();updateBusinessVisuals();
+    renderRecipe();updateModeUi();updateMeter();updateLiveFeedback();updateBusinessVisuals();updateTycoonUi();
   }
   function serveDrink(){
     if(!ready||externalSave||mode!=='playing'||state[F.hardcore]===1||pouring||inputOwner!==null||state[F.holding]===1||state[F.partAttempted]!==1)return;
@@ -473,9 +501,14 @@
     $('result-details').innerHTML+=(missing.length?'<span class="recipe-error">Requested '+missing.join(' · ')+'</span>':'<span class="recipe-exact">✓ '+(mix?'Ingredients matched':'Recipe exact')+'</span>');
     document.querySelector('.receipt-details').open=false;
     text('result-combo',streak>0?(state[F.milestone]>0?`✦ ${streak} in a row · +${dollars(state[F.milestone])}`:`${streak} good ${streak===1?'pour':'pours'} · ${state[F.combo].toFixed(2)}×`):'Next cup, new streak.');
-    const rows=[['Soda sale',state[F.basePay]],['Streak',state[F.comboBonus]],['Milestone',state[F.milestone]],['Perfect tip',state[F.perfectTip]],['Service tips',state[F.serviceTip]],['Ingredients',-state[F.ingredientCost]],['Cleanup',-state[F.cleanupCost]]];
+    const rows=[['Soda sale',state[F.basePay]],['Streak',state[F.comboBonus]],['Milestone',state[F.milestone]],['Perfect tip',state[F.perfectTip]],['Service tips',state[F.serviceTip]],['Regular thank-you',state[F.regularTip]],['Daily special',state[F.specialTip]],['Ingredients',-state[F.ingredientCost]],['Cleanup',-state[F.cleanupCost]]];
     $('bonus-breakdown').innerHTML=rows.filter((r,i)=>i===0||r[1]!==0).map(([label,value])=>ledgerRow(label,value)).join('')+(state[F.refund]>0?'<p class="ledger-note">'+dollars(state[F.refund])+(state[F.basePay]===0?' sale voided · no charge to the guest.':' quality/service discount · already reflected above.')+'</p>':'');
     text('old-rating',state[F.previousRating].toFixed(1));text('new-rating',state[9].toFixed(1));
+    const regular=regularIndex(),regularTip=Math.round(state[F.regularTip]),specialTip=Math.round(state[F.specialTip]);
+    const tycoonBits=[];
+    if(regular<regulars.length)tycoonBits.push(`${regulars[regular].name} · loyalty ${Math.round(state[F.regularLevel])}/5`+(regularTip>0?' · +'+dollars(regularTip):''));
+    if(specialTip>0)tycoonBits.push('Daily special +'+dollars(specialTip));
+    const note=$('finish-tycoon');note.hidden=!tycoonBits.length;text('finish-tycoon',tycoonBits.join('  ✦  '));
     const delta=state[9]-state[F.previousRating];
     text('next-price-note',order===state[F.goal]?'Day complete':delta>.025?'Better reputation · better prices':delta<-.025?'Reputation down':'Reputation steady');
   }
@@ -496,12 +529,12 @@
     $('day-ledger').open=false;
     text('summary-money',signedMoney(state[F.net]));text('summary-rating',rating.toFixed(1)+' ★');text('summary-accuracy',scoreText(state[17])+'%');text('summary-perfect',state[18]+' / '+goal);
     text('summary-title',rating>=4.5?'The talk of the block.':rating>=3?'That’s a wrap.':'Tomorrow’s a fresh pour.');
-    text('summary-message',`Day ${state[F.day]} · ${goal} guests · ${state[F.staffOrders]} staff orders`);
+    text('summary-message',`Day ${state[F.day]} · ${goal} guests · ${state[F.staffOrders]} staff orders · ${state[F.specialHits]}/3 specials`);
     $('shift-ledger').innerHTML=[['Counter sales',state[10]-state[F.staffSales]],['Staff sales',state[F.staffSales]],['Ingredients',-state[F.ingredientTotal]],['Cleanup',-state[F.cleanupTotal]],['Wages',-state[F.wages]],['Profit',state[F.net]]].filter((r,i)=>i===0||i===5||r[1]!==0).map(([label,value],i)=>ledgerRow(label,value,label==='Profit'?'ledger-total':'')).join('')+
-      `<p class="ledger-note">Included above: ${dollars(state[F.signTotal])} from your sign · ${dollars(state[F.serviceTotal])} service tips.</p>`+
+      `<p class="ledger-note">Included above: ${dollars(state[F.signTotal])} from your sign · ${dollars(state[F.serviceTotal])} service tips · ${dollars(state[F.shiftRegularTips])} regular loyalty · ${dollars(state[F.shiftSpecialTips])} daily specials.</p>`+
       (state[F.refundTotal]>0?`<p class="ledger-note">${dollars(state[F.refundTotal])} discounts & refunds · already excluded.</p>`:'')+
       (state[F.missed]>0?`<p class="ledger-note">${state[F.missed]} side-queue guests left. Grow capacity or speed up service.</p>`:'');
-    text('personal-best',`Best sales ${dollars(state[F.bestShift])} · Hardcore streak ${state[F.hardcoreBest]} · Easy streak ${state[F.easyBest]}`);
+    text('personal-best',`Best sales ${dollars(state[F.bestShift])} · Hardcore streak ${state[F.hardcoreBest]} · Easy streak ${state[F.easyBest]} · Regulars ${[F.loyalty0,F.loyalty1,F.loyalty2,F.loyalty3].map(i=>Math.round(state[i])).join('/')}`);
     saveCareer();if(externalSave)return;setMode('summary','pour-button');
     if(celebrate){if(rating>=4)confetti();playCue('day');}announce(`Day complete. Profit ${signedMoney(state[F.net])}. Business cash ${dollars(state[F.cash])}.`);
   }

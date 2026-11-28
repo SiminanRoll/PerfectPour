@@ -6,7 +6,7 @@ const module=await WebAssembly.compile(bytes);
 assert.deepEqual(WebAssembly.Module.imports(module),[],'Engine remains dependency-free');
 const {exports:e}=await WebAssembly.instantiate(module,{}),I=contract.snapshot.fields;
 for(const name of Object.keys(contract.exports))assert.equal(typeof e[name],'function',name);
-assert.equal(e.state_len(),136);assert.equal(e.save_len(),120);
+assert.equal(e.state_len(),148);assert.equal(e.save_len(),120);
 const s=()=>Array.from(new Float32Array(e.memory.buffer,e.state_ptr(),e.state_len()));
 const value=n=>s()[I[n]];
 const save=()=>Array.from(new Float64Array(e.memory.buffer,e.save_ptr(),e.save_len()));
@@ -57,7 +57,7 @@ for(const name of ['untouched','paid','staffed-closed']){
  assert.equal(value('lastNet'),old.engine[14]);assert(value('patienceLimit')>=8);
  assert.equal(value('phase'),old.engine[1]);assert.equal(value('day'),old.engine[25]);
  for(let i=0;i<6;i++)assert.equal(s()[34+i],old.engine[34+i]);
- const migrated=save();assert.equal(migrated[0],106);assert.equal(restore(migrated),1);assert.equal(value('cash'),old.engine[21]);
+ const migrated=save();assert.equal(migrated[0],107);assert.equal(restore(migrated),1);assert.equal(value('cash'),old.engine[21]);
  if(name==='staffed-closed'){assert.equal(value('staffOrders'),2);assert.equal(value('wagesPaid'),400);e.next_order();assert.equal(value('cash'),old.engine[21]);assert.equal(e.next_day(8),1);assert.equal(value('orderGoal'),12);}
 }
 checks.push('Three genuine V101 fixtures migrate: untouched, paid and staffed closed day; cash/ownership/payroll preserved');

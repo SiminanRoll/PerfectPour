@@ -184,8 +184,8 @@ checks.push('Continue restores ordinary and mixed cups at preparation, either in
 // important mixed-pour boundary; their payloads are never relabeled V106 data.
 const released104={"sourceCommit":"beb201e64524137dfa1ad318e756fa69e2e04e37","fixtures":[{"kind":"preparing","save":{"format":"perfect-pour-business","version":104,"engine":[104,0,1,3,3,0.75,0,0,0,0,4.999998599083934,0,0,0,0,1.599999719816787,0,0,0,0,1462341823,33667,1,0,0,4,12,36,36,0,0,0,0,46227,1,1,0,0,1,1,1,1,0,0,0,41,0,36,21123,4.9999979398293135,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,5,7,0,0,0,0,36,0,0,0,1,0,0,0,1,0,2,0,0,1,3,2,0,0,1,1,0,0,0,5,4,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]},"expectedRestoreSnapshot":[0,1,3,3,0.75,330,0,0,0,4.999998569488525,0,0,0,0,1.5999996662139893,0,0,0,0,53.900001525878906,33667,1,0,0,4,12,36,36,1.899999976158142,0,0,0,0,46227,1,1,0,0,1,1,2200,3000,1400,1800,0,0,1,33267,400,0,0,1,1,41,0,1.149999976158142,1.0800000429153442,1,0,0,36,21123,5,4.999998092651367,0,0,0,0,1,15.5,413,0,0,0,0,0,0,0,0,0,0,5,7,0,0,0,10000,14000,40,500,36,0,0,0,5000,1,1,65,2,0,0,1,3,2,0,0,1,100,0,1,0,0,0,1000,1800,2600,80,16,1,1,1,0,5,1,4,1,0,0,3,0.75,0,100,5,0]},{"kind":"easy","save":{"format":"perfect-pour-business","version":104,"engine":[104,0,1,3,3,0.75,11.359931186877393,13.959454166609026,2.1150688131225834,0,4.999998599083934,0,0,0,0,1.599999719816787,0.25,0,0,0,1462341823,33667,0,1,0,4,12,0,36,0,0,0,0,46227,1,1,0,0,1,1,1,1,0,0,0,41,0,36,21123,4.9999979398293135,0,1,0,0,0,13.474999999999982,0,0,0,0,0,0,0,0,0,0,0,5,7,0,0,0,0,36,0,0,0,1,0,0,0,1,0,2,0,0,1,3,2,0,0,1,1,0,0,0,5,4,1,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]},"expectedRestoreSnapshot":[0,1,3,3,0.75,330,11.359930992126465,13.959454536437988,0,4.999998569488525,0,0,0,0,1.5999996662139893,0.25,0,0,0,53.900001525878906,33667,0,1,0,4,12,0,36,1,0,0,0,0,46227,1,1,0,0,1,1,2200,3000,1400,1800,0,0,0,33267,400,0,0,1,1,41,0,1,1.0800000429153442,1,0,0,36,21123,5,4.999998092651367,13.475000381469727,0,0,0,0.9838709831237793,15.5,413,0,0,0,0,0,0,0,0,0,0,5,7,0,0,0,10000,14000,3,75,36,0,0,0,5000,1,0,65,2,0,0,1,3,2,0,0,1,100,1,0,0,0,0,1000,1800,2600,80,16,1,1,1,0,5,1,4,1,0,1,3,0.75,13.475000381469727,100,5,0]},{"kind":"paid","save":{"format":"perfect-pour-business","version":104,"engine":[104,1,1,3,3,0.75,13.474999999999977,0,0,0,3.719999047377075,0,0,1,0,1.599999719816787,0.25,1,0,0,1462341823,33633,1,1,0,4,12,0,36,0,0,0,0,46227,1,1,0,0,1,1,1,1,0,0,0,42,0,36,21123,4.999998599083934,0,1,0,0,0,13.474999999999982,0,34,0,821,-34,34,0,821,0,0,0,5,7,0,0,0,0,36,0,0,0.25,1,0,0,0,1,0,2,0,0,1,3,2,0,0,1,1,0,0,0,5,4,1,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]},"expectedRestoreSnapshot":[1,1,3,3,0.75,330,13.475000381469727,0,0,3.719999074935913,0,0,1,0,1.5999996662139893,0.25,1,0,0,53.900001525878906,33633,1,1,0,4,12,0,36,1,0,0,0,0,46227,1,1,0,0,1,1,2200,3000,1400,1800,0,0,1,33233,400,0,0,1,1,42,0,1.149999976158142,1.0800000429153442,1,0,-34,36,21123,5,4.999998569488525,13.475000381469727,0,0,0,0.9838709831237793,15.5,413,34,0,821,-34,34,0,821,0,0,0,5,7,0,0,0,10000,14000,3,75,36,0,0,0,5000,1,0,65,2,0,0,1,3,2,0,0,1,100,1,0,0,0,0,1000,1800,2600,80,16,1,1,1,0,5,1,4,1,0,1,3,0.75,13.475000381469727,100,5,0]},{"kind":"mix-first-held","save":{"format":"perfect-pour-business","version":104,"engine":[104,0,6,1,0,0.65,11.804205295887872,5.603973520560578,1.1207947041121158,0,1.3634833920000002,0,0,1,0,0.8726966784000001,0.25,5,0,0,4007242341,0,1,1,0,1,12,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,5,0,0,0,1.5345344000000003,0,0,0,0,0,12.924999999999976,0,0,0,340,0,0,0,1887,0,0,0,0,2,0,0,0,0,0,0,0,0,0,0,0,0,1,0,1,0,0,1,1,1,0,0,1,1,0,0,0,5.5,3,0.5,0,1,11.804205295887872,5.603973520560578,1.1207947041121158,12.924999999999976,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]},"expectedRestoreSnapshot":[0,6,1,0,0.6499999761581421,280,11.804204940795898,5.603973388671875,0,1.3634834289550781,0,0,1,0,0.8726966977119446,0.25,5,0,0,53.900001525878906,0,1,1,0,1,12,0,0,1,0,0,0,0,0,0,0,0,0,0,0,1200,1800,1400,1800,2800,4200,0,0,0,0,0,0,0,5,0,1.149999976158142,1,1,0,0,0,0,1,1.5345344543457031,12.925000190734863,0,0,0,0.9814814925193787,13.5,360,0,0,340,0,0,0,1887,0,0,0,0,2,0,0,0,10000,14000,3,75,0,0,0,0,5000,1,0,65,1,0,0,1,1,1,0,0,1,100,1,0,0,0,0,1000,1800,2600,100,8,1,1,1,0,5.5,1,3,0.5,1,0,3,0.6499999761581421,12.925000190734863,0,1,1]},{"kind":"mix-second-held","save":{"format":"perfect-pour-business","version":104,"engine":[104,0,6,1,0,0.65,23.52514538490214,17.758383176485243,2.8748546150978282,0,1.3634833920000002,0,0,1,0,0.8726966784000001,0.4999999999999988,5,0,0,4007242341,0,1,1,0,1,12,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,5,0,0,0,1.5345344000000003,0,0,0,0,0,26.400000000000034,0,0,0,340,0,0,0,1887,0,0,0,0,2,0,0,0,0,0,0,0,0,0,0,0,0,1,0,1,0,0,1,1,1,0,0,1,1,0,0,0,5.5,3,0.5,1,1,12.165214198024742,3.7989290098762156,0.7597858019752438,12.924999999999976,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]},"expectedRestoreSnapshot":[1,6,1,0,0.6499999761581421,280,23.525144577026367,17.75838279724121,0,1.2471686601638794,0,0,1,0,0.8726966977119446,0.5,6,0,0,53.900001525878906,0,1,1,0,1,12,0,0,1,0,0,0,0,0,0,0,0,0,0,0,1200,1800,1400,1800,2800,4200,1,0,0,0,0,0,0,6,0,1.149999976158142,1,1,0,0,0,0,1,1.3634834289550781,26.399999618530273,0,0,0,0.9629629850387573,13.5,360,0,0,361,0,0,0,2248,0,0,0,0,2,0,0,0,10000,14000,3,75,0,0,0,0,5000,1,0,65,1,0,0,1,1,1,0,0,1,100,1,0,0,0,0,1000,1800,2600,100,8,1,1,1,0,5.5,1,3,0.5,1,1,3,0.6499999761581421,12.925000190734863,97.91666412353516,5,1]},{"kind":"mix-paid","save":{"format":"perfect-pour-business","version":104,"engine":[104,1,6,1,0,0.65,26.399999999999967,0,0,0,1.2471687065600003,0,0,1,0,0.8726966784000001,0.4999999999999988,6,0,0,4007242341,0,1,1,0,1,12,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,6,0,0,0,1.3634833920000002,0,0,0,0,0,26.400000000000034,0,0,0,361,0,0,0,2248,0,0,0,0,2,0,0,0,0,0,0,0,0,0,0,0,0,1,0,1,0,0,1,1,1,0,0,1,1,0,0,0,5.5,3,0.5,1,1,12.924999999999986,0,0,12.924999999999976,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]},"expectedRestoreSnapshot":[1,6,1,0,0.6499999761581421,280,26.399999618530273,0,0,1.2471686601638794,0,0,1,0,0.8726966977119446,0.5,6,0,0,53.900001525878906,0,1,1,0,1,12,0,0,1,0,0,0,0,0,0,0,0,0,0,0,1200,1800,1400,1800,2800,4200,1,0,0,0,0,0,0,6,0,1.149999976158142,1,1,0,0,0,0,1,1.3634834289550781,26.399999618530273,0,0,0,0.9629629850387573,13.5,360,0,0,361,0,0,0,2248,0,0,0,0,2,0,0,0,10000,14000,3,75,0,0,0,0,5000,1,0,65,1,0,0,1,1,1,0,0,1,100,1,0,0,0,0,1000,1800,2600,100,8,1,1,1,0,5.5,1,3,0.5,1,1,3,0.6499999761581421,12.925000190734863,97.91666412353516,5,1]}]};
 
-assert.equal(keys.SAVE_KEY,'perfect-pour-business-v106');
-assert.deepEqual(Array.from(keys.LEGACY_SAVE_KEYS),[104,103,102,101].map(version=>'perfect-pour-business-v'+version));
+assert.equal(keys.SAVE_KEY,'perfect-pour-business-v107');
+assert.deepEqual(Array.from(keys.LEGACY_SAVE_KEYS),[106,104,103,102,101].map(version=>'perfect-pour-business-v'+version));
 const legacyCases=[];
 for(const version of [101,102,103]){
   const name='v'+version+'-'+(version===101?'untouched':'partial-easy');
@@ -218,7 +218,7 @@ for(const item of legacyCases){
   assert.equal(legacy.scope.state[F.cash],cash);assert.equal(legacy.scope.state[16],completed);
   if(item.kind)assert.equal(legacy.scope.mode,migratedRoutes[item.kind],item.name+' resumes the correct presentation phase');
   const migrated=JSON.parse(legacy.stored.get(keys.SAVE_KEY));
-  assert.equal(migrated.version,106);assert.equal(migrated.engine[0],106);
+  assert.equal(migrated.version,107);assert.equal(migrated.engine[0],107);
   assert.ok(migrated.engine.slice(106).every(value=>value===0),'V106 reserved slots remain zero');
   assert.equal(legacy.stored.get(key),item.raw,'Migration writes the new key and never modifies its released source');
   const writes=legacy.writes();legacy.api.openShop();
@@ -226,9 +226,26 @@ for(const item of legacyCases){
 }
 checks.push('Genuine101–104 careers automatically enable Continue, preserve original snapshot fields, migrate only on play, retain untouched legacy entries and zero reserved slots, and cannot pay twice');
 
+// Read-only migration from the previous public V106 browser key. Its reserved
+// progression slots must stay untouched until the V107 career is first saved.
+const prior106=JSON.parse(savedCareer('untouched',1060));
+prior106.version=106;prior106.engine[0]=106;
+assert.ok(prior106.engine.slice(106).every(value=>value===0));
+const priorRaw=JSON.stringify(prior106),prevKey='perfect-pour-business-v106';
+const upgraded=await fixture({raw:priorRaw,key:prevKey});
+assert.equal(upgraded.scope.loadedCareer,true);
+assert.equal(upgraded.scope.state[136],4);
+assert.equal(upgraded.scope.state[139],0);
+assert.equal(upgraded.scope.state[144],0);
+assert.equal(upgraded.stored.get(prevKey),priorRaw,'V106 save is never overwritten');
+upgraded.api.showMainMenu();upgraded.api.openShop();
+assert.equal(JSON.parse(upgraded.stored.get(keys.SAVE_KEY)).version,107);
+assert.equal(upgraded.stored.get(prevKey),priorRaw,'V106 source remains unchanged after migrating');
+checks.push('V106 production careers migrate safely into the new V107 key with original 120-value payload and no retroactive rewards');
+
 const productionRaw=savedCareer('closed',911);
 const precedence=await fixture({raw:productionRaw,entries:legacyCases.map(item=>['perfect-pour-business-v'+item.version,item.raw])});
-assert.equal(precedence.scope.state[0],2,'An existing V106 business wins over every legacy entry');
+assert.equal(precedence.scope.state[0],2,'An existing V107 business wins over every legacy entry');
 assert.equal(precedence.stored.get(keys.SAVE_KEY),productionRaw);assert.equal(precedence.writes(),0);
 assert.equal(precedence.reads.some(key=>keys.LEGACY_SAVE_KEYS.includes(key)),false,'Current production progress does not consult older releases');
 const funded104=legacyCases.find(item=>item.name==='v104-preparing');
@@ -238,13 +255,13 @@ assert.equal(newestLegacy.writes(),0);
 const privateOnly=await fixture({raw:savedCareer('easy'),key:'perfect-pour-preview-v106'});
 assert.equal(privateOnly.scope.loadedCareer,false,'The separate preview is not an automatic production migration source');
 assert.equal(privateOnly.element('start-button').disabled,true);assert.equal(privateOnly.writes(),0);
-checks.push('V106 takes precedence, then V104/V103/V102/V101 in order; independent preview storage is not selected');
+checks.push('V107 takes precedence, then V104/V103/V102/V101 in order; independent preview storage is not selected');
 
 const legacyReset=await fixture({raw:funded104.raw,key:'perfect-pour-business-v104'});
 legacyReset.api.showMainMenu();legacyReset.api.newGame();legacyReset.api.resetBusiness();
 assert.equal(legacyReset.scope.mode,'preparing');assert.equal(legacyReset.scope.state[F.cash],0);
 assert.equal(legacyReset.scope.state[F.hardcore],1);assert.equal(legacyReset.writes(),1);
-assert.equal(JSON.parse(legacyReset.stored.get(keys.SAVE_KEY)).version,106);
+assert.equal(JSON.parse(legacyReset.stored.get(keys.SAVE_KEY)).version,107);
 assert.equal(legacyReset.stored.get('perfect-pour-business-v104'),funded104.raw,'Confirmed replacement still preserves the old release entry');
 const legacyRace=await fixture({raw:funded104.raw,key:'perfect-pour-business-v104'});
 legacyRace.api.showMainMenu();const legacyMemory=legacyRace.save();

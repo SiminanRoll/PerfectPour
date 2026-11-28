@@ -25,7 +25,8 @@ const aliases={
   demand:'queuedDemand',missed:'missedCustomers',interior:'interiorLevel',catering:'cateringLevel',
   nextStreak:'nextStreakGoal',nextReward:'nextStreakReward',hardcoreBest:'hardcoreBestStreak',easyBest:'easyBestStreak',
   cleanupSaved:'cleanupSavedSeconds',training:'trainingLevel',tier:'businessTier',canPressure:'mayChangePressure',speedTip:'serviceTipPotential',
-  canRecipe:'mayEditRecipe',recipeFizz:'recipeFizzMultiplier'
+  canRecipe:'mayEditRecipe',recipeFizz:'recipeFizzMultiplier',
+  loyalty0:'loyaltyRuth',loyalty1:'loyaltyCleo',loyalty2:'loyaltyMaya',loyalty3:'loyaltySasha'
 };
 for(const [name,index] of Object.entries(F))assert.equal(index,contract.snapshot.fields[aliases[name]||name],`UI field ${name} matches the engine contract`);
 assert.equal(engine.state_len(),contract.snapshot.length);
@@ -87,12 +88,12 @@ const adapter=vm.runInNewContext(source.slice(adapterStart,adapterEnd)+'\n({capt
 engine.reset(412);
 assert.equal(readState()[F.hardcore],1,'A fresh career starts in Hardcore');
 const current=adapter.captureSave();
-assert.equal(current.version,106);assert.equal(current.engine.length,120);assert.equal(current.engine[0],106);
+assert.equal(current.version,107);assert.equal(current.engine.length,120);assert.equal(current.engine[0],107);
 assert.equal(readState()[F.selectedIce],0);assert.equal(readState()[F.iceFizzMultiplier],1);
 for(const name of ['v101-untouched','v101-paid','v101-staffed-closed','v102-untouched','v102-paid','v102-partial-hardcore','v102-partial-easy','v103-preparing','v103-partial-hardcore','v103-partial-easy','v103-paid','v103-staffed-closed']){
   const fixture=JSON.parse(await readFile(new URL(`engine/fixtures/${name}.json`,root),'utf8'));
   adapter.applySave(fixture);
-  assert.equal(adapter.captureSave().version,106,`${name} is imported into106`);
+  assert.equal(adapter.captureSave().version,107,`${name} is imported into106`);
   assert.equal(fixture.engine[0],fixture.version,`${name} retains its genuine released version`);
   assert.equal(readState()[F.selectedIce],0,`${name} imports without adding ice`);
   assert.equal(readState()[F.selectedSoda],readState()[2],`${name} retains its existing base`);
@@ -107,7 +108,7 @@ for(const name of ['v101-untouched','v101-paid','v101-staffed-closed','v102-unto
 const old104={...current,version:104,engine:[104,...current.engine.slice(1)]};
 assert.ok(old104.engine.slice(105).every(value=>value===0));
 adapter.applySave(old104);
-assert.equal(adapter.captureSave().version,106);assert.equal(readState()[F.selectedIce],0);
+assert.equal(adapter.captureSave().version,107);assert.equal(readState()[F.selectedIce],0);
 assert.deepEqual(adapter.captureSave().engine.slice(1),current.engine.slice(1),'Explicit104 import preserves its complete original payload');
 assert.throws(()=>adapter.applySave({...old104,engine:old104.engine.map((value,index)=>index===105?1:value)}),/damaged|invalid/,'A104 save must keep its original reserved slots zero');
 assert.throws(()=>adapter.applySave({...current,version:101}),/business save/,'Version and array length must agree');
@@ -148,10 +149,10 @@ for(const [value,stars,expected] of [[88,3,'87.9'],[87.99999237060547,3,'87.9'],
 const keyDeclaration=source.match(/const SAVE_KEY=[^;]+;/)?.[0];
 assert.ok(keyDeclaration);
 const keys=vm.runInNewContext(keyDeclaration+'\n({SAVE_KEY,LEGACY_SAVE_KEYS});');
-assert.equal(keys.SAVE_KEY,'perfect-pour-business-v106');
-assert.deepEqual(Array.from(keys.LEGACY_SAVE_KEYS),[104,103,102,101].map(version=>`perfect-pour-business-v${version}`),'Released businesses migrate from newest to oldest');
-const originalKeys=[101,102,103,104].map(version=>`perfect-pour-business-v${version}`);
-for(const key of originalKeys)assert.notEqual(keys.SAVE_KEY,key,'V106 saves must not overwrite an old release write key');
+assert.equal(keys.SAVE_KEY,'perfect-pour-business-v107');
+assert.deepEqual(Array.from(keys.LEGACY_SAVE_KEYS),[106,104,103,102,101].map(version=>`perfect-pour-business-v${version}`),'Released businesses migrate from newest to oldest');
+const originalKeys=[101,102,103,104,106].map(version=>`perfect-pour-business-v${version}`);
+for(const key of originalKeys)assert.notEqual(keys.SAVE_KEY,key,'V107 saves must not overwrite an old release write key');
 const saveStart=source.indexOf('  function saveCareer(){'),saveEnd=source.indexOf('  function exportSave(){');
 assert.ok(saveStart>=0&&saveEnd>saveStart);
 const resumeStart=source.indexOf('  function resume(){'),resumeEnd=source.indexOf('  function showHelp(){');
@@ -183,8 +184,8 @@ function persistenceFixture({readFails=false,writeFails=false}={}){
 const ordinary=persistenceFixture();ordinary.api.saveCareer();
 assert.equal(ordinary.writes(),1);
 const firstRaw=ordinary.stored.get(keys.SAVE_KEY);
-assert.equal(JSON.parse(firstRaw).version,106);assert.equal(ordinary.scope.lastSavedRaw,firstRaw);
-for(const key of originalKeys){assert.equal(ordinary.stored.get(key),'legacy business stays intact');assert.equal(ordinary.reads.includes(key),false,'Active V106 checkpoints use only the current production key');}
+assert.equal(JSON.parse(firstRaw).version,107);assert.equal(ordinary.scope.lastSavedRaw,firstRaw);
+for(const key of originalKeys){assert.equal(ordinary.stored.get(key),'legacy business stays intact');assert.equal(ordinary.reads.includes(key),false,'Active V107 checkpoints use only the current production key');}
 assert.equal(ordinary.scope.storageAvailable,true);assert.equal(ordinary.scope.externalSave,false);
 engine.reset(900);ordinary.api.saveCareer();assert.equal(ordinary.writes(),2,'An unchanged backing save allows the next ordinary checkpoint');
 engine.reset(901);const newerRaw=JSON.stringify(adapter.captureSave());ordinary.stored.set(keys.SAVE_KEY,newerRaw);
@@ -208,7 +209,7 @@ for(const key of originalKeys){
   assert.equal(eventsFixture.stored.get(key),'legacy business stays intact');
   assert.equal(eventsFixture.reads.includes(key),false,'Original business events do not read their storage keys');
 }
-assert.equal(eventsFixture.scope.externalSave,false,'Old-release activity cannot replace or lock an established V106 business');
+assert.equal(eventsFixture.scope.externalSave,false,'Old-release activity cannot replace or lock an established V107 business');
 eventsFixture.storageCallback({key:keys.SAVE_KEY,newValue:newerRaw});
 assert.equal(eventsFixture.scope.externalSave,true,'A relevant callback pauses only when backing storage actually differs');
 assert.equal(eventsFixture.writes(),1);assert.equal(eventsFixture.stored.get(keys.SAVE_KEY),newerRaw);
@@ -222,13 +223,13 @@ for(const failure of [{readFails:true},{writeFails:true}]){
 }
 const bootFallback=source.match(/const saved=([^;]+);/);
 assert.ok(bootFallback,'Boot selects current progress or a released legacy business');
-for(const available of [[104,103,102,101],[103,102,101],[102,101],[101],[]]){
-  for(const current of [null,'current106 business']){
+for(const available of [[106,104,103,102,101],[104,103,102,101],[103,102,101],[102,101],[101],[]]){
+  for(const current of [null,'current107 business']){
     const stored=new Map(available.map(version=>[`perfect-pour-business-v${version}`,`released${version}`]));
     stored.set('perfect-pour-preview-v106','independent preview business');
     const before=Array.from(stored),reads=[];
     const value=vm.runInNewContext(bootFallback[1],{lastSavedRaw:current,LEGACY_SAVE_KEYS:keys.LEGACY_SAVE_KEYS,localStorage:{getItem:key=>{reads.push(key);return stored.get(key)??null;}}});
-    assert.equal(value,current||(available.length?`released${available[0]}`:undefined),'Current106 wins; otherwise the newest released business is selected');
+    assert.equal(value,current||(available.length?`released${available[0]}`:undefined),'Current107 wins; otherwise the newest released business is selected');
     if(current)assert.deepEqual(reads,[],'Current progress never falls back to an older business');
     assert.ok(reads.every(key=>keys.LEGACY_SAVE_KEYS.includes(key)),'Migration only reads the released business keys');
     assert.deepEqual(Array.from(stored),before,'Boot leaves legacy and preview storage unchanged');

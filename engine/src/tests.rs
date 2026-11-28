@@ -326,7 +326,7 @@ fn late_service_loses_speed_tip_and_demand_without_changing_fill_score() {
 
 #[test]
 fn v104_paid_save_is_exact_and_cannot_replay_payout() {
-    let mut g = Game::new(1); perfect(&mut g); let s = g.save(); assert_eq!(s[0], 106.0);
+    let mut g = Game::new(1); perfect(&mut g); let s = g.save(); assert_eq!(s[0], 107.0);
     let mut restored = Game::restore(&s).unwrap(); assert_eq!(restored.save(), s); assert_eq!(restored.foam, 0.0);
     let cash = restored.cash; restored.end_pour(); assert!(!restored.serve()); assert!(!restored.begin_ready());
     advance(&mut restored, 8.0, 60); assert_eq!(restored.cash, cash); assert_eq!(restored.save(), s);
@@ -716,7 +716,7 @@ fn genuine_v103_fixtures_preserve_every_released_snapshot_field() {
         let expected: Vec<f32> = array(source, "expectedRestoreSnapshot").into_iter().map(|v| v as f32).collect();
         let restored = Game::restore(&saved).unwrap();
         assert_eq!(&restored.state()[..124], expected.as_slice()); assert!(!restored.is_mix());
-        assert_eq!(restored.save()[0], 106.0);
+        assert_eq!(restored.save()[0], 107.0);
     }
 }
 
@@ -836,7 +836,7 @@ fn v104_import_defaults_to_no_ice_and_ice_validation_is_atomic() {
     assert_eq!(&restored.state()[..134],&g.state()[..134]);
     old[105] = 1.0; assert!(Game::restore(&old).is_none(), "104 retains its original reserved range");
     let mut g = Game::new(106); g.set_ice(2); let saved = g.save();
-    for (index,value) in [(105,-1.0),(105,6.0),(105,0.5),(106,1.0),(119,1.0),(92,0.0)] {
+    for (index,value) in [(105,-1.0),(105,6.0),(105,0.5),(106,6.0),(115,1.0),(119,1.0),(92,0.0)] {
         let mut bad = saved; bad[index] = value; assert!(Game::restore(&bad).is_none(), "bad index{index} value{value}");
     }
 }
@@ -870,4 +870,68 @@ fn all_four_ingredient_trays_cap_at_five_and_restore() {
     assert!(g.begin_pour());
     assert!(!g.set_recipe(0, 0, 0, 0, 1));
     assert!(!g.set_ice(0));
+}
+
+#[test]
+fn daily_special_is_a_three_order_challenge_and_is_paid_once() {
+    let mut g = Game::new(62107);
+    let special = g.special_soda();
+    assert_eq!((special, g.special_hits, g.shift_special_tips), (0, 0, 0));
+    let mut matched = 0u32;
+    for order in 0..12 {
+        if g.soda == special { matched += 1; }
+        perfect(&mut g);
+        if g.soda == special {
+            assert_eq!(g.special_hits, matched);
+            assert_eq!(g.last_special_tip, if matched == 3 { 150 } else { 25 });
+        } else { assert_eq!(g.last_special_tip, 0); }
+        let snapshot = g.save();
+        let resumed = Game::restore(&snapshot).unwrap();
+        assert_eq!(resumed.save(), snapshot, "paid special cannot grant twice");
+        assert_eq!(resumed.cash, g.cash);
+        if order < 11 { g.next_order(); }
+    }
+    assert_eq!(matched, 3);
+    assert_eq!(g.special_hits, 3);
+    assert_eq!(g.shift_special_tips, 200);
+    g.next_order(); assert_eq!(g.phase, 2);
+    assert!(g.next_day(31415));
+    assert_eq!((g.special_soda(), g.special_hits, g.shift_special_tips), (1, 0, 0));
+}
+#[test]
+fn regular_visits_grow_loyalty_and_are_saved_without_payout_replay() {
+    let mut g = Game::new(739);
+    for _ in 0..12 { perfect(&mut g); g.next_order(); }
+    assert_eq!(g.phase, 2); assert!(g.next_day(740));
+    for _ in 0..2 { perfect(&mut g); g.next_order(); }
+    let reg = g.regular_id();assert!(reg < 4);
+    assert_eq!(g.loyalty[reg], 0);
+    perfect(&mut g);
+    assert_eq!(g.loyalty[reg], 1);
+    assert_eq!(g.last_regular_tip, 20);
+    let paid=g.save();
+    let again=Game::restore(&paid).unwrap();
+    assert_eq!(again.loyalty[reg], 1);
+    assert_eq!(again.last_regular_tip, 20);
+    assert_eq!(again.save(), paid);
+    let original_cash=again.cash;
+    let mut duplicate=again.clone();duplicate.end_pour();
+    assert_eq!(duplicate.cash, original_cash);
+    assert_eq!(duplicate.save(), paid);
+}
+#[test]
+fn version106_saved_business_imports_without_retroactive_tycoon_rewards() {
+    let g=Game::new(106);let mut old=g.save();old[0]=106.0;
+    assert_eq!(old[106..].iter().filter(|x| **x != 0.0).count(),0);
+    let converted=Game::restore(&old).unwrap();
+    assert_eq!(converted.save()[0], 107.0);
+    assert_eq!(converted.cash,g.cash);assert_eq!(converted.special_hits,0);
+    assert_eq!(converted.loyalty,[0;4]);
+    let mut broken=old;broken[106]=1.0;
+    assert!(Game::restore(&broken).is_none());
+    for slot in [106,107,108,109,110,111,112,113,114,115] {
+        let mut invalid=g.save();
+        invalid[slot]=if slot < 110 {6.0} else if slot == 110 {4.0} else if slot == 115 {1.0} else {10000.0};
+        assert!(Game::restore(&invalid).is_none(), "bad tycoon slot {}",slot);
+    }
 }

@@ -1,75 +1,49 @@
 {
   "game": "Perfect Pour",
-  "version": "1.06",
+  "version": "1.07",
   "release_date": "2026-11-27",
-  "revision": "public-main-release",
+  "revision": "github-main-source",
   "source_baseline": {
     "version": "1.04.2",
     "github_commit": "3c9f86a540e1ac446ed2ad20f0141e3f220f2940",
     "sites_commit": "beb201e64524137dfa1ad318e756fa69e2e04e37"
   },
   "site_project_id": "appgprj_6b0908af5d34819183b47b403fbcb98b",
-  "audience": "public",
-  "html_bytes": 532322,
-  "html_sha256": "e4a80dfb10232ce3e497ac71eac63dd6c1744a5dc95b28d451ac5ab8b9c7a9eb",
-  "wasm_bytes": 45831,
-  "wasm_sha256": "4d47a02a6fc605decee0d4bc03b4a29678676d361161f56434419a5cdd3bda3f",
-  "native_tests": 58,
-  "wasm_imports": 0,
-  "snapshot_fields": 136,
-  "save_version": 106,
+  "release_notes": "docs/V107_RELEASE.md",
+  "previous_manifest": "docs/release-manifest-v106.json",
+  "source_revision": "V1.07 neighborhood tycoon growth",
+  "snapshot_fields": 148,
+  "save_version": 107,
   "save_doubles": 120,
-  "inline_scripts": 9,
-  "save_key": "perfect-pour-business-v106",
-  "engine_checks": {
-    "iced_gentle_catalog_cases": 448,
-    "mixture_mode_parity_cases": 216,
-    "zero_ice_catalog_mode_cases": 6048,
-    "baseline_zero_ice_orders": 288,
-    "baseline_zero_ice_snapshots": 1624,
-    "unchanged_baseline_fields": 134
-  },
-  "renderer_checks": {
-    "simulated_frames": 1200,
-    "cup_geometries": 4,
-    "bounded_ingredients": 9,
-    "bounded_rivulets": 8,
-    "ice_resting_submersion_approx": 0.83,
-    "pause_and_reduced_motion": "stable rendered frames"
-  },
-  "fixes_during_browser_qa": [
-    "Keep mobile counter surfaces visible in preparation.",
-    "Return pointer knob focus to Pour without interrupting keyboard slider edits.",
-    "Keep wetted ice mostly submerged and damp surface overshoot.",
-    "Recover disturbed cherries toward a floating level after release.",
-    "Compact the machine on short landscape screens."
+  "save_key": "perfect-pour-business-v107",
+  "import_versions": [
+    101,
+    102,
+    103,
+    104,
+    106,
+    107
   ],
-  "ice_scope": "Optional free0/1/2 scoops increase actual foam gas expansion; no displacement, melting, temperature or inventory management.",
-  "spill_scope": "Accumulates for the current cup and remains through review; clears with the next customer.",
-  "control_flow": "V1.04.2 hold/release, two-part mixtures, explicit Easy serving and capture-release guards retained.",
-  "save_scope": "Current V106 takes precedence; existing production104/103/102/101 saves migrate on Continue with legacy keys unchanged. V1.05 used104. Existing audio settings retained.",
-  "verification_limit": "Managed Chromium desktop and phone-sized iframe views, not physical iPhone/Safari or Android certification. Audio cue/lifecycle verification, not subjective listening.",
-  "acceptance_report": "docs/qa/V106_ACCEPTANCE.md",
-  "live_url": "https://perfect-pour.pretty-scarf-0591.chatgpt.site",
-  "repository": "https://github.com/SiminanRoll/PerfectPour",
-  "branch": "main",
-  "github_main_parent_sha": "42bd84a6d75431bf5f63969cb568db1783f61710",
-  "release_notes": "docs/V106_RELEASE.md",
-  "preview_browser_checks": [
-    "Desktop illustrated startup, counter, pressure knob, ingredient selection and single-soda held pour.",
-    "390x844 portrait stocked ingredients and a Rush overflow with436mL engine waste, visible runoff and puddle.",
-    "360x740 mixed drink: pointer knob then Space, first release switches without payment, second release serves, Next Customer advances.",
-    "844x390 compact landscape machine, larger glass and native held pour.",
-    "Final390x844 Easy mode: pause, top up and explicit Serve; final cup visibly retains floating ice and recovered cherry."
+  "physical_controls": "V1.04.2 one-hold Hardcore, Easy separate serve, mixed pours and latest ice spin fix retained",
+  "features": {
+    "daily_specials": "Rotating soda, three 4+ star successes, 25c+25c+150c rewards per day",
+    "regular_customers": "Ruth, Cleo, Maya, Sasha appear from day2, persistent loyalty0..5 and earned bonus tips",
+    "visible_shop_expansion": "Signs, counter fascia, lighting and interiors respond to existing purchases",
+    "native_physics": "Unmodified drink flow, foam, spillage, and pour controls"
+  },
+  "html_sha256": null,
+  "wasm_sha256": null,
+  "distribution": "GitHub main with CI-regenerated standalone dist/index.html",
+  "existing_public_url": "https://perfect-pour.pretty-scarf-0591.chatgpt.site",
+  "site_deployment_status": "Not automatically published by the GitHub CI workflow.",
+  "verified_checks": [
+    "native Rust",
+    "Wasm integration",
+    "legacy save migration",
+    "long-running ice physics",
+    "V107 loyalty/specials",
+    "UI tycoon contract",
+    "offline bundle"
   ],
-  "historical_preview_acceptance": "docs/qa/V106_PREVIEW_ACCEPTANCE.md",
-  "production_migration_checks": {
-    "genuine_v104_fixtures": 6,
-    "original_fields_compared": 134,
-    "boot_and_menu_read_only": true,
-    "legacy_entries_unchanged": true,
-    "current_v106_precedence": true,
-    "stale_migration_guard": true,
-    "paid_and_interrupted_pours": true
-  }
+  "verification_limit": "Source and CI tests are not a physical iPhone or Android playtest."
 }
