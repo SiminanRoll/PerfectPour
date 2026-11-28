@@ -384,7 +384,7 @@ fn fresh_recipe_requires_a_base_and_locks_atomically_on_first_hold() {
         let mut g = Game::new(314); g.set_mode(hardcore);
         assert_eq!((g.ordered_cherries, g.selected_soda), (1, 4));
         assert!(!g.begin_pour()); assert!(!g.attempted);
-        for invalid in [(5, 0, 0, 0, 1), (0, 3, 0, 0, 1), (0, 0, 1, 0, 1), (0, 0, 0, 1, 1), (0, 0, 0, 0, 0)] {
+        for invalid in [(5, 0, 0, 0, 1), (0, 6, 0, 0, 1), (0, 0, 1, 0, 1), (0, 0, 0, 1, 1), (0, 0, 0, 0, 0)] {
             let before = g.save(); assert!(!g.set_recipe(invalid.0, invalid.1, invalid.2, invalid.3, invalid.4));
             assert_eq!(g.save(), before);
         }
@@ -730,7 +730,7 @@ fn ice_is_optional_free_and_locks_on_the_first_hold() {
         assert!(g.set_ice(0));
         assert!(!g.prep_started, "repeating no ice does not start patience");
         let before = (g.capacity, g.target, g.menu_price(), g.addin_cost(), g.recipe_accuracy());
-        assert!(!g.set_ice(3));
+        assert!(!g.set_ice(6));
         assert!(g.set_ice(2));
         assert!(g.prep_started);
         assert_eq!(before, (g.capacity, g.target, g.menu_price(), g.addin_cost(), g.recipe_accuracy()));
@@ -839,4 +839,35 @@ fn v104_import_defaults_to_no_ice_and_ice_validation_is_atomic() {
     for (index,value) in [(105,-1.0),(105,3.0),(105,0.5),(106,1.0),(119,1.0),(92,0.0)] {
         let mut bad = saved; bad[index] = value; assert!(Game::restore(&bad).is_none(), "bad index{index} value{value}");
     }
+}
+
+#[test]
+fn all_four_ingredient_trays_cap_at_five_and_restore() {
+    let mut g = Game::new(106);
+    g.upgrades[9] = 1; g.upgrades[10] = 1; g.refresh();
+    assert!(g.set_recipe(0, 5, 5, 5, 1));
+    assert!(g.set_ice(5));
+    assert_eq!((g.selected_cherries, g.selected_lime, g.selected_syrup, g.selected_ice), (5, 5, 5, 5));
+    assert_eq!(g.addin_cost(), 5 * (8 + 10 + 12));
+    assert!((g.ice_fizz() - 2.0).abs() < 1e-9);
+    let save = g.save();
+    let restored = Game::restore(&save).expect("maximum garnishes and ice restore");
+    assert_eq!((restored.selected_cherries, restored.selected_lime, restored.selected_syrup, restored.selected_ice), (5, 5, 5, 5));
+    for invalid in [(6, 5, 5), (5, 6, 5), (5, 5, 6)] {
+        assert!(!g.set_recipe(0, invalid.0, invalid.1, invalid.2, 1));
+        assert_eq!(g.save(), save);
+    }
+    assert!(!g.set_ice(6));
+    assert_eq!(g.save(), save);
+    for slot in [88, 89, 90, 105] {
+        let mut bad = save;
+        bad[slot] = 6.0;
+        assert!(Game::restore(&bad).is_none());
+    }
+    let mut old = save;
+    old[0] = 104.0; old[105] = 0.0;
+    assert!(Game::restore(&old).is_none(), "older saves retain their original ingredient caps");
+    assert!(g.begin_pour());
+    assert!(!g.set_recipe(0, 0, 0, 0, 1));
+    assert!(!g.set_ice(0));
 }

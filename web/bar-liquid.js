@@ -78,7 +78,7 @@
   function spawnIngredient(type, index, g, initial, reducedMotion) {
     const salt = scene.seed + index * 21 + ({cherry: 9, lime: 51, ice: 119}[type]);
     const r = type === 'ice' ? 12 + noise(salt) * 3.5 : type === 'lime' ? 15 : 8.2;
-    const lane = type === 'cherry' ? (index ? .27 : -.23) : type === 'lime' ? .27 : ((index % 3) - 1) * .25;
+    const lane = type === 'cherry' ? (index - 2) * .16 : type === 'lime' ? (index - 2) * .17 : ((index % 3) - 1) * .25;
     return {
       type, index, r, salt,
       x: CENTER + lane * Math.max(45, g.width(1) - 28),
@@ -95,10 +95,12 @@
   }
 
   function syncIngredients(o, g, fresh) {
+    const scoops = clamp(Math.round(finite(o.ice)), 0, 5);
     const wanted = {
-      cherry: clamp(Math.round(finite(o.cherries)), 0, 2),
-      lime: clamp(Math.round(finite(o.lime)), 0, 1),
-      ice: clamp(Math.round(finite(o.ice)), 0, 2) * 3
+      cherry: clamp(Math.round(finite(o.cherries)), 0, 5),
+      lime: clamp(Math.round(finite(o.lime)), 0, 5),
+      // Preserve three cubes for the first two scoops; later scoops add two.
+      ice: scoops <= 2 ? scoops * 3 : 6 + (scoops - 2) * 2
     };
     scene.ingredients = scene.ingredients.filter(p => p.index < wanted[p.type]);
     for (const type of ['ice', 'cherry', 'lime']) {
@@ -120,11 +122,11 @@
       p.x = CENTER + (col - 1) * Math.min(28, width * .21) + row * 6 - 3;
       p.y = wet ? liquidY + verticalRadius * .65 + row * p.r * 1.48 : g.bottom - p.r - 6 - row * p.r * 1.6;
     } else if (p.type === 'cherry') {
-      p.x = CENTER + (p.index ? 1 : -1) * Math.min(25, g.width(.2) * .18);
+      p.x = CENTER + (p.index - 2) * Math.min(15, g.width(.2) * .095);
       const floatDepth = p.r * (scene.ingredients.some(item => item.type === 'ice') ? 3 : 1.2);
       p.y = wet ? liquidY + Math.min(depth - p.r, floatDepth + p.index * 3) : g.bottom - p.r - 6;
     } else {
-      p.x = CENTER + Math.min(34, width * .26);
+      p.x = CENTER + (p.index - 2) * Math.min(15, width * .095);
       p.y = wet ? liquidY + p.r * .23 : g.bottom - p.r - 6;
     }
     p.y = Math.min(g.bottom - p.r - 6, p.y);
@@ -214,7 +216,7 @@
           p.vy = Math.max(0, p.vy);
         }
       }
-      // At most nine ingredients: one small pairwise collision pass is bounded.
+      // At most 22 illustrated pieces (12 ice, five cherries, five limes); collisions stay bounded.
       for (let a = 0; a < all.length; a++) {
         const p = all[a];
         if (p.delay > 0) continue;

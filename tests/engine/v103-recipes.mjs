@@ -23,7 +23,7 @@ const next=()=>{e.next_order();if(v('phase')===2)assert.equal(e.next_day(v('day'
 const checks=[];
 assert.equal(e.state_len(),136);assert.equal(e.save_len(),120);e.reset(1);
 assert.equal(v('selectedSoda'),4);assert.equal(v('orderedCherries'),1);assert.equal(e.begin_pour(),0);assert.equal(v('attempted'),0);
-const fresh=save();for(const args of [[5,0,0,0,1],[0,3,0,0,1],[0,0,1,0,1],[0,0,0,1,1],[0,0,0,0,0]]){assert.equal(e.set_recipe(...args),0);assert.deepEqual(save(),fresh);}
+const fresh=save();for(const args of [[5,0,0,0,1],[0,6,0,0,1],[0,0,1,0,1],[0,0,0,1,1],[0,0,0,0,0]]){assert.equal(e.set_recipe(...args),0);assert.deepEqual(save(),fresh);}
 e.set_recipe(4,0,0,0,1);step(3);assert.equal(v('elapsed'),0);
 e.set_recipe(4,1,0,0,1);step(2);assert(v('elapsed')>1.99);assert.equal(v('selectedSoda'),4);assert.equal(v('attempted'),0);assert.equal(v('cash'),0);
 const prep=save();assert.equal(restore(prep),1);assert.deepEqual(save(),prep);assert.equal(e.begin_pour(),0);recipe();

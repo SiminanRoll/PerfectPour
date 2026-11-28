@@ -50,7 +50,7 @@
     if(!['cherry','lime','ice','syrup'].includes(kind))return icon(kind);
     const key=`pp-station-${kind}-${++stationSequence}`;
     const paint=name=>`url(#${key}-${name})`;
-    const selected=count(amount,2)>0,available=options?.available!==false;
+    const selected=count(amount,5)>0,available=options?.available!==false;
     const defs=`<defs>
       <linearGradient id="${key}-steel" x1="0" y1="0" x2="1" y2="0"><stop stop-color="#7c9c93"/><stop offset=".12" stop-color="#dae6d9"/><stop offset=".26" stop-color="#f5f7e5"/><stop offset=".49" stop-color="#a6beb0"/><stop offset=".73" stop-color="#e3ead9"/><stop offset=".94" stop-color="#7f9e91"/><stop offset="1" stop-color="#65897b"/></linearGradient>
       <linearGradient id="${key}-rim" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#faffee"/><stop offset=".4" stop-color="#d4e3d1"/><stop offset=".55" stop-color="#77998c"/><stop offset="1" stop-color="#ecf0d9"/></linearGradient>
@@ -116,11 +116,11 @@
     const raw=String(color).replace('#','');
     if(!/^[a-f\d]{6}$/i.test(raw))return color;
     let rgb=[0,2,4].map(p=>parseInt(raw.slice(p,p+2),16));
-    const b=count(blend,2),s=count(syrup,2);
+    const b=count(blend,2),s=count(syrup,5);
     const mix=(to,amount)=>{rgb=rgb.map((v,i)=>Math.round(v+(to[i]-v)*amount));};
     if(b===0)mix([238,240,210],.28);
     if(b===2)mix([102,57,43],.16);
-    if(s)mix([195,65,92],s*.14);
+    if(s)mix([195,65,92],Math.min(.6,s*.14));
     return '#'+rgb.map(v=>v.toString(16).padStart(2,'0')).join('');
   }
 
@@ -169,7 +169,7 @@
   // not change the engine's volume or target; their display is purely visual.
   function drawInside(ctx,options={}) {
     const g=options.geometry;if(!g||!ctx)return;
-    const cherries=count(options.cherries,2),syrup=count(options.syrup,2);
+    const cherries=count(options.cherries,5),syrup=count(options.syrup,5);
     const liquidY=Number.isFinite(options.liquidY)?options.liquidY:g.bottom;
     const filled=liquidY<g.bottom-3;
     ctx.save();
@@ -190,10 +190,10 @@
     for(let i=0;i<cherries;i++){
       // Keep the fruit above the status pill and beside the printed cup mark.
       // Constrain the offset to the local glass width, including curved cups.
-      const r=9.2,y=g.bottom-42-i*3;
+      const r=9.2,y=g.bottom-38-Math.floor(i/2)*12;
       const height=g.cup?.height||g.bottom-g.top;
-      const offset=Math.min(36,g.width((g.bottom-y)/height)/2-r*1.35-3);
-      drawCherry(ctx,260+(i===0?-offset:offset),y,r,i===0?-.16:.2);
+      const offset=Math.max(0,Math.min(36,g.width((g.bottom-y)/height)/2-r*1.35-3));
+      drawCherry(ctx,260+[-.9,.9,-.55,.55,0][i]*offset,y,r,(i-2)*.12);
     }
     ctx.restore();
   }

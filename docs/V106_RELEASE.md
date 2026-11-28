@@ -14,7 +14,7 @@ requested.
   containers.
 - Fruit drops into the glass, responds to pouring, and recovers toward a
   floating position. Ice floats mostly submerged and moves with the stream.
-- Optional zero, one or two ice scoops increase actual foam gas expansion,
+- Optional zero through five ice scoops increase actual foam gas expansion,
   strongest at the beginning of a pour. Ice does not change recipe grading,
   price, cup capacity or target geometry.
 - Glass, bubbles, textured foam, stream impact, condensation, overflow trails
@@ -59,3 +59,9 @@ the final build and the production Site.
 Release source retains normal Git history above the existing main head;
 promotion does not reset or force-push the branch. The published artifact and
 the GitHub release source must have matching content.
+
+## V1.06.1 ingredient tray capacity
+The cherry tin, ice bin, lime tray and syrup bottle each allow zero to five
+additions. Each tap adds one; at five the tray greys out and locks.
+Existing customer recipes are unchanged. The V106 save schema is retained,
+and V101–V104 save imports retain their original count validation.

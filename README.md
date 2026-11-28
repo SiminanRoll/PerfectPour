@@ -53,9 +53,10 @@ Enter activates discrete actions; pouring requires a hold of Space or the button
 | Component | Choices | Availability |
 | --- | --- | --- |
 | Base | Orange, Cherry, Lime, Cola | All four from the start |
-| Cherries | 0–2 | Starter jar |
-| Lime | 0–1 wedge | $10 citrus tray |
-| Cherry syrup | 0–2 pumps | $18 syrup rack |
+| Cherries | 0–5 | Starter tin; tray dims at five |
+| Ice | 0–5 scoops | Ice bin; tray dims at five and boosts fizz |
+| Lime | 0–5 wedges | $10 citrus tray; dims at five |
+| Cherry syrup | 0–5 pumps | $18 syrup rack; dims at five |
 | Blend | Light / extra soda water, Regular, Bold | $26 mixing dispenser unlocks custom blends |
 
 The first new-business order requests Orange with one cherry. Later single-soda requests gradually add combinations, with plain orders between them and at most two add-in types. Customers only request owned ingredients. Buying a station preserves the current ticket; future orders can use it.

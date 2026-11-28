@@ -15,16 +15,30 @@ assert.equal(e.state_len(),136);assert.equal(e.save_len(),120);
 assert.equal(contract.saveVersion,106);assert.equal(contract.snapshot.fields.selectedIce,134);assert.equal(contract.snapshot.fields.iceFizzMultiplier,135);
 e.reset(106);assert.equal(state(e)[134],0);assert.equal(state(e)[135],1);
 assert.equal(e.set_ice(0),1);assert.equal(state(e)[118],0,'No-op ice selection does not start patience');
-assert.equal(e.set_ice(3),0);assert.equal(e.set_ice(2),1);assert.equal(state(e)[134],2);assert.equal(state(e)[135],Math.fround(1.4));
-const preparing=save(e);assert.equal(preparing[0],106);assert.equal(preparing[105],2);assert.equal(restore(e,preparing),1);
-assert.equal(state(e)[134],2);assert.equal(state(e)[22],0);
-for(const [i,v] of [[105,-1],[105,.5],[105,3],[106,1],[119,1],[92,0]]){
+assert.equal(e.set_ice(6),0);assert.equal(e.set_ice(5),1);assert.equal(state(e)[134],5);assert.equal(state(e)[135],Math.fround(2));
+const preparing=save(e);assert.equal(preparing[0],106);assert.equal(preparing[105],5);assert.equal(restore(e,preparing),1);
+assert.equal(state(e)[134],5);assert.equal(state(e)[22],0);
+for(const [i,v] of [[105,-1],[105,.5],[105,6],[106,1],[119,1],[92,0]]){
  const bad=[...preparing];bad[i]=v;const before=state(e);assert.equal(restore(e,bad),0);assert.deepEqual(state(e),before);
 }
-checks.push('Ice is optional, bounded, free, saved and validated atomically');
+checks.push('Ice is optional, bounded at five, free, saved and validated atomically');
+e.reset(106);assert.equal(e.set_recipe(0,5,0,0,1),1);
+assert.equal(state(e)[103],5);assert.equal(state(e)[116],40);
+assert.equal(e.set_recipe(0,6,0,0,1),0);
+const fiveCherries=save(e);assert.equal(fiveCherries[88],5);
+assert.equal(restore(e,fiveCherries),1);assert.equal(state(e)[103],5);
+const invalidSix=[...fiveCherries];invalidSix[88]=6;assert.equal(restore(e,invalidSix),0);
+const legacyCherry=[...fiveCherries];legacyCherry[0]=104;assert.equal(restore(e,legacyCherry),0);
+const allFull=save(e);allFull[93]=1;allFull[94]=1;
+assert.equal(restore(e,allFull),1);
+assert.equal(e.set_recipe(0,5,5,5,1),1);
+assert.equal(state(e)[104],5);assert.equal(state(e)[105],5);
+const fourTrays=save(e);assert.equal(restore(e,fourTrays),1);
+for(const slot of [88,89,90,105]){const bad=[...fourTrays];bad[slot]=6;assert.equal(restore(e,bad),0);}
+checks.push('All four player ingredient amounts reach five and reject six; old save limits remain');
 
 const physical=[];
-for(const scoops of [0,1,2]){
+for(const scoops of [0,1,5]){
  e.reset(106);e.set_ice(scoops);prepare(e);
  const before=state(e);assert.equal(e.begin_pour(),1);assert.equal(e.set_ice(0),0);
  advance(e,.6);const during=state(e);
@@ -38,12 +52,12 @@ assert(physical[0][7]<physical[1][7]&&physical[1][7]<physical[2][7]);
 checks.push('Ice increases real foam gas, most strongly on first contact, without changing beverage, flow, targets, price or recipe grade');
 
 for(const hard of [0,1]){
- e.reset(106);e.set_mode(hard);e.set_ice(2);prepare(e);e.begin_pour();advance(e,.6);
- const partial=save(e),poured=partial[55];assert.equal(restore(e,partial),1);assert.equal(state(e)[134],2);assert.equal(save(e)[55],poured);
+ e.reset(106);e.set_mode(hard);e.set_ice(5);prepare(e);e.begin_pour();advance(e,.6);
+ const partial=save(e),poured=partial[55];assert.equal(restore(e,partial),1);assert.equal(state(e)[134],5);assert.equal(save(e)[55],poured);
  if(!hard){assert.equal(state(e)[0],0);assert.equal(state(e)[23],0);assert.equal(e.set_ice(0),0);e.begin_pour();advance(e,.4);e.end_pour();assert.equal(e.serve(),1);}
  assert.equal(state(e)[0],1);const cash=state(e)[20],completed=state(e)[16],paid=save(e);
  assert.equal(restore(e,paid),1);e.end_pour();assert.equal(e.serve(),0);advance(e,3);
- assert.equal(state(e)[20],cash);assert.equal(state(e)[16],completed);assert.equal(state(e)[134],2);
+ assert.equal(state(e)[20],cash);assert.equal(state(e)[16],completed);assert.equal(state(e)[134],5);
  e.next_order();assert.equal(state(e)[134],0);
 }
 checks.push('Both modes preserve ice across interruptions, keep paid cups paid and reset ice on the next customer');

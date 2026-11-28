@@ -158,7 +158,7 @@
       "activeTarget is a fraction of total cup capacity: target*firstShare on the first mix part and target on the final part. firstBeverageMl excludes foam gas and accounts for proportional overflow losses. It is fixed after the final score.",
       "mixAccuracy=clamp(100-200*abs(first retained beverage/total retained beverage-firstShare),0,100). Empty mixed cups score0 for mix; singles report100. mixStars uses fill-grade thresholds. Overall stars are the minimum of fill, recipe and mix grades.",
       "Mixed orders begin on customer6, initially half/half. Subsequent orders mix about one in three; quarter shares appear after12 completed manual customers. Mixed requests use at most one simple add-in and regular water blend. Their first base is preselected without starting prep time.",
-      "Fields134..135 append optional ice: selectedIce0/1/2 scoops renders0/3/6 cubes. iceFizzMultiplier=1+scoops*(0.08+0.12/(1+pouredMl/90)) multiplies foam gas expansion only, initially1/1.2/1.4. The effect declines as ice is wetted by cumulative poured volume; pauses/reloads cannot reset it. No-ice liquid, mix, cost, capacity and target behavior is unchanged."
+      "Fields134..135 append optional ice: selectedIce0..5 scoops renders 0/3/6/8/10/12 ice pieces. iceFizzMultiplier=1+scoops*(0.08+0.12/(1+pouredMl/90)) multiplies foam gas expansion only, initially1..2.0. The effect declines as ice is wetted by cumulative poured volume; pauses/reloads cannot reset it. No-ice liquid, mix, cost, capacity and target behavior is unchanged."
     ]
   },
   "save": {
@@ -278,7 +278,7 @@
     ],
     "notes": [
       "Version106 stores120 doubles with ice in formerly reserved slot105. Imports101 (80 values zero-padded),102,103 and104 (120 original values) preserve their historical validation and default ice to0.",
-      "save_ptr refreshes buffer from live state: call once, write all120 doubles, then restore_save. Validation is atomic. V106 requires integral ice0..2 at105 and zero reserved106..119. V104 still requires reserved105..119 zero; earlier original reserved ranges remain enforced.",
+      "save_ptr refreshes buffer from live state: call once, write all120 doubles, then restore_save. Validation is atomic. V106 requires integral ice0..5 at105 and zero reserved106..119. V104 still requires reserved105..119 zero; earlier original reserved ranges remain enforced.",
       "V101/V102 current orders migrate as plain recipes with their original soda selected and no retroactive garnish charges. V103 current recipes and every original124 snapshot field preserve released restore behavior.",
       "For104 and106, attempted remains cup-global and partAttempted belongs to pourPart. Interrupted Hardcore first-part saves advance to the untouched second part without paying; untouched second-part saves survive repeat reloads; interrupted final-part saves commit once. Single-soda102/103/104/106 Hardcore holds retain their one-time commit behavior.",
       "An unfinished Easy cup restores stopped in Easy, keeps its current part, and returns to Hardcore after the cup. Unpoured preparation restores without consuming a hold. Paid cups serialize settled beverage and never replay sales.",
@@ -401,7 +401,7 @@
       "costsCents": [
         1000
       ],
-      "effect": "Unlocks one lime garnish and lime requests on future orders"
+      "effect": "Unlocks up to five player-added lime wedges (customer requests remain one) on future orders"
     },
     {
       "item": 10,
@@ -409,7 +409,7 @@
       "costsCents": [
         1800
       ],
-      "effect": "Unlocks up to two syrup pumps and syrup requests on future orders"
+      "effect": "Unlocks up to five player-added syrup pumps (customer requests remain one or two) on future orders"
     },
     {
       "item": 11,
@@ -433,7 +433,7 @@
     "reviewSettling": "Phase 1 step advances only the existing cup physics with pouring disabled. Elapsed service time, score, payout, and career state remain final. Phase 2 step does nothing.",
     "service": "Patience starts on first changed recipe selection or first hold. New orders allow2seconds for base selection plus1.5seconds per requested add-in action or nonregular blend; mixes add2seconds for their second part. Reading an untouched ticket and paid settling/review/menu time are free. Slow service reduces tips and eventually sale value/demand. Specialist work retains at most10seconds of actual service per nonempty final committed cup;3.5s/order divided by(1+0.2*activeTraining).",
     "pressure": "Chosen only on an untouched cup. All3 pressure settings and all targets exist in both modes; Gentle keeps every tested single-soda and two-soda catalog request five-star reachable while retaining visible fizz.",
-    "recipe": "Starter cherries0..2. Lime0..1 requires item9, syrup0..2 requires item10, nonregular water blend requires item11. Recipe edits lock on the first hold for the whole cup. Premiums: cherries40c each,lime35c,syrup50c per pump,nonregular water blend25c,two-soda mix60c. Mixed base prices weight requested shares. Selected add-ins charge once: cherries8c,lime10c,syrup12c. Actual per-soda input volumes set liquid ingredient costs. Garnishes do not change fill volume.",
+    "recipe": "Player-selected cherries0..5 (customer requests remain0..2). Lime0..5 requires item9, syrup0..5 requires item10, nonregular water blend requires item11. Recipe edits lock on the first hold for the whole cup. Premiums: cherries40c each,lime35c,syrup50c per pump,nonregular water blend25c,two-soda mix60c. Mixed base prices weight requested shares. Selected add-ins charge once: cherries8c,lime10c,syrup12c. Actual per-soda input volumes set liquid ingredient costs. Garnishes do not change fill volume.",
     "recipeScore": "Recipe accuracy=100-60wrong first base-15per cherry difference-20lime difference-20per syrup difference-20per water-blend step, clamped0..100. Mix accuracy=clamp(100-200*absolute retained-first-share error,0,100), with0 for empty mixes and100 for singles. Overallstars=min(fillStars,recipeStars,mixStars). Five stars require the exact recipe and96+fill andmix scores.",
     "recipeGeneration": "Fresh first customer requests Orange and one cherry. The first5 customers are single-soda; customer6 guarantees half/half. Later mixes occur about1in3, with quarter shares introduced after12 completed manual customers. Mixed requests use distinct bases, at most one simple add-in, and regular water blend; their first base is preselected without prep time. Single-soda requests retain plain breaks, owned ingredients and at most two add-in types. Purchases never change the current request.",
     "hardcoreAttemptScope": "One hold for a single-soda cup; one hold for each of two ordered sodas. First release advances without scoring; final release commits once."

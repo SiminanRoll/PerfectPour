@@ -307,13 +307,13 @@
     const pair=mix?window.PourRecipeArt.renderRatioOrder({first:state[2],second:state[F.orderedSecondSoda],share:state[F.firstShare],part,complete:state[0]!==0}):'';
     $('mix-prep-sequence').hidden=!mix;
     if(mix)$('mix-prep-sequence').innerHTML=pair;
-    [['cherries',F.selectedCherries,true,2],['ice',F.selectedIce,true,2],['lime',F.selectedLime,state[F.hasCitrus]===1,1],['syrup',F.selectedSyrup,state[F.hasSyrup]===1,2]].forEach(([name,field,available,max])=>{
-      const button=$('ingredient-options').querySelector(`[data-ingredient="${name}"]`),n=state[field];
+    [['cherries',F.selectedCherries,true,5],['ice',F.selectedIce,true,5],['lime',F.selectedLime,state[F.hasCitrus]===1,5],['syrup',F.selectedSyrup,state[F.hasSyrup]===1,5]].forEach(([name,field,available,max])=>{
+      const button=$('ingredient-options').querySelector(`[data-ingredient="${name}"]`),n=state[field],atLimit=n>=max;
       button.hidden=!available;
-      text(name+'-count',available?n:'');text(name+'-availability',name==='ice'&&n>0?'Extra fizz':available?'':'Locked');
+      text(name+'-count',available?n:'');text(name+'-availability',atLimit?'MAX 5':name==='ice'&&n>0?'Extra fizz':available?'':'Locked');
       const station=button.querySelector('.station-art'),kind=name==='cherries'?'cherry':name;
       if(station)station.innerHTML=window.PourRecipeArt.station(kind,n,{available});
-      button.disabled=!available||state[F.canRecipe]!==1||state[F.selectedSoda]>3;button.classList.toggle('selected',n>0);button.classList.toggle('locked',!available);button.setAttribute('aria-pressed',String(n>0));button.setAttribute('aria-label',available?`${name}: ${n}${name==='ice'?' scoops':''}. Tap to cycle zero to ${max}.`:`${name} locked. Unlock in Build.`);button.title=available?`${name}: ${n}${name==='ice'?' scoops · extra fizz':''}. Tap to change.`:'Unlock in Build';
+      button.disabled=atLimit||!available||state[F.canRecipe]!==1||state[F.selectedSoda]>3;button.classList.toggle('selected',n>0);button.classList.toggle('at-limit',atLimit);button.classList.toggle('locked',!available);button.setAttribute('aria-pressed',String(n>0));button.setAttribute('aria-label',available?`${name}: ${n} of ${max}. ${atLimit?'Maximum reached.':'Tap to add one.'}`:`${name} locked. Unlock in Build.`);button.title=atLimit?`${name}: 5 of 5 · full`:available?`${name}: ${n} of ${max}. Tap to add.`:'Unlock in Build';
     });
     $('ingredient-options').hidden=false;
     $('blend-controls').hidden=state[F.hasMixer]!==1||mix||state[F.selectedSoda]>3;
@@ -764,9 +764,9 @@
   $('base-options').addEventListener('click',event=>{const button=event.target.closest('button[data-base]');if(button&&!button.disabled){changeRecipe('base',Number(button.dataset.base));focusPourAfterPointer(event);}});
   $('ingredient-options').addEventListener('click',event=>{
     const button=event.target.closest('button[data-ingredient]');if(!button||button.disabled)return;
-    const kind=button.dataset.ingredient,field={cherries:F.selectedCherries,lime:F.selectedLime,syrup:F.selectedSyrup,ice:F.selectedIce}[kind],max=kind==='lime'?1:2;
+    const kind=button.dataset.ingredient,field={cherries:F.selectedCherries,lime:F.selectedLime,syrup:F.selectedSyrup,ice:F.selectedIce}[kind],max=5;
     if(field===undefined)return;
-    const next=(state[field]+1)%(max+1);
+    const next=Math.min(max,state[field]+1);
     if(kind==='ice')changeIce(next);else changeRecipe(kind,next);
     openAudio();playCue('ingredient',{kind:kind==='cherries'?'cherry':kind});focusPourAfterPointer(event);
   });

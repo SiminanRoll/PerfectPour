@@ -113,7 +113,7 @@ impl Game {
     /// A recipe is freely adjustable before the first hold. Even Easy locks its
     /// ingredients once liquid is poured; only additional liquid can be added.
     pub fn set_recipe(&mut self, soda: usize, cherries: u32, lime: u32, syrup: u32, blend: usize) -> bool {
-        if self.phase != 0 || self.attempted || soda > 4 || cherries > 2 || lime > 1 || syrup > 2 || blend > 2
+        if self.phase != 0 || self.attempted || soda > 4 || cherries > 5 || lime > 5 || syrup > 5 || blend > 2
             || (lime > 0 && self.upgrades[9] == 0) || (syrup > 0 && self.upgrades[10] == 0)
             || (blend != 1 && self.upgrades[11] == 0) { return false; }
         let changed = (self.selected_soda, self.selected_cherries, self.selected_lime, self.selected_syrup, self.selected_blend)
@@ -146,7 +146,7 @@ impl Game {
     /// Ice is an optional free preparation choice, not an ordered garnish.
     /// It changes gas expansion only and locks with the cup's first attempt.
     pub fn set_ice(&mut self, scoops: u32) -> bool {
-        if scoops > 2 || self.phase != 0 || self.attempted { return false; }
+        if scoops > 5 || self.phase != 0 || self.attempted { return false; }
         self.prep_started |= self.selected_ice != scoops;
         self.selected_ice = scoops;
         self.refresh(); true
@@ -705,12 +705,17 @@ impl Game {
                 || (phase == 0 && s[23] == 0.0 && (s[54] != 0.0 || s[55] != 0.0)) { return None; }
         }
         if !legacy && !v102 {
-            for i in [83, 85, 86, 88, 90, 91] { if !integer(i, 0, 2) { return None; } }
-            for i in [84, 89, 92, 93, 94, 95] { if !integer(i, 0, 1) { return None; } }
+            for i in [83, 85, 86, 91] { if !integer(i, 0, 2) { return None; } }
+            for i in [84, 92, 93, 94, 95] { if !integer(i, 0, 1) { return None; } }
+            // Historical V103/V104 garnishes keep their original limits.
+            let newer = s[0] == SAVE_VERSION;
+            if !integer(88, 0, if newer { 5 } else { 2 })
+                || !integer(89, 0, if newer { 5 } else { 1 })
+                || !integer(90, 0, if newer { 5 } else { 2 }) { return None; }
             if !integer(87, 0, 4) || !(0.0..=11.0).contains(&s[96])
                 || (v103 && s[97..].iter().any(|v| *v != 0.0))
                 || (v104 && s[105..].iter().any(|v| *v != 0.0))
-                || (!v103 && !v104 && (!integer(105, 0, 2) || s[106..].iter().any(|v| *v != 0.0)))
+                || (!v103 && !v104 && (!integer(105, 0, 5) || s[106..].iter().any(|v| *v != 0.0)))
                 || (!v103 && !v104 && s[105] > 0.0 && s[92] != 1.0)
                 || (s[93] == 0.0 && (s[84] > 0.0 || s[89] > 0.0))
                 || (s[94] == 0.0 && (s[85] > 0.0 || s[90] > 0.0))
